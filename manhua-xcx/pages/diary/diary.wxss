@@ -33,17 +33,7 @@ button::after {
   background: #fffaf5;
 }
 
-.page-subtitle {
-  width: 100%;
-  margin-bottom: 24rpx;
-  color: #76594f;
-  font-size: 26rpx;
-  line-height: 1.5;
-  text-align: center;
-}
-
-.diary-card,
-.check-card {
+.diary-card {
   width: 100%;
   margin-bottom: 24rpx;
   padding: 28rpx;
@@ -219,36 +209,6 @@ button::after {
   color: #9a8177;
   font-size: 23rpx;
   line-height: 1.5;
-}
-
-.check-card {
-  background: #fff7e8;
-}
-
-.check-list {
-  margin-top: 18rpx;
-}
-
-.check-line {
-  display: flex;
-  align-items: flex-start;
-  color: #715247;
-  font-size: 24rpx;
-  line-height: 1.5;
-}
-
-.check-line + .check-line {
-  margin-top: 12rpx;
-}
-
-.check-line::before {
-  content: "";
-  flex: 0 0 14rpx;
-  width: 14rpx;
-  height: 14rpx;
-  margin: 12rpx 12rpx 0 0;
-  border-radius: 50%;
-  background: #ff96a7;
 }
 
 .generate-button {

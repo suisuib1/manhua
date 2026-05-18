@@ -1,5 +1,27 @@
 # 当前任务记录
 
+## 本轮任务：去掉日记页说明和检查卡片
+
+本轮使用 Figma Implement Design skill。用户确认工作区中 mine/index.* 的未提交删除是用户本人改动，本轮忽略且不纳入提交。
+
+## 本轮处理内容
+
+- 去掉 diary 页面顶部说明文案。
+- 去掉 diary 页面“生成前检查”卡片。
+- 删除对应的 page-subtitle、check-card、check-list、check-line 样式。
+- 未修改其他页面。
+
+## 本轮未做
+
+- 未修改 app.json。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：去掉日记页照片删除条
 
 本轮使用 Figma Implement Design skill。用户确认工作区中 app.wxss 和 mine/index.* 的未提交变更是用户本人改动，本轮忽略且不纳入提交。

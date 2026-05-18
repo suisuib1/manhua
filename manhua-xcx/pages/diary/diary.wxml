@@ -1,6 +1,4 @@
 <view class="diary-page">
-  <view class="page-subtitle">只记录想变成漫画的片段就好，慢慢写也可以</view>
-
   <view class="diary-card">
     <view class="card-head">
       <view>
@@ -50,15 +48,6 @@
       </button>
     </view>
     <view class="photo-tip">照片只用于本地预览占位，本轮不会上传。</view>
-  </view>
-
-  <view class="check-card">
-    <view class="card-title">生成前检查</view>
-    <view class="check-list">
-      <view class="check-line">日记内容已填写</view>
-      <view class="check-line">照片记录已准备</view>
-      <view class="check-line">{{mock.characterHint}}</view>
-    </view>
   </view>
 
   <button class="generate-button" bindtap="goGenerating" hover-class="button-hover">
