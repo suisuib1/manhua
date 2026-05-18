@@ -33,32 +33,49 @@ button::after {
   align-items: center;
   justify-content: center;
   position: relative;
-  min-height: 72rpx;
+  min-height: 92rpx;
+  padding: 8rpx 116rpx 10rpx;
+  box-sizing: border-box;
 }
 
 .home-title {
-  max-width: 440rpx;
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
   color: #4a2b22;
-  font-size: 38rpx;
-  font-weight: 700;
+  font-size: 36rpx;
+  font-weight: 800;
   letter-spacing: 0;
   text-align: center;
+  line-height: 1.25;
 }
 
 .icon-button {
   position: absolute;
   right: 0;
-  top: 4rpx;
+  top: 12rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 72rpx;
-  height: 72rpx;
+  min-width: 92rpx;
+  height: 56rpx;
+  padding: 0 22rpx;
+  box-sizing: border-box;
+  border-radius: 999rpx;
+  color: #8a6255;
+  font-size: 24rpx;
+  font-weight: 600;
+  background: rgba(255, 246, 239, 0.9);
+  box-shadow: 0 8rpx 18rpx rgba(108, 68, 46, 0.07);
+}
+
+.settings-entry::before {
+  content: "";
+  width: 10rpx;
+  height: 10rpx;
+  margin-right: 8rpx;
   border-radius: 50%;
-  color: #6f4537;
-  font-size: 22rpx;
-  background: rgba(255, 248, 240, 0.92);
-  box-shadow: 0 8rpx 22rpx rgba(108, 68, 46, 0.12);
+  background: #f49aa9;
 }
 
 .button-hover {
@@ -71,8 +88,8 @@ button::after {
   align-items: center;
   justify-content: space-between;
   min-height: 164rpx;
-  margin-top: 22rpx;
-  padding: 26rpx 28rpx 24rpx;
+  margin-top: 16rpx;
+  padding: 28rpx 26rpx 26rpx 30rpx;
   box-sizing: border-box;
   border: 3rpx solid #d9bda9;
   border-radius: 44rpx 44rpx 72rpx 44rpx;
@@ -117,14 +134,16 @@ button::after {
 
 .mascot-wrap {
   position: relative;
-  width: 176rpx;
-  height: 156rpx;
-  margin-left: 18rpx;
+  flex: 0 0 148rpx;
+  width: 148rpx;
+  height: 144rpx;
+  margin-left: 14rpx;
+  z-index: 1;
 }
 
 .home-mascot {
-  width: 176rpx;
-  height: 156rpx;
+  width: 148rpx;
+  height: 144rpx;
   display: block;
 }
 

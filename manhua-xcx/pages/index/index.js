@@ -43,6 +43,13 @@ Page({
     })
   },
 
+  showSettingsTip() {
+    wx.showToast({
+      title: '设置功能后续开放',
+      icon: 'none',
+    })
+  },
+
   showAllChaptersTip() {
     wx.showToast({
       title: '章节列表后续开放',

@@ -1,5 +1,31 @@
 # 当前任务记录
 
+## 本轮任务：修复首页设置入口与图片占位
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对首页 index 顶部设置入口和首页吉祥物图片占位做局部视觉修复。
+
+## 本轮处理内容
+
+- 已确认素材 `manhua-xcx/subpackage/icon-home-mascot-star.png` 存在。
+- 将首页顶部标题固定为“我的漫画日记本”，避免标题区域乱码、层级不清或叠字观感。
+- 将顶部设置入口改为浅色小胶囊按钮，视觉更轻，不再像突兀图标入口。
+- 顶部设置入口只调用 `wx.showToast` 占位，不跳转真实设置页。
+- 首页欢迎卡片右侧吉祥物继续使用真实本地素材 `/subpackage/icon-home-mascot-star.png`，并收敛尺寸，避免挤压标题和欢迎文案。
+
+## 本轮未做
+
+- 未修改 create 页面。
+- 未修改 diary、character、generating、chapter-detail、share、mine、quota-empty 页面。
+- 未修改 app.json。
+- 未新增业务功能。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI 服务。
+- 未创建 Java 后端代码。
+- 未引入依赖。
+- 未自动 push。
+
 ## 本轮任务：优化创建章节页视觉布局
 
 本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对 `manhua-xcx/pages/create/` 创建章节页做 UI polish。
