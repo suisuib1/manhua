@@ -1,8 +1,6 @@
 page {
   min-height: 100%;
   background: #fffaf5;
-  color: #50332a;
-  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 button {
@@ -10,6 +8,7 @@ button {
   padding: 0;
   background: transparent;
   border: 0;
+  line-height: 1;
 }
 
 button::after {
@@ -17,56 +16,48 @@ button::after {
 }
 
 .quota-page {
-  min-height: 100vh;
-  padding: 52rpx 28rpx 58rpx;
-  box-sizing: border-box;
-  background:
-    radial-gradient(circle at 12% 8%, rgba(255, 226, 176, 0.35), transparent 220rpx),
-    radial-gradient(circle at 88% 14%, rgba(255, 216, 224, 0.38), transparent 260rpx),
-    #fffaf5;
+  padding-top: 52rpx;
 }
 
-.state-card,
-.tips-card {
-  padding: 30rpx;
-  border: 2rpx solid #efd9cc;
-  border-radius: 34rpx;
+.empty-card {
   text-align: center;
-  background: rgba(255, 254, 250, 0.94);
-  box-shadow: 0 12rpx 30rpx rgba(114, 75, 54, 0.09);
+  border-color: #f0b4a8;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff4ee 100%);
+  box-shadow: 0 18rpx 36rpx rgba(210, 102, 92, 0.14);
 }
 
-.state-illustration {
+.empty-illustration {
   position: relative;
-  height: 260rpx;
-  margin-bottom: 18rpx;
+  height: 290rpx;
+  margin-bottom: 24rpx;
   border-radius: 28rpx;
-  background: linear-gradient(180deg, #fff4dc 0%, #fff0f4 100%);
   overflow: hidden;
+  background: linear-gradient(180deg, #fff4dc 0%, #fff0f4 100%);
 }
 
 .moon,
 .sleep-cat-head,
 .sleep-cat-body,
-.bubble {
+.bubble,
+.soft-star {
   position: absolute;
 }
 
 .moon {
-  right: 112rpx;
+  right: 126rpx;
   top: 42rpx;
-  width: 68rpx;
-  height: 68rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   background: #ffd96a;
-  box-shadow: -18rpx 0 0 #fff4dc;
+  box-shadow: -20rpx 0 0 #fff4dc;
 }
 
 .sleep-cat-head {
-  left: 206rpx;
-  bottom: 80rpx;
-  width: 70rpx;
-  height: 62rpx;
+  left: 204rpx;
+  bottom: 88rpx;
+  width: 74rpx;
+  height: 64rpx;
   border-radius: 50%;
   background: #fffaf1;
   border: 3rpx solid #d9aa91;
@@ -74,10 +65,10 @@ button::after {
 
 .sleep-cat-body {
   left: 258rpx;
-  bottom: 56rpx;
-  width: 136rpx;
-  height: 76rpx;
-  border-radius: 48rpx;
+  bottom: 62rpx;
+  width: 142rpx;
+  height: 78rpx;
+  border-radius: 50rpx;
   background: #fffaf1;
   border: 3rpx solid #d9aa91;
 }
@@ -89,34 +80,39 @@ button::after {
 
 .bubble-one {
   left: 112rpx;
-  top: 72rpx;
+  top: 78rpx;
   width: 42rpx;
   height: 42rpx;
 }
 
 .bubble-two {
   left: 164rpx;
-  top: 44rpx;
+  top: 48rpx;
   width: 24rpx;
   height: 24rpx;
 }
 
-.state-title {
-  color: #4a2b22;
-  font-size: 40rpx;
-  font-weight: 800;
+.soft-star {
+  left: 86rpx;
+  bottom: 74rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  background: #ffd66b;
 }
 
-.state-subtitle,
-.reset-hint,
-.tip-line {
-  color: #715247;
-  font-size: 26rpx;
-  line-height: 1.65;
+.state-title {
+  color: #4a2b22;
+  font-size: 42rpx;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .state-subtitle {
   margin-top: 18rpx;
+  color: #715247;
+  font-size: 26rpx;
+  line-height: 1.65;
 }
 
 .reset-hint {
@@ -124,53 +120,24 @@ button::after {
   padding: 18rpx;
   border-radius: 20rpx;
   color: #9b6a76;
+  font-size: 25rpx;
+  line-height: 1.55;
   background: #fff1f4;
 }
 
-.tips-card {
-  margin-top: 28rpx;
-  text-align: left;
+.tip-list {
+  margin-top: 20rpx;
+  padding: 18rpx;
+  border-radius: 20rpx;
   background: #fff7e8;
 }
 
-.tips-title {
-  color: #4d3029;
-  font-size: 30rpx;
-  font-weight: 800;
-}
-
 .tip-line {
-  margin-top: 14rpx;
+  color: #715247;
+  font-size: 24rpx;
+  line-height: 1.55;
 }
 
-.primary-button,
-.secondary-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 620rpx;
-  max-width: 100%;
-  height: 96rpx;
-  margin: 30rpx auto 0;
-  border-radius: 999rpx;
-  font-size: 32rpx;
-  font-weight: 800;
-}
-
-.primary-button {
-  border: 4rpx solid #ffffff;
-  color: #ffffff;
-  background: linear-gradient(180deg, #ff96a7 0%, #f77187 100%);
-  box-shadow: 0 16rpx 30rpx rgba(238, 98, 119, 0.23);
-}
-
-.secondary-button {
-  margin-top: 18rpx;
-  border: 2rpx solid #f0d6c8;
-  color: #7b5b51;
-  background: #fffdf9;
-}
-
-.button-hover {
-  opacity: 0.86;
+.tip-line + .tip-line {
+  margin-top: 8rpx;
 }

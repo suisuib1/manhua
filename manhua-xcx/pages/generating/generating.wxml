@@ -1,64 +1,69 @@
-<view class="generating-page">
-  <view class="page-header">
-    <view class="page-title">{{mock.title}}</view>
-    <view class="page-subtitle">{{mock.subtitle}}</view>
+<view class="generating-page polish-page">
+  <view class="polish-header">
+    <view class="polish-title">{{mock.title}}</view>
+    <view class="polish-subtitle">{{mock.subtitle}}</view>
   </view>
 
-  <view class="wait-illustration">
-    <view class="cloud cloud-one"></view>
-    <view class="cloud cloud-two"></view>
-    <view class="mascot-head"></view>
-    <view class="mascot-body"></view>
-    <view class="spark spark-one"></view>
-    <view class="spark spark-two"></view>
-  </view>
-
-  <view class="progress-card">
-    <view class="progress-head">
-      <view>
-        <view class="status-label">{{mock.statusText}}</view>
-        <view class="chapter-title">{{mock.chapterTitle}}</view>
+  <view class="stage-card polish-card">
+    <view class="polish-card-content">
+      <view class="binder-row">
+        <view class="binder"></view>
+        <view class="binder"></view>
+        <view class="binder"></view>
+        <view class="binder"></view>
+        <view class="binder"></view>
       </view>
-      <view class="progress-number">{{progress}}%</view>
-    </view>
-    <view class="progress-track">
-      <view class="progress-fill" style="width: {{progress}}%;"></view>
-    </view>
-    <view class="task-meta">
-      <text>任务：{{mock.taskId}}</text>
-      <text>{{mock.estimatedText}}</text>
+      <view class="stage-illustration">
+        <view class="comic-sheet">
+          <view class="sheet-panel"></view>
+          <view class="sheet-panel"></view>
+          <view class="sheet-panel"></view>
+          <view class="sheet-panel"></view>
+        </view>
+        <view class="girl-head"></view>
+        <view class="girl-body"></view>
+        <view class="cat-nap"></view>
+        <view class="stage-star star-a"></view>
+        <view class="stage-star star-b"></view>
+      </view>
+      <view class="stage-title">正在为你整理今天的漫画页...</view>
+      <view class="chapter-pill">当前章节：{{mock.chapterTitle}}</view>
     </view>
   </view>
 
-  <view class="steps-card">
-    <view class="card-title">生成步骤</view>
-    <view
-      wx:for="{{mock.steps}}"
-      wx:key="id"
-      class="step-row {{index <= activeStepIndex ? 'is-active' : ''}}"
-    >
-      <view class="step-dot">{{index + 1}}</view>
-      <view class="step-copy">
-        <view class="step-title">{{item.label}}</view>
-        <view class="step-detail">{{item.detail}}</view>
+  <view class="progress-card polish-card">
+    <view class="polish-card-content">
+      <view class="step-track">
+        <view wx:for="{{mock.steps}}" wx:key="id" class="track-item {{index <= activeStepIndex ? 'is-active' : ''}}">
+          <view class="track-dot">{{index + 1}}</view>
+          <view class="track-label">{{item.label}}</view>
+        </view>
       </view>
+      <view class="soft-progress">
+        <view class="soft-progress-fill" style="width: {{progress}}%;"></view>
+      </view>
+      <view class="wait-pill">{{mock.estimatedText}}</view>
     </view>
+  </view>
+
+  <view class="polish-note wait-note">
+    你可以先去做其他可爱的事，回来时这一章会继续为你生成中。
   </view>
 
   <button
     wx:if="{{canViewChapter}}"
-    class="primary-button"
+    class="polish-primary"
     bindtap="goChapterDetail"
-    hover-class="primary-hover"
+    hover-class="polish-button-hover"
   >
     查看生成章节
   </button>
   <button
     wx:else
-    class="secondary-button"
+    class="polish-secondary"
     bindtap="retryTask"
-    hover-class="secondary-hover"
+    hover-class="polish-button-hover"
   >
-    失败重试入口占位
+    返回漫画书
   </button>
 </view>

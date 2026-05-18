@@ -1,56 +1,68 @@
-<view class="mine-page">
-  <view class="user-card">
-    <view class="avatar">
-      <view class="avatar-face"></view>
-    </view>
-    <view class="user-copy">
-      <view class="user-name">{{mock.user.nickname}}</view>
-      <view class="user-subtitle">{{mock.user.subtitle}}</view>
-    </view>
+<view class="mine-page polish-page">
+  <view class="polish-header">
+    <view class="polish-title">我的漫画日记本</view>
+    <view class="polish-subtitle">收藏今天，也照顾好自己的小小故事</view>
   </view>
 
-  <view class="stats-card">
-    <view class="stats-title">{{mock.bookStats.title}}</view>
-    <view class="stats-grid">
-      <view class="stat-item">
-        <view class="stat-number">{{mock.bookStats.chapterCount}}</view>
-        <view class="stat-label">章节</view>
+  <view class="book-profile polish-card">
+    <view class="polish-card-content book-profile-content">
+      <view class="book-cover-mini">
+        <view class="mini-sun"></view>
+        <view class="mini-avatar"></view>
       </view>
-      <view class="stat-item">
-        <view class="stat-number">{{mock.bookStats.completedCount}}</view>
-        <view class="stat-label">已完成</view>
-      </view>
-      <view class="stat-item">
-        <view class="stat-number">{{mock.bookStats.generatingCount}}</view>
-        <view class="stat-label">生成中</view>
+      <view class="book-copy">
+        <view class="user-name">{{mock.user.nickname}}</view>
+        <view class="user-subtitle">{{mock.user.subtitle}}</view>
+        <view class="book-title">{{mock.bookStats.title}}</view>
       </view>
     </view>
   </view>
 
-  <view class="quota-card" bindtap="goQuotaEmpty">
+  <view class="stats-card polish-card">
+    <view class="polish-card-content">
+      <view class="stats-grid">
+        <view class="stat-item">
+          <view class="stat-number">{{mock.bookStats.chapterCount}}</view>
+          <view class="stat-label">章节</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number">{{mock.bookStats.completedCount}}</view>
+          <view class="stat-label">已完成</view>
+        </view>
+        <view class="stat-item">
+          <view class="stat-number">{{mock.bookStats.generatingCount}}</view>
+          <view class="stat-label">生成中</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="quota-card polish-note" bindtap="goQuotaEmpty">
     <view>
       <view class="quota-title">今日免费次数</view>
-      <view class="quota-desc">静态展示，可查看次数不足状态</view>
+      <view class="quota-desc">剩余次数会用于生成新的漫画章节</view>
     </view>
     <view class="quota-number">{{mock.freeQuotaRemaining}} / {{mock.freeQuotaTotal}}</view>
   </view>
 
-  <view class="menu-card">
-    <button
-      wx:for="{{mock.menuItems}}"
-      wx:key="id"
-      class="menu-row"
-      data-action="{{item.action}}"
-      data-title="{{item.title}}"
-      bindtap="handleMenuTap"
-      hover-class="row-hover"
-    >
-      <view class="menu-icon"></view>
-      <view class="menu-copy">
-        <view class="menu-title">{{item.title}}</view>
-        <view class="menu-desc">{{item.desc}}</view>
-      </view>
-      <view class="menu-arrow">›</view>
-    </button>
+  <view class="menu-card polish-card">
+    <view class="polish-card-content">
+      <button
+        wx:for="{{mock.menuItems}}"
+        wx:key="id"
+        class="menu-row"
+        data-action="{{item.action}}"
+        data-title="{{item.title}}"
+        bindtap="handleMenuTap"
+        hover-class="polish-button-hover"
+      >
+        <view class="menu-icon icon-{{index}}"></view>
+        <view class="menu-copy">
+          <view class="menu-title">{{item.title}}</view>
+          <view class="menu-desc">{{item.desc}}</view>
+        </view>
+        <view class="menu-arrow">›</view>
+      </button>
+    </view>
   </view>
 </view>

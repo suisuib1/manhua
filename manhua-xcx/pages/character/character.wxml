@@ -1,76 +1,101 @@
-<view class="character-page">
-  <view class="page-header">
-    <view class="page-title">{{mock.title}}</view>
-    <view class="page-subtitle">{{mock.subtitle}}</view>
+<view class="character-page polish-page">
+  <view class="polish-header">
+    <view class="polish-title">{{mock.title}}</view>
+    <view class="polish-subtitle">{{mock.subtitle}}</view>
   </view>
 
-  <view class="hero-card">
-    <view class="avatar-wrap">
-      <view class="avatar-hair"></view>
-      <view class="avatar-face">{{mock.avatarText}}</view>
-      <view class="avatar-body"></view>
-    </view>
-    <view class="hero-copy">
-      <view class="hero-label">{{mock.relation}}</view>
-      <input
-        class="nickname-input"
-        value="{{nickname}}"
-        placeholder="给主角取个名字"
-        bindinput="onNicknameInput"
-      />
-    </view>
-  </view>
-
-  <view class="form-card">
-    <view class="card-title">角色描述</view>
-    <textarea
-      class="desc-input"
-      value="{{description}}"
-      maxlength="120"
-      placeholder="描述发型、衣服、常见表情或你想保持一致的特征"
-      placeholder-class="input-placeholder"
-      bindinput="onDescriptionInput"
-    />
-  </view>
-
-  <view class="form-card">
-    <view class="card-title">性格标签</view>
-    <view class="tag-grid">
-      <button
-        wx:for="{{personalityTags}}"
-        wx:key="value"
-        class="tag-chip {{item.selected ? 'is-selected' : ''}}"
-        data-value="{{item.value}}"
-        bindtap="togglePersonalityTag"
-        hover-class="chip-hover"
-      >
-        {{item.label}}
-      </button>
+  <view class="profile-cover polish-card">
+    <view class="polish-card-content cover-content">
+      <view class="profile-photo">
+        <view class="photo-hair"></view>
+        <view class="photo-face">{{mock.avatarText}}</view>
+        <view class="photo-body"></view>
+      </view>
+      <view class="cover-copy">
+        <view class="cover-kicker">角色档案会帮助漫画保持人物一致</view>
+        <view class="cover-title">{{nickname}}</view>
+        <view class="cover-desc">{{mock.relation}}</view>
+      </view>
+      <view class="cover-star star-one"></view>
+      <view class="cover-star star-two"></view>
     </view>
   </view>
 
-  <view class="form-card">
-    <view class="card-title">外观标签</view>
-    <view class="tag-grid">
-      <button
-        wx:for="{{appearanceTags}}"
-        wx:key="value"
-        class="tag-chip {{item.selected ? 'is-selected' : ''}}"
-        data-value="{{item.value}}"
-        bindtap="toggleAppearanceTag"
-        hover-class="chip-hover"
-      >
-        {{item.label}}
-      </button>
+  <view class="profile-form polish-card">
+    <view class="polish-card-content">
+      <view class="form-grid">
+        <view class="field-block">
+          <view class="field-label">主角昵称</view>
+          <input
+            class="field-input"
+            value="{{nickname}}"
+            placeholder="给主角取个名字"
+            bindinput="onNicknameInput"
+          />
+        </view>
+        <view class="field-block">
+          <view class="field-label">身份关系</view>
+          <view class="field-static">{{mock.relation}}</view>
+        </view>
+      </view>
+
+      <view class="field-block full-field">
+        <view class="field-label">角色描述</view>
+        <textarea
+          class="desc-input"
+          value="{{description}}"
+          maxlength="120"
+          placeholder="描述发型、衣服、常见表情或你想保持一致的特征"
+          placeholder-class="input-placeholder"
+          bindinput="onDescriptionInput"
+        />
+      </view>
+
+      <view class="tag-section">
+        <view class="field-label">性格关键词</view>
+        <view class="polish-chip-row">
+          <button
+            wx:for="{{personalityTags}}"
+            wx:key="value"
+            class="polish-chip {{item.selected ? 'is-selected' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="togglePersonalityTag"
+            hover-class="polish-button-hover"
+          >
+            {{item.label}}
+          </button>
+        </view>
+      </view>
+
+      <view class="tag-section">
+        <view class="field-label">外观特征</view>
+        <view class="polish-chip-row">
+          <button
+            wx:for="{{appearanceTags}}"
+            wx:key="value"
+            class="polish-chip {{item.selected ? 'is-selected' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="toggleAppearanceTag"
+            hover-class="polish-button-hover"
+          >
+            {{item.label}}
+          </button>
+        </view>
+      </view>
+
+      <view class="reference-row">
+        <view class="reference-card small-one"></view>
+        <view class="reference-card small-two"></view>
+        <view class="reference-add">+</view>
+      </view>
     </view>
   </view>
 
-  <view class="note-card">
-    <view class="note-title">角色一致性说明</view>
+  <view class="character-note polish-note">
     <view wx:for="{{mock.notes}}" wx:key="*this" class="note-line">{{item}}</view>
   </view>
 
-  <button class="primary-button" bindtap="saveCharacter" hover-class="primary-hover">
+  <button class="polish-primary" bindtap="saveCharacter" hover-class="polish-button-hover">
     保存角色档案
   </button>
 </view>
