@@ -1,6 +1,6 @@
 const pageRoutes = {
   home: '/pages/index/index',
-  create: '/pages/create/index',
+  create: '/pages/create/create',
   diary: '/pages/diary/index',
   character: '/pages/character/index',
   generating: '/pages/generating/index',
@@ -65,8 +65,48 @@ const homeMock = {
   ],
 }
 
+const createChapterMock = {
+  title: '创建日记章节',
+  subtitle: '先给今天的故事取个名字吧',
+  draftChapterTitle: '和小猫一起的傍晚',
+  diaryDate: '2026-05-18',
+  diaryDateLabel: '2026-05-18（今天）',
+  dateHint: '同一天也可以记录多章',
+  pageMode: 'custom',
+  pageCount: 1,
+  freeQuotaRemaining: 2,
+  quotaHint: '当前剩余免费生成次数',
+  pageModeOptions: [
+    {
+      value: 'random',
+      label: '随机生成',
+      iconText: '骰',
+    },
+    {
+      value: 'custom',
+      label: '自定义',
+      iconText: '页',
+    },
+  ],
+  pageCountOptions: [1, 2, 3, 4, 5, 6, 7, 8],
+  tagOptions: [
+    { value: 'warm', label: '温馨' },
+    { value: 'funny', label: '搞笑' },
+    { value: 'healing', label: '治愈' },
+    { value: 'fairy', label: '童话' },
+    { value: 'cute', label: '可爱' },
+    { value: 'daily', label: '日常' },
+    { value: 'happy', label: '开心' },
+    { value: 'sad', label: '难过' },
+    { value: 'memory', label: '纪念' },
+  ],
+  selectedTags: ['warm', 'healing', 'cute'],
+  note: '这些标签会帮助我们更好地把握章节的氛围，不会限制你的创作哦~',
+}
+
 module.exports = {
   pageRoutes,
   chapterStatuses,
   homeMock,
+  createChapterMock,
 }

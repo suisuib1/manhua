@@ -358,3 +358,40 @@ PRD + AGENTS 初始化。
 - 未实现社区、评论、点赞、关注、公开广场。
 - 未实现支付、充值、会员、订单或余额。
 - 未展示原始隐私日记全文。
+## 本轮任务：Issue 3A 创建章节页静态 UI
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只读取本地 `docs/ui/02-create-chapter.png` 作为视觉参考。
+
+## 本轮目标
+
+- 只实现微信小程序创建章节页静态 UI。
+- 创建章节页定位为“开始创建今天的漫画章节”。
+- 展示顶部标题和温馨说明、章节标题输入框、日期占位、生成页数选择、情绪 / 风格标签、当前免费次数提示和下一步按钮。
+- 只做本地轻量交互，不提交真实业务数据。
+
+## 本轮处理内容
+
+- 新增 `manhua-xcx/pages/create/create.wxml`。
+- 新增 `manhua-xcx/pages/create/create.wxss`。
+- 新增 `manhua-xcx/pages/create/create.js`。
+- 新增 `manhua-xcx/pages/create/create.json`。
+- 更新 `manhua-xcx/utils/mock.js`，新增创建章节页本地 mock 数据，并将 create 路由指向 `pages/create/create`。
+- 由于当前实际注册路径是 `pages/create/index`，而本轮允许文件为 `pages/create/create.*`，同步更新 `manhua-xcx/app.json` 的 create 页面和 tabBar 路径，保证本轮页面能被微信小程序加载。
+
+## 本轮未做
+
+- 未实现日记输入页 UI。
+- 未修改首页 UI。
+- 未修改其他页面 UI。
+- 未接真实接口。
+- 未接 AI 服务。
+- 未实现真实上传图片。
+- 未实现真实登录。
+- 未提交真实业务数据。
+- 未创建 Java 后端代码。
+- 未创建数据库结构。
+- 未引入依赖。
+- 未修改 `project.config.json`。
+- 未修改 PRD 核心结论。
+- 未实现社区、评论、点赞、关注、公开广场。
+- 未实现支付、充值、会员、订单或余额。
