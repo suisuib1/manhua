@@ -1,5 +1,26 @@
 # 当前任务记录
 
+## 本轮任务：替换首页漫画封面图片
+
+本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图将首页红框内的漫画书封面和最近章节封面统一替换为 `/subpackage/icon-home-mascot-star.png`。
+
+## 本轮处理内容
+
+- 将首页漫画书大封面替换为本地图片 `/subpackage/icon-home-mascot-star.png`。
+- 将最近章节列表里的章节封面统一替换为同一张本地图片。
+- 删除对应 CSS 绘制占位图样式，保留图片尺寸、圆角和卡片结构。
+- 未修改 create、diary、character、generating、chapter-detail、share、mine、quota-empty 页面。
+
+## 本轮未做
+
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：修复创建页返回按钮和标签溢出
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图修复 create 创建日记章节页的局部布局问题。

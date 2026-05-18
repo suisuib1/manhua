@@ -17,15 +17,7 @@
     <image class="home-decor-icon book-heart-decor" src="/subpackage/icon-home-heart.png" mode="aspectFit" />
     <image class="home-decor-icon book-star-decor" src="/subpackage/icon-home-star-badge.png" mode="aspectFit" />
     <image class="home-decor-icon book-smile-decor" src="/subpackage/icon-home-smile.png" mode="aspectFit" />
-    <view class="book-cover">
-      <view class="cover-sky"></view>
-      <view class="cover-character">
-        <view class="cover-face"></view>
-        <view class="cover-body"></view>
-      </view>
-      <view class="cover-cloud cloud-one"></view>
-      <view class="cover-cloud cloud-two"></view>
-    </view>
+    <image class="book-cover-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
     <view class="book-info">
       <view class="book-title">{{defaultComicBook.title}}</view>
       <view class="privacy-pill">{{defaultComicBook.privacyLabel}}</view>
@@ -62,11 +54,7 @@
         data-id="{{item.id}}"
         bindtap="goChapterDetail"
       >
-        <view class="chapter-cover {{item.coverTone}}">
-          <view class="cover-bubble bubble-one"></view>
-          <view class="cover-bubble bubble-two"></view>
-          <view class="cover-avatar"></view>
-        </view>
+        <image class="chapter-cover-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
         <view class="chapter-title">{{item.title}}</view>
         <view class="chapter-subtitle">{{item.subtitle}}</view>
         <view class="chapter-date">{{item.date}}</view>

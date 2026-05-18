@@ -170,95 +170,15 @@ button::after {
   height: 42rpx;
 }
 
-.book-cover {
-  position: relative;
+.book-cover-image {
   flex: 0 0 224rpx;
   width: 224rpx;
   height: 224rpx;
-  overflow: hidden;
   border: 3rpx solid #dab19e;
   border-radius: 28rpx;
-  background: linear-gradient(160deg, #cae8ff 0%, #fff3cd 58%, #d8edbe 100%);
-}
-
-.cover-sky,
-.cover-character,
-.cover-cloud,
-.cover-face,
-.cover-body {
-  position: absolute;
-}
-
-.cover-sky {
-  left: 20rpx;
-  top: 22rpx;
-  width: 42rpx;
-  height: 42rpx;
-  border-radius: 50%;
-  background: #ffe26d;
-  box-shadow: 72rpx 12rpx 0 -12rpx #fff3a7, 126rpx 36rpx 0 -15rpx #f6b5d2;
-}
-
-.cover-character {
-  left: 58rpx;
-  bottom: 14rpx;
-  width: 116rpx;
-  height: 150rpx;
-}
-
-.cover-face {
-  left: 14rpx;
-  top: 0;
-  width: 92rpx;
-  height: 92rpx;
-  border-radius: 50%;
-  background: #ffd8c8;
-  box-shadow: inset 18rpx 0 0 rgba(192, 132, 92, 0.18);
-}
-
-.cover-face::before,
-.cover-face::after {
-  content: "";
-  position: absolute;
-  top: 38rpx;
-  width: 10rpx;
-  height: 16rpx;
-  border-radius: 50%;
-  background: #654039;
-}
-
-.cover-face::before {
-  left: 28rpx;
-}
-
-.cover-face::after {
-  right: 26rpx;
-}
-
-.cover-body {
-  left: 20rpx;
-  bottom: 0;
-  width: 78rpx;
-  height: 70rpx;
-  border-radius: 34rpx 34rpx 20rpx 20rpx;
-  background: #c5a4f0;
-}
-
-.cover-cloud {
-  width: 76rpx;
-  height: 36rpx;
-  border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.cloud-one {
-  right: 16rpx;
-  top: 30rpx;
-}
-
-.cloud-two {
-  left: 16rpx;
-  bottom: 24rpx;
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .book-info {
@@ -425,75 +345,12 @@ button::after {
   margin-right: 0;
 }
 
-.chapter-cover {
-  position: relative;
+.chapter-cover-image {
   width: 100%;
   height: 148rpx;
-  overflow: hidden;
   border-radius: 18rpx;
-}
-
-.chapter-cover.sunny {
-  background: linear-gradient(160deg, #bceaff 0%, #ffe9a7 62%, #bfe7ad 100%);
-}
-
-.chapter-cover.home {
-  background: linear-gradient(160deg, #ffe1c2 0%, #fff4df 50%, #cbe8df 100%);
-}
-
-.chapter-cover.rain {
-  background: linear-gradient(160deg, #7897c4 0%, #b9cff0 56%, #f4e4cb 100%);
-}
-
-.cover-bubble {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.bubble-one {
-  left: 14rpx;
-  top: 18rpx;
-  width: 32rpx;
-  height: 32rpx;
-}
-
-.bubble-two {
-  right: 18rpx;
-  top: 28rpx;
-  width: 22rpx;
-  height: 22rpx;
-}
-
-.cover-avatar {
-  position: absolute;
-  left: 50%;
-  bottom: 12rpx;
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 50%;
-  background: #ffd7c7;
-  box-shadow: -18rpx -14rpx 0 rgba(184, 130, 96, 0.32), 0 46rpx 0 -18rpx #b7a1ed;
-  transform: translateX(-50%);
-}
-
-.cover-avatar::before,
-.cover-avatar::after {
-  content: "";
-  position: absolute;
-  top: 34rpx;
-  width: 8rpx;
-  height: 12rpx;
-  border-radius: 50%;
-  background: #593d37;
-}
-
-.cover-avatar::before {
-  left: 22rpx;
-}
-
-.cover-avatar::after {
-  right: 22rpx;
+  display: block;
+  overflow: hidden;
 }
 
 .chapter-title {
