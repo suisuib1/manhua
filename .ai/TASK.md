@@ -495,3 +495,31 @@ PRD + AGENTS 初始化。
 - `node --check` 已覆盖 diary、character、generating、chapter-detail、share、mine、quota-empty 和 utils/mock.js，均通过。
 - `app.json` 已通过 JSON 解析检查。
 - 已扫描本轮页面和 mock，未发现 `wx.request`、`wx.uploadFile` 或支付、社区类实现。
+# 本轮任务：小程序 UI 只读审查与修复方案
+
+本轮使用 zoom-out skill，目标是从整体产品与页面系统层面审查当前小程序静态 UI，不修改任何小程序页面代码。
+
+## 本轮处理内容
+
+- 只读查看 AGENTS、PRD、MVP 范围、UI 页面映射、UI 开发任务、`docs/ui/` 参考图和当前小程序页面实现。
+- 对比首页、创建章节页与后续批量补齐页面的视觉一致性。
+- 新增 `docs/UI_POLISH_REVIEW.md`，记录当前 UI 总体问题、统一视觉规范、页面级问题清单、修复优先级、每页允许/禁止修改范围和后续 Codex 执行建议。
+- 更新 `.ai/TASK.md` 记录本轮审查。
+
+## 本轮结论
+
+- 当前最需要先修的是 `chapter-detail`、`diary`、`character`。
+- 主要问题是剩余页面缺少主视觉、卡片堆叠严重、模板感强、和首页/创建页风格不统一。
+- 后续不建议继续批量修复，应一轮只修一个页面。
+
+## 本轮未做
+
+- 未修改任何小程序 WXML。
+- 未修改任何小程序 WXSS。
+- 未修改任何小程序 JS。
+- 未修改 app.json。
+- 未创建后端代码。
+- 未接接口。
+- 未接 AI。
+- 未引入依赖。
+- 未自动 push。
