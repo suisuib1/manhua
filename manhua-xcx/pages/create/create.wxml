@@ -30,11 +30,11 @@
     <view class="small-hint">{{dateHint}}</view>
   </view>
 
-  <view class="form-card">
+  <view class="form-card choice-card">
     <view class="card-title-row">
       <text class="card-title">漫画页数</text>
     </view>
-    <view class="mode-grid">
+    <view class="mode-switch">
       <button
         wx:for="{{pageModeOptions}}"
         wx:key="value"
@@ -60,9 +60,9 @@
     </view>
   </view>
 
-  <view class="form-card">
+  <view class="form-card choice-card">
     <view class="card-title-row">
-      <text class="card-title">情绪 / 风格标签</text>
+      <text class="card-title">情绪标签</text>
     </view>
     <view class="tag-grid">
       <button
@@ -73,7 +73,6 @@
         data-value="{{item.value}}"
         bindtap="toggleTag"
       >
-        <text class="tag-dot {{item.selected ? 'is-on' : ''}}"></text>
         <text class="tag-label">{{item.label}}</text>
       </button>
     </view>
