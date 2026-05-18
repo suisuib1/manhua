@@ -43,10 +43,4 @@ Page({
     })
   },
 
-  showAllChaptersTip() {
-    wx.showToast({
-      title: '章节列表后续开放',
-      icon: 'none',
-    })
-  },
 })

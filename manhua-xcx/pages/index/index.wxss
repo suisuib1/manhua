@@ -303,25 +303,6 @@ button::after {
   font-weight: 800;
 }
 
-.section-mark {
-  width: 28rpx;
-  height: 34rpx;
-  margin-right: 12rpx;
-  border: 3rpx solid #eaa59d;
-  border-radius: 6rpx;
-  background: #fff4ef;
-}
-
-.text-button {
-  color: #9b8176;
-  font-size: 24rpx;
-}
-
-.text-button::after {
-  content: "›";
-  margin-left: 8rpx;
-}
-
 .chapter-scroll {
   width: 100%;
   white-space: nowrap;

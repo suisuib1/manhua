@@ -1,5 +1,27 @@
 # 当前任务记录
 
+## 本轮任务：去掉首页最近章节多余入口
+
+本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图去掉首页“最近章节”标题前的装饰块和右侧“全部章节”入口。
+
+## 本轮处理内容
+
+- 去掉首页最近章节标题前的小方块装饰。
+- 去掉首页最近章节右侧“全部章节”按钮。
+- 删除该按钮对应的本地 toast 方法和无用样式。
+- 未修改其他页面。
+
+## 本轮未做
+
+- 未修改 app.json。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：替换其他页面占位图
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只将首页之外其他页面的手绘占位图替换为 `/subpackage/icon-home-mascot-star.png`。

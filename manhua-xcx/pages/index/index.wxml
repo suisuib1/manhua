@@ -40,10 +40,8 @@
   <view class="section-card chapters-card">
     <view class="section-head">
       <view class="section-title">
-        <text class="section-mark"></text>
         <text>最近章节</text>
       </view>
-      <button class="text-button" hover-class="button-hover" bindtap="showAllChaptersTip">全部章节</button>
     </view>
 
     <scroll-view class="chapter-scroll" scroll-x="true" enable-flex="true">
