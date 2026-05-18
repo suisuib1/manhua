@@ -1,12 +1,41 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/logs/logs"
+    "pages/create/index",
+    "pages/diary/index",
+    "pages/character/index",
+    "pages/generating/index",
+    "pages/chapter-detail/index",
+    "pages/share/index",
+    "pages/mine/index",
+    "pages/quota-empty/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "Weixin",
-    "navigationBarBackgroundColor": "#ffffff"
+    "navigationBarTitleText": "日记生成漫画",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundTextStyle": "light"
+  },
+  "tabBar": {
+    "color": "#8f7d73",
+    "selectedColor": "#e56c86",
+    "backgroundColor": "#fffdf9",
+    "borderStyle": "white",
+    "position": "top",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/create/index",
+        "text": "创建"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "text": "我的"
+      }
+    ]
   },
   "style": "v2",
   "componentFramework": "glass-easel",

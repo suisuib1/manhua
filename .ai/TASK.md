@@ -292,3 +292,35 @@ PRD + AGENTS 初始化。
 ## 下一步建议
 
 项目基线提交完成后，后续才能进入 Issue 1：小程序基础导航和页面骨架确认。本轮不执行下一步。
+
+## 本轮任务：diagnose Issue 1 小程序页面骨架与导航确认
+
+本轮使用 diagnose 场景，目标是执行 Issue 1：确认小程序 MVP 页面路径、app.json 页面注册和轻量 tabBar 入口结构。
+
+## 本轮处理内容
+
+- 检查 Git 状态，确认工作区干净后开始。
+- 只读查看 docs/UI_IMPLEMENTATION_ISSUES.md、docs/UI_PAGE_MAPPING.md、manhua-xcx/pages 和 manhua-xcx/app.json。
+- 将 app.json 页面路径调整为 MVP 页面范围。
+- 建立轻量 tabBar：首页、创建、我的。
+- 保留 pages/logs 文件但不再注册到 app.json，避免默认示例页干扰 MVP 路径。
+- 为创建章节、日记输入与照片上传、角色档案、生成等待、章节详情、章节私密分享、我的页、免费次数不足状态创建极简页面骨架。
+- 新增 utils/mock.js，只放页面路径和状态占位常量，供后续静态页面任务复用。
+
+## 本轮未做
+
+- 未实现具体页面 UI。
+- 未还原 docs/ui/ 视觉细节。
+- 未接真实接口。
+- 未接 AI 服务。
+- 未创建 Java 后端工程。
+- 未创建数据库文件。
+- 未引入依赖。
+- 未修改 project.config.json。
+- 未修改 PRD 核心产品结论。
+- 未扩大 MVP 范围。
+- 未 push。
+
+## 下一步建议
+
+下一步建议执行 Issue 2：首页 / 漫画书首页静态 UI。本轮不执行下一步。
