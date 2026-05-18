@@ -1,4 +1,117 @@
-<view class="page-shell">
-  <view class="page-title">{{pageName}}</view>
-  <view class="page-note">Issue 1 页面骨架占位，后续单独实现静态 UI。</view>
+<view class="home-page">
+  <view class="home-header">
+    <view class="home-title">我的漫画日记本</view>
+    <button class="icon-button" hover-class="button-hover" bindtap="goMine">设置</button>
+  </view>
+
+  <view class="greeting-card">
+    <view class="greeting-copy">
+      <view class="greeting-title">{{user.greetingTitle}}，</view>
+      <view class="greeting-text">{{user.greetingText}}</view>
+    </view>
+    <view class="mascot-wrap">
+      <view class="mascot-face">Q</view>
+      <view class="mascot-spark spark-one"></view>
+      <view class="mascot-spark spark-two"></view>
+    </view>
+  </view>
+
+  <view class="book-card">
+    <view class="book-cover">
+      <view class="cover-sky"></view>
+      <view class="cover-character">
+        <view class="cover-face"></view>
+        <view class="cover-body"></view>
+      </view>
+      <view class="cover-cloud cloud-one"></view>
+      <view class="cover-cloud cloud-two"></view>
+    </view>
+    <view class="book-info">
+      <view class="book-title">{{defaultComicBook.title}}</view>
+      <view class="privacy-pill">{{defaultComicBook.privacyLabel}}</view>
+      <view class="book-desc">{{defaultComicBook.description}}</view>
+      <view class="book-meta">已收藏 {{defaultComicBook.chapterCount}} 个章节</view>
+    </view>
+  </view>
+
+  <button class="create-button" hover-class="create-button-hover" bindtap="goCreateChapter">
+    <text class="create-icon">✎</text>
+    <text>写今天的漫画日记</text>
+  </button>
+
+  <view class="quota-line">
+    <text class="quota-star">☆</text>
+    <text>{{quotaHint}}：</text>
+    <text class="quota-count">{{freeQuotaRemaining}}次</text>
+  </view>
+
+  <view class="section-card chapters-card">
+    <view class="section-head">
+      <view class="section-title">
+        <text class="section-mark"></text>
+        <text>最近章节</text>
+      </view>
+      <button class="text-button" hover-class="button-hover" bindtap="showAllChaptersTip">全部章节</button>
+    </view>
+
+    <scroll-view class="chapter-scroll" scroll-x="true" enable-flex="true">
+      <view
+        wx:for="{{recentChapters}}"
+        wx:key="id"
+        class="chapter-card"
+        data-id="{{item.id}}"
+        bindtap="goChapterDetail"
+      >
+        <view class="chapter-cover {{item.coverTone}}">
+          <view class="cover-bubble bubble-one"></view>
+          <view class="cover-bubble bubble-two"></view>
+          <view class="cover-avatar"></view>
+        </view>
+        <view class="chapter-title">{{item.title}}</view>
+        <view class="chapter-subtitle">{{item.subtitle}}</view>
+        <view class="chapter-date">{{item.date}}</view>
+        <view class="chapter-summary">{{item.summary}}</view>
+        <view class="chapter-status {{item.statusClass}}">
+          <text class="status-dot"></text>
+          <text>{{item.statusText}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="memory-note">
+    <view class="note-pin"></view>
+    <view class="memory-copy">
+      <view>还没有更多章节时，</view>
+      <view>会在这里慢慢收藏你的回忆。</view>
+    </view>
+    <view class="sleepy-cat">
+      <view class="cat-head"></view>
+      <view class="cat-body"></view>
+    </view>
+  </view>
+
+  <view class="quick-grid">
+    <view class="quick-card character-card" bindtap="goCharacter">
+      <view class="quick-illustration character-illustration">
+        <view class="quick-heart"></view>
+      </view>
+      <view class="quick-copy">
+        <view class="quick-title">角色档案</view>
+        <view class="quick-desc">管理你的专属角色和故事设定</view>
+      </view>
+      <view class="quick-arrow">›</view>
+    </view>
+
+    <view class="quick-card mine-card" bindtap="goMine">
+      <view class="quick-illustration mine-illustration">
+        <view class="quick-star"></view>
+      </view>
+      <view class="quick-copy">
+        <view class="quick-title">我的 / 设置</view>
+        <view class="quick-desc">隐私与偏好设置安心记录</view>
+      </view>
+      <view class="quick-arrow">›</view>
+    </view>
+  </view>
 </view>

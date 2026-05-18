@@ -324,3 +324,37 @@ PRD + AGENTS 初始化。
 ## 下一步建议
 
 下一步建议执行 Issue 2：首页 / 漫画书首页静态 UI。本轮不执行下一步。
+## 本轮任务：Issue 2 首页 / 漫画书首页静态 UI
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只读取本地 `docs/ui/01-home.png` 作为视觉参考。
+
+## 本轮目标
+
+- 只实现微信小程序首页静态 UI。
+- 首页定位为“私人漫画书首页”。
+- 展示今日入口、默认漫画书卡片、最近章节列表、免费次数提示、创建章节主按钮、角色档案入口和我的 / 设置入口。
+- 适配 375px 微信小程序宽度，保持温馨、治愈、Q 版漫画氛围。
+
+## 本轮处理内容
+
+- 更新 `manhua-xcx/utils/mock.js`，新增首页本地 mock 数据。
+- 更新 `manhua-xcx/pages/index/index.js`，首页只读取本地 mock 数据。
+- 更新 `manhua-xcx/pages/index/index.wxml`，实现首页静态结构。
+- 更新 `manhua-xcx/pages/index/index.wxss`，实现手账卡片、漫画书卡片、最近章节卡片和入口卡片样式。
+- 更新 `manhua-xcx/pages/index/index.json`，设置首页导航栏标题和背景色。
+
+## 本轮未做
+
+- 未接真实接口。
+- 未接 AI 服务。
+- 未实现真实登录。
+- 未实现真实上传。
+- 未创建 Java 后端代码。
+- 未创建数据库结构。
+- 未引入依赖。
+- 未修改 `app.json`。
+- 未修改 `project.config.json`。
+- 未修改 PRD 核心结论。
+- 未实现社区、评论、点赞、关注、公开广场。
+- 未实现支付、充值、会员、订单或余额。
+- 未展示原始隐私日记全文。

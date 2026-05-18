@@ -1,5 +1,52 @@
+const { homeMock, pageRoutes, chapterStatuses } = require('../../utils/mock')
+
+const statusClassMap = {
+  [chapterStatuses.completed]: 'is-completed',
+  [chapterStatuses.generating]: 'is-generating',
+  [chapterStatuses.failed]: 'is-failed',
+}
+
 Page({
   data: {
-    pageName: '首页 / 漫画书首页',
+    user: homeMock.user,
+    defaultComicBook: homeMock.defaultComicBook,
+    freeQuotaRemaining: homeMock.freeQuotaRemaining,
+    quotaHint: homeMock.quotaHint,
+    recentChapters: homeMock.recentChapters.map((chapter) => Object.assign({}, chapter, {
+      statusClass: statusClassMap[chapter.status] || '',
+    })),
+  },
+
+  goCreateChapter() {
+    wx.switchTab({
+      url: pageRoutes.create,
+    })
+  },
+
+  goChapterDetail(event) {
+    const { id } = event.currentTarget.dataset
+
+    wx.navigateTo({
+      url: `${pageRoutes.chapterDetail}?id=${id}`,
+    })
+  },
+
+  goCharacter() {
+    wx.navigateTo({
+      url: pageRoutes.character,
+    })
+  },
+
+  goMine() {
+    wx.switchTab({
+      url: pageRoutes.mine,
+    })
+  },
+
+  showAllChaptersTip() {
+    wx.showToast({
+      title: '章节列表后续开放',
+      icon: 'none',
+    })
   },
 })
