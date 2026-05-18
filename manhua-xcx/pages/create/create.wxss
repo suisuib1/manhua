@@ -38,42 +38,9 @@ button::after {
 }
 
 .create-header {
-  display: grid;
-  grid-template-columns: 64rpx minmax(0, 1fr) 64rpx;
-  gap: 12rpx;
-  align-items: center;
   width: 100%;
   margin-bottom: 28rpx;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  color: #70483c;
-  font-size: 40rpx;
-  font-weight: 700;
-  background: rgba(255, 246, 239, 0.92);
-  box-shadow: 0 8rpx 18rpx rgba(116, 76, 58, 0.08);
-}
-
-.back-arrow {
-  display: block;
-  height: 48rpx;
-  line-height: 42rpx;
-}
-
-.header-copy {
-  min-width: 0;
   text-align: center;
-}
-
-.header-spacer {
-  width: 64rpx;
-  height: 1rpx;
 }
 
 .page-title {
@@ -103,16 +70,6 @@ button::after {
   display: flex;
   align-items: center;
   width: 100%;
-}
-
-.card-icon {
-  flex: 0 0 18rpx;
-  width: 18rpx;
-  height: 18rpx;
-  margin-right: 14rpx;
-  border-radius: 50%;
-  background: #f58da0;
-  box-shadow: 18rpx 0 0 #ffd66e;
 }
 
 .card-title {
@@ -234,8 +191,8 @@ button::after {
 
 .tag-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16rpx;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
   width: 100%;
   margin-top: 22rpx;
 }
@@ -247,6 +204,7 @@ button::after {
   min-width: 0;
   height: 64rpx;
   padding: 0 10rpx;
+  box-sizing: border-box;
   border-radius: 999rpx;
   color: #76554b;
   font-size: 26rpx;

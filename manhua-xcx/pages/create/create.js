@@ -92,12 +92,6 @@ Page({
     })
   },
 
-  goBack() {
-    wx.navigateBack({
-      delta: 1,
-    })
-  },
-
   goNext() {
     wx.navigateTo({
       url: pageRoutes.diary,

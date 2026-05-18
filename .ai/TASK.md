@@ -1,5 +1,27 @@
 # 当前任务记录
 
+## 本轮任务：修复创建页返回按钮和标签溢出
+
+本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图修复 create 创建日记章节页的局部布局问题。
+
+## 本轮处理内容
+
+- 去掉 create 页面内容区的返回按钮。
+- 去掉各表单标题前面的装饰点。
+- 修复“情绪 / 风格标签”区域按钮横向超出页面的问题。
+- 保持 create 页面原有本地交互不变。
+- 未修改首页、diary、character、generating、chapter-detail、share、mine、quota-empty 页面。
+
+## 本轮未做
+
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：去掉首页顶部设置入口
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图去掉首页标题右侧的“设置”入口。

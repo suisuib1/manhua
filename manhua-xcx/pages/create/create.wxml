@@ -1,18 +1,11 @@
 <view class="create-page">
   <view class="create-header">
-    <button class="back-button" hover-class="button-hover" bindtap="goBack">
-      <text class="back-arrow">‹</text>
-    </button>
-    <view class="header-copy">
-      <view class="page-title">{{title}}</view>
-      <view class="page-subtitle">{{subtitle}}</view>
-    </view>
-    <view class="header-spacer"></view>
+    <view class="page-title">{{title}}</view>
+    <view class="page-subtitle">{{subtitle}}</view>
   </view>
 
   <view class="form-card">
     <view class="card-title-row">
-      <text class="card-icon"></text>
       <text class="card-title">章节标题</text>
     </view>
     <view class="title-input-wrap">
@@ -29,7 +22,6 @@
 
   <view class="form-card">
     <view class="card-title-row">
-      <text class="card-icon"></text>
       <text class="card-title">日期</text>
     </view>
     <view class="date-select">
@@ -40,7 +32,6 @@
 
   <view class="form-card">
     <view class="card-title-row">
-      <text class="card-icon"></text>
       <text class="card-title">漫画页数</text>
     </view>
     <view class="mode-grid">
@@ -71,7 +62,6 @@
 
   <view class="form-card">
     <view class="card-title-row">
-      <text class="card-icon"></text>
       <text class="card-title">情绪 / 风格标签</text>
     </view>
     <view class="tag-grid">
