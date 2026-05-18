@@ -1,5 +1,26 @@
 # 当前任务记录
 
+## 本轮任务：修复角色档案页导航遮挡
+
+本轮使用 diagnose skill。根据用户截图，定位 character 角色档案页顶部内容被导航栏区域遮挡，本轮只补足角色页顶部安全留白。
+
+## 本轮处理内容
+
+- 给 character 页面单独增加顶部 padding。
+- 让角色页标题和副标题从导航栏下方自然开始。
+- 未修改其他页面的通用 polish-page 样式。
+
+## 本轮未做
+
+- 未修改 app.json。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：修复我的页菜单宽度
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图让 mine 页菜单项占满一行宽度。

@@ -15,6 +15,10 @@ button::after {
   border: 0;
 }
 
+.character-page {
+  padding-top: 96rpx;
+}
+
 .profile-cover {
   min-height: 234rpx;
   border-color: #f0b4a8;
