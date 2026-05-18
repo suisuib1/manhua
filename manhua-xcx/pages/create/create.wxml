@@ -1,133 +1,104 @@
 <view class="create-page">
   <view class="create-header">
-    <button class="back-button" hover-class="button-hover" bindtap="goBack">‹</button>
+    <button class="back-button" hover-class="button-hover" bindtap="goBack">
+      <text class="back-arrow">‹</text>
+    </button>
     <view class="header-copy">
       <view class="page-title">{{title}}</view>
       <view class="page-subtitle">{{subtitle}}</view>
     </view>
-    <view class="header-character">
-      <view class="character-head"></view>
-      <view class="character-body"></view>
-      <view class="pencil"></view>
+    <view class="header-spacer"></view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title-row">
+      <text class="card-icon"></text>
+      <text class="card-title">章节标题</text>
+    </view>
+    <view class="title-input-wrap">
+      <input
+        class="chapter-input"
+        value="{{draftChapterTitle}}"
+        placeholder="给今天的故事取个名字"
+        placeholder-class="input-placeholder"
+        maxlength="24"
+        bindinput="onTitleInput"
+      />
     </view>
   </view>
 
-  <view class="form-card title-card">
-    <view class="card-inner">
-      <view class="card-title-row">
-        <text class="card-icon star-icon">☆</text>
-        <text class="card-title">章节标题</text>
-      </view>
-      <view class="title-input-wrap">
-        <input
-          class="chapter-input"
-          value="{{draftChapterTitle}}"
-          placeholder="给今天的故事取个名字"
-          placeholder-class="input-placeholder"
-          maxlength="24"
-          bindinput="onTitleInput"
-        />
-        <button wx:if="{{draftChapterTitle}}" class="clear-button" hover-class="button-hover" bindtap="clearTitle">×</button>
-      </view>
+  <view class="form-card">
+    <view class="card-title-row">
+      <text class="card-icon"></text>
+      <text class="card-title">日期</text>
+    </view>
+    <view class="date-select">
+      <text>{{diaryDateLabel}}</text>
+    </view>
+    <view class="small-hint">{{dateHint}}</view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title-row">
+      <text class="card-icon"></text>
+      <text class="card-title">漫画页数</text>
+    </view>
+    <view class="mode-grid">
+      <button
+        wx:for="{{pageModeOptions}}"
+        wx:key="value"
+        class="mode-option {{item.selected ? 'is-selected' : ''}}"
+        hover-class="option-hover"
+        data-mode="{{item.value}}"
+        bindtap="selectPageMode"
+      >
+        <text class="mode-label">{{item.label}}</text>
+      </button>
+    </view>
+    <view class="count-grid">
+      <button
+        wx:for="{{pageCountOptions}}"
+        wx:key="count"
+        class="count-option {{item.selected ? 'is-selected' : ''}}"
+        hover-class="option-hover"
+        data-count="{{item.count}}"
+        bindtap="selectPageCount"
+      >
+        <text>{{item.count}}页</text>
+      </button>
     </view>
   </view>
 
-  <view class="form-card date-card">
-    <view class="card-inner date-inner">
-      <view class="date-content">
-        <view class="card-title-row">
-          <text class="card-icon calendar-icon"></text>
-          <text class="card-title">日期</text>
-        </view>
-        <view class="date-select">
-          <text>{{diaryDateLabel}}</text>
-          <text class="select-arrow">⌄</text>
-        </view>
-        <view class="small-hint">
-          <text class="hint-heart">♡</text>
-          <text>{{dateHint}}</text>
-        </view>
-      </view>
-      <view class="date-cat">
-        <view class="date-cat-head"></view>
-        <view class="date-cat-body"></view>
-      </view>
+  <view class="form-card">
+    <view class="card-title-row">
+      <text class="card-icon"></text>
+      <text class="card-title">情绪 / 风格标签</text>
     </view>
-  </view>
-
-  <view class="form-card page-count-card">
-    <view class="card-inner">
-      <view class="card-title-row">
-        <text class="card-icon page-icon"></text>
-        <text class="card-title">漫画页数</text>
-      </view>
-      <view class="mode-grid">
-        <button
-          wx:for="{{pageModeOptions}}"
-          wx:key="value"
-          class="mode-option {{item.selected ? 'is-selected' : ''}}"
-          hover-class="option-hover"
-          data-mode="{{item.value}}"
-          bindtap="selectPageMode"
-        >
-          <text class="mode-icon">{{item.iconText}}</text>
-          <text>{{item.label}}</text>
-        </button>
-      </view>
-      <view class="count-grid">
-        <button
-          wx:for="{{pageCountOptions}}"
-          wx:key="count"
-          class="count-option {{item.selected ? 'is-selected' : ''}}"
-          hover-class="option-hover"
-          data-count="{{item.count}}"
-          bindtap="selectPageCount"
-        >
-          {{item.label}}
-        </button>
-      </view>
-    </view>
-  </view>
-
-  <view class="form-card tags-card">
-    <view class="card-inner">
-      <view class="card-title-row">
-        <text class="card-icon tag-icon"></text>
-        <text class="card-title">情绪 / 风格标签</text>
-      </view>
-      <view class="tag-grid">
-        <button
-          wx:for="{{tagOptions}}"
-          wx:key="value"
-          class="tag-option {{item.selected ? 'is-selected' : ''}}"
-          hover-class="option-hover"
-          data-value="{{item.value}}"
-          bindtap="toggleTag"
-        >
-          <text>{{item.label}}</text>
-          <text wx:if="{{item.selected}}" class="tag-check">✓</text>
-        </button>
-      </view>
+    <view class="tag-grid">
+      <button
+        wx:for="{{tagOptions}}"
+        wx:key="value"
+        class="tag-option {{item.selected ? 'is-selected' : ''}}"
+        hover-class="option-hover"
+        data-value="{{item.value}}"
+        bindtap="toggleTag"
+      >
+        <text class="tag-dot {{item.selected ? 'is-on' : ''}}"></text>
+        <text class="tag-label">{{item.label}}</text>
+      </button>
     </view>
   </view>
 
   <view class="note-card">
-    <view class="note-pin"></view>
     <view class="note-copy">{{note}}</view>
-    <view class="note-mascot">
-      <view class="note-cat-head"></view>
-      <view class="note-cat-body"></view>
-    </view>
   </view>
 
   <view class="quota-line">
-    <text class="quota-star">☆</text>
     <text>{{quotaHint}}：</text>
     <text class="quota-count">{{freeQuotaRemaining}}次</text>
   </view>
 
   <button class="next-button" hover-class="next-button-hover" bindtap="goNext">
-    <text class="next-spark">✦</text>
-    <text>下一步：填写日记和照片</text>
+    <text>下一步：填写日记</text>
   </button>
 </view>

@@ -1,5 +1,33 @@
 # 当前任务记录
 
+## 本轮任务：重修创建章节页布局错乱问题
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对 `manhua-xcx/pages/create/` 创建章节页做本页级布局重修。
+
+## 本轮处理内容
+
+- 仅重做创建章节页 WXML/WXSS 布局结构和样式，未修改其他页面。
+- 移除 create 页旧的叠加式样式体系，改为单一稳定移动端表单布局。
+- 重修漫画页数区域：随机 / 自定义为 flex segmented control，1-8 页为 4 列等宽 grid。
+- 重修情绪 / 风格标签区域：标签为 3 列等宽 grid，选中态不再使用遮挡文字的大浮层。
+- 简化章节标题、日期、提示和底部按钮区域，去掉影响表单稳定性的装饰图形。
+- 页面根容器增加底部安全留白，避免主按钮靠近 tabBar。
+
+## 本轮未做
+
+- 未修改首页 index 页面。
+- 未修改 diary、character、generating、chapter-detail、share、mine、quota-empty 页面。
+- 未修改 app.json。
+- 未新增业务功能。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI 服务。
+- 未真实上传。
+- 未创建 Java 后端代码。
+- 未引入依赖。
+- 未自动 push。
+
 ## 本轮任务：修复首页设置入口与图片占位
 
 本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对首页 index 顶部设置入口和首页吉祥物图片占位做局部视觉修复。
