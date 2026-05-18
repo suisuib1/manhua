@@ -126,73 +126,72 @@ button::after {
   line-height: 1.5;
 }
 
-.mode-switch {
+.page-count-control {
   display: flex;
-  gap: 12rpx;
+  align-items: center;
+  gap: 14rpx;
   width: 100%;
   margin-top: 24rpx;
-  padding: 6rpx;
-  border-radius: 999rpx;
-  background: #fff3eb;
 }
 
-.mode-option {
+.random-option {
   display: flex;
-  flex: 1;
   align-items: center;
   justify-content: center;
+  flex: 1;
   min-width: 0;
-  height: 68rpx;
+  height: 76rpx;
   border-radius: 999rpx;
   color: #87675d;
   font-size: 25rpx;
   font-weight: 700;
-  background: transparent;
-}
-
-.mode-option.is-selected {
-  color: #ef637c;
-  background: #ffffff;
-  box-shadow: 0 8rpx 18rpx rgba(239, 126, 144, 0.14);
-}
-
-.mode-label {
-  max-width: 100%;
-  overflow: hidden;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.count-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12rpx;
-  width: 100%;
-  margin-top: 16rpx;
-}
-
-.count-option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  height: 64rpx;
-  padding: 0 4rpx;
-  box-sizing: border-box;
-  border: 2rpx solid transparent;
-  border-radius: 18rpx;
-  color: #76554b;
-  font-size: 24rpx;
-  font-weight: 700;
-  text-align: center;
-  white-space: nowrap;
   background: #fff4ec;
 }
 
-.count-option.is-selected {
+.random-option.is-selected {
   border: 2rpx solid #f58298;
   color: #ef637c;
   background: #fff0f4;
+}
+
+.page-count-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  height: 76rpx;
+  padding: 0 22rpx;
+  box-sizing: border-box;
+  border: 2rpx solid transparent;
+  border-radius: 999rpx;
+  color: #76554b;
+  font-size: 26rpx;
+  font-weight: 700;
+  background: #fff4ec;
+}
+
+.page-count-input-wrap.is-selected {
+  border: 2rpx solid #f58298;
+  color: #ef637c;
+  background: #fff0f4;
+}
+
+.page-count-input {
+  flex: 1;
+  min-width: 0;
+  height: 72rpx;
+  color: #ef637c;
+  font-size: 28rpx;
+  font-weight: 800;
+  text-align: center;
+}
+
+.page-count-unit {
+  flex: 0 0 auto;
+  margin-left: 8rpx;
+  color: #8a6a60;
+  font-size: 25rpx;
+  font-weight: 700;
 }
 
 .tag-grid {

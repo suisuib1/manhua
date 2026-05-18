@@ -34,29 +34,27 @@
     <view class="card-title-row">
       <text class="card-title">漫画页数</text>
     </view>
-    <view class="mode-switch">
+    <view class="page-count-control">
       <button
-        wx:for="{{pageModeOptions}}"
-        wx:key="value"
-        class="mode-option {{item.selected ? 'is-selected' : ''}}"
+        class="random-option {{pageMode === 'random' ? 'is-selected' : ''}}"
         hover-class="option-hover"
-        data-mode="{{item.value}}"
-        bindtap="selectPageMode"
+        bindtap="selectRandomPageMode"
       >
-        <text class="mode-label">{{item.label}}</text>
+        <text>随机生成</text>
       </button>
-    </view>
-    <view class="count-grid">
-      <button
-        wx:for="{{pageCountOptions}}"
-        wx:key="count"
-        class="count-option {{item.selected ? 'is-selected' : ''}}"
-        hover-class="option-hover"
-        data-count="{{item.count}}"
-        bindtap="selectPageCount"
-      >
-        <text>{{item.count}}页</text>
-      </button>
+      <view class="page-count-input-wrap {{pageMode === 'custom' ? 'is-selected' : ''}}">
+        <input
+          class="page-count-input"
+          type="number"
+          maxlength="1"
+          value="{{pageCountInput}}"
+          placeholder="1-8"
+          placeholder-class="input-placeholder"
+          bindinput="onPageCountInput"
+          bindblur="onPageCountBlur"
+        />
+        <text class="page-count-unit">页</text>
+      </view>
     </view>
   </view>
 

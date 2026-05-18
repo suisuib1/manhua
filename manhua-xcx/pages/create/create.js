@@ -6,18 +6,10 @@ function markSelected(options, selectedValues) {
   }))
 }
 
-function markPageModes(options, selectedMode) {
-  return options.map((option) => Object.assign({}, option, {
-    selected: option.value === selectedMode,
-  }))
-}
+function normalizePageCount(value) {
+  const digit = String(value || '').replace(/[^1-8]/g, '').slice(0, 1)
 
-function buildPageCountOptions(counts, selectedCount, pageMode) {
-  return counts.map((count) => ({
-    count,
-    label: `${count}页`,
-    selected: pageMode === 'custom' && selectedCount === count,
-  }))
+  return digit
 }
 
 Page({
@@ -29,14 +21,9 @@ Page({
     dateHint: createChapterMock.dateHint,
     pageMode: createChapterMock.pageMode,
     pageCount: createChapterMock.pageCount,
+    pageCountInput: String(createChapterMock.pageCount),
     freeQuotaRemaining: createChapterMock.freeQuotaRemaining,
     quotaHint: createChapterMock.quotaHint,
-    pageModeOptions: markPageModes(createChapterMock.pageModeOptions, createChapterMock.pageMode),
-    pageCountOptions: buildPageCountOptions(
-      createChapterMock.pageCountOptions,
-      createChapterMock.pageCount,
-      createChapterMock.pageMode
-    ),
     tagOptions: markSelected(createChapterMock.tagOptions, createChapterMock.selectedTags),
     selectedTags: createChapterMock.selectedTags,
     note: createChapterMock.note,
@@ -54,24 +41,30 @@ Page({
     })
   },
 
-  selectPageMode(event) {
-    const { mode } = event.currentTarget.dataset
-
+  selectRandomPageMode() {
     this.setData({
-      pageMode: mode,
-      pageModeOptions: markPageModes(createChapterMock.pageModeOptions, mode),
-      pageCountOptions: buildPageCountOptions(createChapterMock.pageCountOptions, this.data.pageCount, mode),
+      pageMode: 'random',
     })
   },
 
-  selectPageCount(event) {
-    const pageCount = Number(event.currentTarget.dataset.count)
+  onPageCountInput(event) {
+    const pageCountInput = normalizePageCount(event.detail.value)
+    const pageCount = Number(pageCountInput || this.data.pageCount || 1)
 
     this.setData({
       pageMode: 'custom',
       pageCount,
-      pageModeOptions: markPageModes(createChapterMock.pageModeOptions, 'custom'),
-      pageCountOptions: buildPageCountOptions(createChapterMock.pageCountOptions, pageCount, 'custom'),
+      pageCountInput,
+    })
+  },
+
+  onPageCountBlur() {
+    const pageCountInput = normalizePageCount(this.data.pageCountInput) || '1'
+
+    this.setData({
+      pageMode: 'custom',
+      pageCount: Number(pageCountInput),
+      pageCountInput,
     })
   },
 
