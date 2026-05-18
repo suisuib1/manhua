@@ -263,3 +263,32 @@ PRD + AGENTS 初始化。
 ## 下一步建议
 
 下一步建议先执行 Issue 1：小程序基础导航和页面骨架确认。若用户更想先看视觉效果，也可以先实现 Issue 2：首页 / 漫画书首页静态 UI，但仍需遵守一次只推进一个小目标。
+
+## 本轮任务：diagnose 补交项目基线文件
+
+本轮使用 diagnose 场景，目标是整理当前 Git 仓库状态，把既有项目基线文件提交到本地 Git，避免后续页面开发 diff 混乱。
+
+## 本轮处理内容
+
+- 检查当前 Git 状态和最近提交记录。
+- 确认上一轮 UI 页面映射与任务拆分提交已存在。
+- 检查 .gitignore，确认已排除 project.private.config.json 和 manhua-xcx/project.private.config.json。
+- 补交 AGENTS.md、PRD、MVP、AI 生成流程、数据模型草案、UI 参考图、小程序骨架、项目配置、.gitignore 和 .ai/PROJECT.md 等项目基线文件。
+
+## 本轮未做
+
+- 未开发业务代码。
+- 未修改小程序页面功能。
+- 未修改小程序页面 UI。
+- 未创建 Java 后端工程。
+- 未创建数据库文件。
+- 未接入 AI 服务。
+- 未修改 PRD 核心产品结论。
+- 未移动 manhua-xcx/。
+- 未提交 project.private.config.json。
+- 未提交 manhua-xcx/project.private.config.json。
+- 未 push。
+
+## 下一步建议
+
+项目基线提交完成后，后续才能进入 Issue 1：小程序基础导航和页面骨架确认。本轮不执行下一步。

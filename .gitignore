@@ -1,0 +1,11 @@
+project.private.config.json
+manhua-xcx/project.private.config.json
+node_modules/
+miniprogram_npm/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
