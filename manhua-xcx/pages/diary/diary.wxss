@@ -118,8 +118,9 @@ button::after {
   width: 100%;
   margin-bottom: 24rpx;
   padding: 20rpx 24rpx;
+  border: 2rpx solid #f3e5dc;
   border-radius: 24rpx;
-  background: #fff5e5;
+  background: #ffffff;
   box-shadow: 0 10rpx 24rpx rgba(146, 101, 62, 0.06);
 }
 
