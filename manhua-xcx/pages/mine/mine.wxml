@@ -7,8 +7,7 @@
   <view class="book-profile polish-card">
     <view class="polish-card-content book-profile-content">
       <view class="book-cover-mini">
-        <view class="mini-sun"></view>
-        <view class="mini-avatar"></view>
+        <image class="book-cover-mini-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
       </view>
       <view class="book-copy">
         <view class="user-name">{{mock.user.nickname}}</view>

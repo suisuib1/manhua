@@ -35,70 +35,10 @@ button::after {
   background: linear-gradient(180deg, #fff4dc 0%, #fff0f4 100%);
 }
 
-.moon,
-.sleep-cat-head,
-.sleep-cat-body,
-.bubble,
-.soft-star {
-  position: absolute;
-}
-
-.moon {
-  right: 126rpx;
-  top: 42rpx;
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
-  background: #ffd96a;
-  box-shadow: -20rpx 0 0 #fff4dc;
-}
-
-.sleep-cat-head {
-  left: 204rpx;
-  bottom: 88rpx;
-  width: 74rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: #fffaf1;
-  border: 3rpx solid #d9aa91;
-}
-
-.sleep-cat-body {
-  left: 258rpx;
-  bottom: 62rpx;
-  width: 142rpx;
-  height: 78rpx;
-  border-radius: 50rpx;
-  background: #fffaf1;
-  border: 3rpx solid #d9aa91;
-}
-
-.bubble {
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.bubble-one {
-  left: 112rpx;
-  top: 78rpx;
-  width: 42rpx;
-  height: 42rpx;
-}
-
-.bubble-two {
-  left: 164rpx;
-  top: 48rpx;
-  width: 24rpx;
-  height: 24rpx;
-}
-
-.soft-star {
-  left: 86rpx;
-  bottom: 74rpx;
-  width: 32rpx;
-  height: 32rpx;
-  border-radius: 50%;
-  background: #ffd66b;
+.empty-image {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .state-title {

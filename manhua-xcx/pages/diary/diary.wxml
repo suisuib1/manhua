@@ -41,10 +41,7 @@
         wx:key="id"
         class="photo-tile {{item.tone}}"
       >
-        <view class="photo-scene">
-          <view class="photo-sun"></view>
-          <view class="photo-hill"></view>
-        </view>
+        <image class="photo-preview" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
         <view class="photo-label">{{item.label}}</view>
         <button class="photo-remove" data-id="{{item.id}}" bindtap="removePhoto">×</button>
       </view>

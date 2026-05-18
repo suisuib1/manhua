@@ -46,83 +46,17 @@ button::after {
   margin-top: 18rpx;
 }
 
-.comic-sheet {
-  position: absolute;
-  left: 58rpx;
-  top: 52rpx;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6rpx;
-  width: 122rpx;
-  height: 146rpx;
-  padding: 10rpx;
-  box-sizing: border-box;
-  border: 4rpx solid #b98372;
-  border-radius: 12rpx;
-  background: #fff7ef;
-  transform: rotate(-14deg);
-}
-
-.sheet-panel {
-  border-radius: 8rpx;
-  background: linear-gradient(160deg, #cfeeff 0%, #fff0c6 100%);
-}
-
-.girl-head,
-.girl-body,
-.cat-nap,
 .stage-star {
   position: absolute;
 }
 
-.girl-head {
-  left: 50%;
-  top: 36rpx;
-  width: 184rpx;
-  height: 174rpx;
-  border-radius: 50%;
-  background: #ffd8c8;
-  box-shadow: -36rpx -24rpx 0 rgba(184, 130, 96, 0.24);
-  transform: translateX(-50%);
-}
-
-.girl-head::before,
-.girl-head::after {
-  content: "";
+.stage-image {
   position: absolute;
-  top: 82rpx;
-  width: 16rpx;
-  height: 22rpx;
-  border-radius: 50%;
-  background: #5c3c35;
-}
-
-.girl-head::before {
-  left: 58rpx;
-}
-
-.girl-head::after {
-  right: 54rpx;
-}
-
-.girl-body {
   left: 50%;
-  bottom: 32rpx;
-  width: 162rpx;
-  height: 92rpx;
-  border-radius: 60rpx 60rpx 28rpx 28rpx;
-  background: #c6a9ee;
+  top: 8rpx;
+  width: 260rpx;
+  height: 260rpx;
   transform: translateX(-50%);
-}
-
-.cat-nap {
-  right: 74rpx;
-  bottom: 46rpx;
-  width: 128rpx;
-  height: 62rpx;
-  border: 3rpx solid #d9aa91;
-  border-radius: 48rpx;
-  background: #fffaf1;
 }
 
 .stage-star {

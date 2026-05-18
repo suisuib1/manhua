@@ -1,5 +1,30 @@
 # 当前任务记录
 
+## 本轮任务：替换其他页面占位图
+
+本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只将首页之外其他页面的手绘占位图替换为 `/subpackage/icon-home-mascot-star.png`。
+
+## 本轮处理内容
+
+- 替换 diary 页照片贴纸占位图。
+- 替换 character 页角色头像和参考图占位。
+- 替换 generating 页生成中插画占位。
+- 替换 chapter-detail 页漫画分镜占位图，并保留分镜文字。
+- 替换 share 页章节预览占位图，并保留预览标题。
+- 替换 mine 页漫画书封面占位图。
+- 替换 quota-empty 页空状态插画占位图。
+
+## 本轮未做
+
+- 未修改 app.json。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：替换首页漫画封面图片
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图将首页红框内的漫画书封面和最近章节封面统一替换为 `/subpackage/icon-home-mascot-star.png`。

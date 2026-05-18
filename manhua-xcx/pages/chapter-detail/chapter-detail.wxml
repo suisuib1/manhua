@@ -30,8 +30,7 @@
             wx:key="*this"
             class="comic-panel"
           >
-            <view class="panel-sun"></view>
-            <view class="panel-avatar"></view>
+            <image class="comic-panel-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
             <view class="panel-text">{{panel}}</view>
           </view>
         </view>

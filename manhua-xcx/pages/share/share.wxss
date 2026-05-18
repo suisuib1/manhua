@@ -59,36 +59,13 @@ button::after {
   border: 4rpx solid rgba(255, 255, 255, 0.82);
   border-radius: 24rpx;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
-.preview-cover.sunny {
-  background: linear-gradient(160deg, #bceaff 0%, #ffe9a7 62%, #bfe7ad 100%);
-}
-
-.preview-cover.home {
-  background: linear-gradient(160deg, #ffe1c2 0%, #fff4df 50%, #cbe8df 100%);
-}
-
-.preview-sun {
-  position: absolute;
-  left: 22rpx;
-  top: 22rpx;
-  width: 42rpx;
-  height: 42rpx;
-  border-radius: 50%;
-  background: #ffd96a;
-}
-
-.preview-avatar {
-  position: absolute;
-  left: 50%;
-  top: 76rpx;
-  width: 82rpx;
-  height: 82rpx;
-  border-radius: 50%;
-  background: #ffd8c8;
-  box-shadow: -18rpx -12rpx 0 rgba(184, 130, 96, 0.23), 0 54rpx 0 -24rpx #c6a9ee;
-  transform: translateX(-50%);
+.preview-cover-image {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .preview-title {

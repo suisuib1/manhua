@@ -2,12 +2,7 @@
   <view class="empty-card polish-card">
     <view class="polish-card-content">
       <view class="empty-illustration">
-        <view class="moon"></view>
-        <view class="sleep-cat-head"></view>
-        <view class="sleep-cat-body"></view>
-        <view class="bubble bubble-one"></view>
-        <view class="bubble bubble-two"></view>
-        <view class="soft-star"></view>
+        <image class="empty-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
       </view>
 
       <view class="state-title">{{mock.title}}</view>

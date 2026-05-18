@@ -7,9 +7,7 @@
   <view class="profile-cover polish-card">
     <view class="polish-card-content cover-content">
       <view class="profile-photo">
-        <view class="photo-hair"></view>
-        <view class="photo-face">{{mock.avatarText}}</view>
-        <view class="photo-body"></view>
+        <image class="profile-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
       </view>
       <view class="cover-copy">
         <view class="cover-kicker">角色档案会帮助漫画保持人物一致</view>
@@ -84,8 +82,8 @@
       </view>
 
       <view class="reference-row">
-        <view class="reference-card small-one"></view>
-        <view class="reference-card small-two"></view>
+        <image class="reference-card" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
+        <image class="reference-card" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
         <view class="reference-add">+</view>
       </view>
     </view>

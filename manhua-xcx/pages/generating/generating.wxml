@@ -14,15 +14,7 @@
         <view class="binder"></view>
       </view>
       <view class="stage-illustration">
-        <view class="comic-sheet">
-          <view class="sheet-panel"></view>
-          <view class="sheet-panel"></view>
-          <view class="sheet-panel"></view>
-          <view class="sheet-panel"></view>
-        </view>
-        <view class="girl-head"></view>
-        <view class="girl-body"></view>
-        <view class="cat-nap"></view>
+        <image class="stage-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
         <view class="stage-star star-a"></view>
         <view class="stage-star star-b"></view>
       </view>

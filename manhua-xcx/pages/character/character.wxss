@@ -30,7 +30,6 @@ button::after {
 }
 
 .profile-photo {
-  position: relative;
   flex: 0 0 168rpx;
   width: 168rpx;
   height: 168rpx;
@@ -40,43 +39,10 @@ button::after {
   overflow: hidden;
 }
 
-.photo-hair,
-.photo-face,
-.photo-body {
-  position: absolute;
-}
-
-.photo-hair {
-  left: 34rpx;
-  top: 22rpx;
-  width: 102rpx;
-  height: 86rpx;
-  border-radius: 54rpx 54rpx 42rpx 42rpx;
-  background: #b98968;
-}
-
-.photo-face {
-  left: 40rpx;
-  top: 44rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 50%;
-  color: #8d5b4a;
-  font-size: 32rpx;
-  font-weight: 800;
-  background: #ffd8c8;
-}
-
-.photo-body {
-  left: 50rpx;
-  bottom: 0;
-  width: 72rpx;
-  height: 48rpx;
-  border-radius: 32rpx 32rpx 16rpx 16rpx;
-  background: #c7a7ef;
+.profile-image {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .cover-copy {
@@ -206,25 +172,10 @@ button::after {
 }
 
 .reference-card {
-  position: relative;
-  background: linear-gradient(160deg, #dfefff 0%, #fff1c8 58%, #ffdce5 100%);
-}
-
-.reference-card::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 18rpx;
-  width: 54rpx;
-  height: 54rpx;
-  border-radius: 50%;
-  background: #ffd8c8;
-  box-shadow: 0 34rpx 0 -16rpx #c7a7ef;
-  transform: translateX(-50%);
-}
-
-.small-two {
-  background: linear-gradient(160deg, #fff3d8 0%, #ffe0e9 58%, #e9f7df 100%);
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .reference-add {

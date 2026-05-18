@@ -29,7 +29,6 @@ button::after {
 }
 
 .book-cover-mini {
-  position: relative;
   flex: 0 0 166rpx;
   width: 166rpx;
   height: 190rpx;
@@ -39,27 +38,10 @@ button::after {
   overflow: hidden;
 }
 
-.mini-sun {
-  position: absolute;
-  left: 24rpx;
-  top: 24rpx;
-  width: 40rpx;
-  height: 40rpx;
-  border-radius: 50%;
-  background: #ffe26d;
-  box-shadow: 76rpx 18rpx 0 -12rpx #fff3a7;
-}
-
-.mini-avatar {
-  position: absolute;
-  left: 50%;
-  bottom: 34rpx;
-  width: 82rpx;
-  height: 82rpx;
-  border-radius: 50%;
-  background: #ffd7c7;
-  box-shadow: -18rpx -14rpx 0 rgba(184, 130, 96, 0.3), 0 52rpx 0 -22rpx #b7a1ed;
-  transform: translateX(-50%);
+.book-cover-mini-image {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .book-copy {

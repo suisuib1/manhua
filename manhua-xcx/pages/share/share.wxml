@@ -13,10 +13,9 @@
         <view
           wx:for="{{mock.comicPreview}}"
           wx:key="id"
-          class="preview-cover {{item.tone}}"
+          class="preview-cover"
         >
-          <view class="preview-sun"></view>
-          <view class="preview-avatar"></view>
+          <image class="preview-cover-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
           <view class="preview-title">{{item.title}}</view>
         </view>
       </view>

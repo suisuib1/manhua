@@ -175,35 +175,11 @@ button::after {
   background: #fff4ec;
 }
 
-.photo-tile.mint {
-  background: #f4faef;
-}
-
-.photo-scene {
+.photo-preview {
+  display: block;
   flex: 1;
   width: 100%;
   min-height: 0;
-  background: linear-gradient(160deg, #ffe1c2 0%, #fff4df 56%, #cbe8df 100%);
-}
-
-.photo-tile.mint .photo-scene {
-  background: linear-gradient(160deg, #d9f2df 0%, #fff8de 58%, #d7ecff 100%);
-}
-
-.photo-sun {
-  width: 34rpx;
-  height: 34rpx;
-  margin: 18rpx 0 0 18rpx;
-  border-radius: 50%;
-  background: #ffd96a;
-}
-
-.photo-hill {
-  width: 120rpx;
-  height: 58rpx;
-  margin: 34rpx auto 0;
-  border-radius: 70rpx 70rpx 20rpx 20rpx;
-  background: rgba(183, 226, 173, 0.78);
 }
 
 .photo-label {
