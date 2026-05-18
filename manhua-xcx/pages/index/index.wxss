@@ -34,7 +34,7 @@ button::after {
   justify-content: center;
   position: relative;
   min-height: 92rpx;
-  padding: 8rpx 116rpx 10rpx;
+  padding: 8rpx 24rpx 10rpx;
   box-sizing: border-box;
 }
 
@@ -48,34 +48,6 @@ button::after {
   letter-spacing: 0;
   text-align: center;
   line-height: 1.25;
-}
-
-.icon-button {
-  position: absolute;
-  right: 0;
-  top: 12rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 92rpx;
-  height: 56rpx;
-  padding: 0 22rpx;
-  box-sizing: border-box;
-  border-radius: 999rpx;
-  color: #8a6255;
-  font-size: 24rpx;
-  font-weight: 600;
-  background: rgba(255, 246, 239, 0.9);
-  box-shadow: 0 8rpx 18rpx rgba(108, 68, 46, 0.07);
-}
-
-.settings-entry::before {
-  content: "";
-  width: 10rpx;
-  height: 10rpx;
-  margin-right: 8rpx;
-  border-radius: 50%;
-  background: #f49aa9;
 }
 
 .button-hover {

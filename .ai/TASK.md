@@ -1,5 +1,26 @@
 # 当前任务记录
 
+## 本轮任务：去掉首页顶部设置入口
+
+本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮只根据用户截图去掉首页标题右侧的“设置”入口。
+
+## 本轮处理内容
+
+- 仅移除首页顶部标题旁的“设置”按钮。
+- 同步删除该按钮对应的样式和本地 toast 方法。
+- 保持首页其他区域不变。
+- 未修改 create、diary、character、generating、chapter-detail、share、mine、quota-empty 页面。
+
+## 本轮未做
+
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI。
+- 未开发 Java 后端。
+- 未新增业务功能。
+- 未自动 push。
+
 ## 本轮任务：修复填写日记页顶部和底部布局
 
 本轮使用 Figma Implement Design skill。项目当前不使用 Figma，本轮不连接 Figma MCP，只根据用户最新截图和明确问题修复 `diary` 页面。

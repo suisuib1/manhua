@@ -1,7 +1,6 @@
 <view class="home-page">
   <view class="home-header">
     <view class="home-title">我的漫画日记本</view>
-    <button class="icon-button settings-entry" hover-class="button-hover" bindtap="showSettingsTip">设置</button>
   </view>
 
   <view class="greeting-card">
