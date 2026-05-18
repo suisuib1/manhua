@@ -1,14 +1,5 @@
 <view class="diary-page">
-  <view class="diary-header">
-    <button class="back-button" hover-class="button-hover" bindtap="goBack">
-      <text class="back-arrow">‹</text>
-    </button>
-    <view class="header-copy">
-      <view class="page-title">填写日记</view>
-      <view class="page-subtitle">只记录想变成漫画的片段就好，慢慢写也可以</view>
-    </view>
-    <view class="header-spacer"></view>
-  </view>
+  <view class="page-subtitle">只记录想变成漫画的片段就好，慢慢写也可以</view>
 
   <view class="diary-card">
     <view class="card-head">

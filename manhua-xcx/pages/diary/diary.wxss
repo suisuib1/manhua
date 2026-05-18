@@ -28,65 +28,18 @@ button::after {
 .diary-page {
   width: 100%;
   min-height: 100vh;
-  padding: 56rpx 24rpx 240rpx;
+  padding: 24rpx 24rpx 240rpx;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at 12% 4%, rgba(255, 226, 176, 0.32), transparent 210rpx),
-    radial-gradient(circle at 88% 12%, rgba(255, 216, 224, 0.3), transparent 230rpx),
-    #fffaf5;
-}
-
-.diary-header {
-  display: grid;
-  grid-template-columns: 64rpx minmax(0, 1fr) 64rpx;
-  gap: 12rpx;
-  align-items: center;
-  width: 100%;
-  margin-bottom: 30rpx;
-}
-
-.back-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56rpx;
-  height: 56rpx;
-  border-radius: 50%;
-  color: #70483c;
-  font-size: 40rpx;
-  font-weight: 700;
-  background: rgba(255, 246, 239, 0.92);
-  box-shadow: 0 8rpx 18rpx rgba(116, 76, 58, 0.08);
-}
-
-.back-arrow {
-  display: block;
-  height: 48rpx;
-  line-height: 42rpx;
-}
-
-.header-copy {
-  min-width: 0;
-  text-align: center;
-}
-
-.header-spacer {
-  width: 64rpx;
-  height: 1rpx;
-}
-
-.page-title {
-  color: #4a2b22;
-  font-size: 38rpx;
-  font-weight: 800;
-  line-height: 1.25;
+  background: #fffaf5;
 }
 
 .page-subtitle {
-  margin-top: 12rpx;
+  width: 100%;
+  margin-bottom: 24rpx;
   color: #76594f;
-  font-size: 25rpx;
+  font-size: 26rpx;
   line-height: 1.5;
+  text-align: center;
 }
 
 .diary-card,
@@ -209,7 +162,6 @@ button::after {
 
 .photo-tile,
 .photo-add {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -268,14 +220,12 @@ button::after {
 }
 
 .photo-remove {
-  position: absolute;
-  right: 10rpx;
-  top: 10rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 36rpx;
   height: 36rpx;
+  margin: 8rpx auto 10rpx;
   border-radius: 50%;
   color: #ffffff;
   font-size: 24rpx;
@@ -345,7 +295,7 @@ button::after {
   justify-content: center;
   width: 78%;
   height: 88rpx;
-  margin: 30rpx auto 160rpx;
+  margin: 30rpx auto 0;
   border-radius: 999rpx;
   color: #ffffff;
   font-size: 30rpx;
