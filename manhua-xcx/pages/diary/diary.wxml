@@ -43,7 +43,6 @@
       >
         <image class="photo-preview" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
         <view class="photo-label">{{item.label}}</view>
-        <button class="photo-remove" data-id="{{item.id}}" bindtap="removePhoto">×</button>
       </view>
       <button class="photo-add" bindtap="addPhotoPlaceholder" hover-class="button-hover">
         <view class="add-plus">+</view>

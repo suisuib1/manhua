@@ -195,20 +195,6 @@ button::after {
   background: rgba(255, 253, 249, 0.82);
 }
 
-.photo-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36rpx;
-  height: 36rpx;
-  margin: 8rpx auto 10rpx;
-  border-radius: 50%;
-  color: #ffffff;
-  font-size: 24rpx;
-  font-weight: 800;
-  background: rgba(239, 112, 130, 0.9);
-}
-
 .photo-add {
   flex-direction: column;
   border: 2rpx dashed #f0c9bf;
