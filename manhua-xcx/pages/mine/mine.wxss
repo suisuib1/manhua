@@ -127,11 +127,17 @@ button::after {
 }
 
 .menu-card {
-  padding: 12rpx 24rpx;
+  padding: 12rpx 0;
 }
 
 .menu-card::before {
   display: none;
+}
+
+.menu-card .polish-card-content {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .menu-row {
@@ -139,6 +145,8 @@ button::after {
   align-items: center;
   width: 100%;
   min-height: 118rpx;
+  padding: 0 28rpx;
+  box-sizing: border-box;
   border-bottom: 2rpx solid #f3e6dd;
 }
 
