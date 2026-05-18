@@ -47,6 +47,12 @@ Page({
     })
   },
 
+  goBack() {
+    wx.navigateBack({
+      delta: 1,
+    })
+  },
+
   goGenerating() {
     wx.navigateTo({
       url: pageRoutes.generating,

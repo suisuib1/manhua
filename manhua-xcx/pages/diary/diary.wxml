@@ -1,84 +1,80 @@
-<view class="diary-page polish-page">
-  <view class="polish-header diary-header">
-    <view class="polish-title">{{mock.title}}</view>
-    <view class="polish-subtitle">{{mock.subtitle}}</view>
-  </view>
-
-  <view class="diary-book polish-card">
-    <view class="polish-card-content">
-      <view class="book-ring ring-one"></view>
-      <view class="book-ring ring-two"></view>
-      <view class="diary-book-head">
-        <view>
-          <view class="polish-card-title">今天的日记</view>
-          <view class="diary-book-desc">{{mock.chapterSummary.title}} · {{mock.chapterSummary.pageModeText}}</view>
-        </view>
-        <view class="diary-count">{{textCount}} / {{mock.diaryTextMaxLength}}</view>
-      </view>
-      <textarea
-        class="diary-textarea"
-        value="{{diaryText}}"
-        maxlength="{{mock.diaryTextMaxLength}}"
-        placeholder="{{mock.diaryPlaceholder}}"
-        placeholder-class="input-placeholder"
-        bindinput="onDiaryInput"
-      />
-      <view class="polish-chip-row diary-tags">
-        <text wx:for="{{mock.chapterSummary.tags}}" wx:key="*this" class="polish-chip">#{{item}}</text>
-      </view>
+<view class="diary-page">
+  <view class="diary-header">
+    <button class="back-button" hover-class="button-hover" bindtap="goBack">
+      <text class="back-arrow">‹</text>
+    </button>
+    <view class="header-copy">
+      <view class="page-title">填写日记</view>
+      <view class="page-subtitle">只记录想变成漫画的片段就好，慢慢写也可以</view>
     </view>
+    <view class="header-spacer"></view>
   </view>
 
-  <view class="privacy-note polish-note">
-    <view class="note-badge">隐私</view>
-    <view class="note-copy">{{mock.privacyHint}}</view>
-  </view>
-
-  <view class="photo-card polish-card">
-    <view class="polish-card-content">
-      <view class="photo-card-head">
-        <view>
-          <view class="polish-card-title">照片贴纸</view>
-          <view class="polish-card-desc">选择 1-9 张最能代表今天故事的照片</view>
-        </view>
-        <view class="photo-limit">{{photoList.length}} / {{mock.photoLimit}}</view>
-      </view>
-      <view class="photo-grid">
-        <view
-          wx:for="{{photoList}}"
-          wx:key="id"
-          class="photo-tile {{item.tone}}"
-        >
-          <view class="photo-sky"></view>
-          <view class="photo-hill"></view>
-          <view class="photo-label">{{item.label}}</view>
-          <button class="photo-remove" data-id="{{item.id}}" bindtap="removePhoto">×</button>
-        </view>
-        <button class="photo-add" bindtap="addPhotoPlaceholder" hover-class="polish-button-hover">
-          <view class="add-plus">+</view>
-          <view>继续添加</view>
-        </button>
-      </view>
-      <view class="photo-tip">建议选择最能代表今天故事的照片，后续会帮助漫画分镜更丰富。</view>
-    </view>
-  </view>
-
-  <view class="check-card polish-card">
-    <view class="polish-card-content check-content">
+  <view class="diary-card">
+    <view class="card-head">
       <view>
-        <view class="polish-card-title">生成前检查</view>
-        <view class="check-line">日记内容已填写</view>
-        <view class="check-line">照片记录已准备</view>
-        <view class="check-line">{{mock.characterHint}}</view>
+        <view class="card-title">今天的日记</view>
+        <view class="card-desc">{{mock.chapterSummary.title}} · {{mock.chapterSummary.pageModeText}}</view>
       </view>
-      <view class="check-mascot">
-        <view class="check-face"></view>
-        <view class="check-glass"></view>
-      </view>
+      <view class="count-pill">{{textCount}} / {{mock.diaryTextMaxLength}}</view>
+    </view>
+    <textarea
+      class="diary-textarea"
+      value="{{diaryText}}"
+      maxlength="{{mock.diaryTextMaxLength}}"
+      placeholder="{{mock.diaryPlaceholder}}"
+      placeholder-class="input-placeholder"
+      bindinput="onDiaryInput"
+    />
+    <view class="diary-tags">
+      <text wx:for="{{mock.chapterSummary.tags}}" wx:key="*this" class="diary-tag">#{{item}}</text>
     </view>
   </view>
 
-  <button class="polish-primary" bindtap="goGenerating" hover-class="polish-button-hover">
-    提交并开始生成
+  <view class="privacy-note">
+    <view class="privacy-badge">隐私</view>
+    <view class="privacy-copy">{{mock.privacyHint}}</view>
+  </view>
+
+  <view class="diary-card">
+    <view class="card-head">
+      <view>
+        <view class="card-title">照片贴纸</view>
+        <view class="card-desc">选择 1-9 张最能代表今天故事的照片</view>
+      </view>
+      <view class="count-pill">{{photoList.length}} / {{mock.photoLimit}}</view>
+    </view>
+    <view class="photo-grid">
+      <view
+        wx:for="{{photoList}}"
+        wx:key="id"
+        class="photo-tile {{item.tone}}"
+      >
+        <view class="photo-scene">
+          <view class="photo-sun"></view>
+          <view class="photo-hill"></view>
+        </view>
+        <view class="photo-label">{{item.label}}</view>
+        <button class="photo-remove" data-id="{{item.id}}" bindtap="removePhoto">×</button>
+      </view>
+      <button class="photo-add" bindtap="addPhotoPlaceholder" hover-class="button-hover">
+        <view class="add-plus">+</view>
+        <view class="add-label">添加照片</view>
+      </button>
+    </view>
+    <view class="photo-tip">照片只用于本地预览占位，本轮不会上传。</view>
+  </view>
+
+  <view class="check-card">
+    <view class="card-title">生成前检查</view>
+    <view class="check-list">
+      <view class="check-line">日记内容已填写</view>
+      <view class="check-line">照片记录已准备</view>
+      <view class="check-line">{{mock.characterHint}}</view>
+    </view>
+  </view>
+
+  <button class="generate-button" bindtap="goGenerating" hover-class="button-hover">
+    生成我的漫画
   </button>
 </view>

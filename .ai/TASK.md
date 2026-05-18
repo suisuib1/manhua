@@ -1,5 +1,35 @@
 # 当前任务记录
 
+## 本轮任务：重修填写日记页布局错乱问题
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对 `manhua-xcx/pages/diary/` 填写日记页做本页级布局重修。
+
+## 本轮处理内容
+
+- 仅重做 diary 页 WXML/WXSS 布局结构和样式，未修改其他页面。
+- 重修顶部区域，增加页面顶部安全留白，标题固定为“填写日记”。
+- 重修日记输入卡片：标题、字数 pill、textarea 和标签行分层布局，避免边框断裂和 placeholder 挤压。
+- 重修照片贴纸区域：照片卡片和添加卡片统一为 3 列等宽等高网格，删除按钮仅作为卡片内部小圆按钮。
+- 重修生成前检查区域，使用普通卡片和 3 条检查项，避免被底部安全区遮挡。
+- 增加页面底部留白和主按钮底部间距，避免被 tabBar 或手势条挤压。
+- diary.js 仅补充本地返回方法，保留原有本地字数统计、照片占位增删和跳转 generating 交互。
+
+## 本轮未做
+
+- 未修改首页 index 页面。
+- 未修改 create 页面。
+- 未修改 character、generating、chapter-detail、share、mine、quota-empty 页面。
+- 未修改 app.json。
+- 未新增业务功能。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI 服务。
+- 未真实上传。
+- 未创建 Java 后端代码。
+- 未引入依赖。
+- 未自动 push。
+
 ## 本轮任务：重修创建章节页布局错乱问题
 
 本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只针对 `manhua-xcx/pages/create/` 创建章节页做本页级布局重修。
