@@ -1,0 +1,27 @@
+<view class="quota-page">
+  <view class="state-card">
+    <view class="state-illustration">
+      <view class="moon"></view>
+      <view class="sleep-cat-head"></view>
+      <view class="sleep-cat-body"></view>
+      <view class="bubble bubble-one"></view>
+      <view class="bubble bubble-two"></view>
+    </view>
+
+    <view class="state-title">{{mock.title}}</view>
+    <view class="state-subtitle">{{mock.subtitle}}</view>
+    <view class="reset-hint">{{mock.resetHint}}</view>
+  </view>
+
+  <view class="tips-card">
+    <view class="tips-title">你还可以</view>
+    <view wx:for="{{mock.tips}}" wx:key="*this" class="tip-line">{{item}}</view>
+  </view>
+
+  <button class="primary-button" bindtap="goHome" hover-class="button-hover">
+    {{mock.actions.home}}
+  </button>
+  <button class="secondary-button" bindtap="viewChapter" hover-class="button-hover">
+    {{mock.actions.chapter}}
+  </button>
+</view>

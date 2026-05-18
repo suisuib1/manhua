@@ -1,0 +1,76 @@
+<view class="character-page">
+  <view class="page-header">
+    <view class="page-title">{{mock.title}}</view>
+    <view class="page-subtitle">{{mock.subtitle}}</view>
+  </view>
+
+  <view class="hero-card">
+    <view class="avatar-wrap">
+      <view class="avatar-hair"></view>
+      <view class="avatar-face">{{mock.avatarText}}</view>
+      <view class="avatar-body"></view>
+    </view>
+    <view class="hero-copy">
+      <view class="hero-label">{{mock.relation}}</view>
+      <input
+        class="nickname-input"
+        value="{{nickname}}"
+        placeholder="给主角取个名字"
+        bindinput="onNicknameInput"
+      />
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title">角色描述</view>
+    <textarea
+      class="desc-input"
+      value="{{description}}"
+      maxlength="120"
+      placeholder="描述发型、衣服、常见表情或你想保持一致的特征"
+      placeholder-class="input-placeholder"
+      bindinput="onDescriptionInput"
+    />
+  </view>
+
+  <view class="form-card">
+    <view class="card-title">性格标签</view>
+    <view class="tag-grid">
+      <button
+        wx:for="{{personalityTags}}"
+        wx:key="value"
+        class="tag-chip {{item.selected ? 'is-selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="togglePersonalityTag"
+        hover-class="chip-hover"
+      >
+        {{item.label}}
+      </button>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title">外观标签</view>
+    <view class="tag-grid">
+      <button
+        wx:for="{{appearanceTags}}"
+        wx:key="value"
+        class="tag-chip {{item.selected ? 'is-selected' : ''}}"
+        data-value="{{item.value}}"
+        bindtap="toggleAppearanceTag"
+        hover-class="chip-hover"
+      >
+        {{item.label}}
+      </button>
+    </view>
+  </view>
+
+  <view class="note-card">
+    <view class="note-title">角色一致性说明</view>
+    <view wx:for="{{mock.notes}}" wx:key="*this" class="note-line">{{item}}</view>
+  </view>
+
+  <button class="primary-button" bindtap="saveCharacter" hover-class="primary-hover">
+    保存角色档案
+  </button>
+</view>

@@ -1,0 +1,69 @@
+<view class="diary-page">
+  <view class="page-header">
+    <view class="page-title">{{mock.title}}</view>
+    <view class="page-subtitle">{{mock.subtitle}}</view>
+  </view>
+
+  <view class="summary-card">
+    <view class="summary-head">
+      <view>
+        <view class="summary-label">当前章节</view>
+        <view class="summary-title">{{mock.chapterSummary.title}}</view>
+      </view>
+      <view class="summary-date">{{mock.chapterSummary.dateLabel}}</view>
+    </view>
+    <view class="summary-meta">
+      <text>{{mock.chapterSummary.pageModeText}}</text>
+      <text wx:for="{{mock.chapterSummary.tags}}" wx:key="*this">#{{item}}</text>
+    </view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title">日记正文</view>
+    <textarea
+      class="diary-textarea"
+      value="{{diaryText}}"
+      maxlength="{{mock.diaryTextMaxLength}}"
+      placeholder="{{mock.diaryPlaceholder}}"
+      placeholder-class="input-placeholder"
+      bindinput="onDiaryInput"
+    />
+    <view class="count-line">{{textCount}} / {{mock.diaryTextMaxLength}}</view>
+  </view>
+
+  <view class="form-card">
+    <view class="card-title-row">
+      <view class="card-title">照片记录</view>
+      <view class="card-hint">1-9 张，本地占位预览</view>
+    </view>
+    <view class="photo-grid">
+      <view
+        wx:for="{{photoList}}"
+        wx:key="id"
+        class="photo-tile {{item.tone}}"
+      >
+        <view class="photo-sun"></view>
+        <view class="photo-label">{{item.label}}</view>
+        <button class="photo-remove" data-id="{{item.id}}" bindtap="removePhoto">×</button>
+      </view>
+      <button class="photo-add" bindtap="addPhotoPlaceholder" hover-class="button-hover">
+        <view class="add-plus">+</view>
+        <view>添加照片</view>
+      </button>
+    </view>
+  </view>
+
+  <view class="tip-card">
+    <view class="tip-icon">Q</view>
+    <view class="tip-copy">{{mock.characterHint}}</view>
+  </view>
+
+  <view class="privacy-card">
+    <view class="privacy-title">隐私提示</view>
+    <view class="privacy-copy">{{mock.privacyHint}}</view>
+  </view>
+
+  <button class="primary-button" bindtap="goGenerating" hover-class="primary-hover">
+    生成漫画
+  </button>
+</view>

@@ -1,0 +1,64 @@
+<view class="generating-page">
+  <view class="page-header">
+    <view class="page-title">{{mock.title}}</view>
+    <view class="page-subtitle">{{mock.subtitle}}</view>
+  </view>
+
+  <view class="wait-illustration">
+    <view class="cloud cloud-one"></view>
+    <view class="cloud cloud-two"></view>
+    <view class="mascot-head"></view>
+    <view class="mascot-body"></view>
+    <view class="spark spark-one"></view>
+    <view class="spark spark-two"></view>
+  </view>
+
+  <view class="progress-card">
+    <view class="progress-head">
+      <view>
+        <view class="status-label">{{mock.statusText}}</view>
+        <view class="chapter-title">{{mock.chapterTitle}}</view>
+      </view>
+      <view class="progress-number">{{progress}}%</view>
+    </view>
+    <view class="progress-track">
+      <view class="progress-fill" style="width: {{progress}}%;"></view>
+    </view>
+    <view class="task-meta">
+      <text>任务：{{mock.taskId}}</text>
+      <text>{{mock.estimatedText}}</text>
+    </view>
+  </view>
+
+  <view class="steps-card">
+    <view class="card-title">生成步骤</view>
+    <view
+      wx:for="{{mock.steps}}"
+      wx:key="id"
+      class="step-row {{index <= activeStepIndex ? 'is-active' : ''}}"
+    >
+      <view class="step-dot">{{index + 1}}</view>
+      <view class="step-copy">
+        <view class="step-title">{{item.label}}</view>
+        <view class="step-detail">{{item.detail}}</view>
+      </view>
+    </view>
+  </view>
+
+  <button
+    wx:if="{{canViewChapter}}"
+    class="primary-button"
+    bindtap="goChapterDetail"
+    hover-class="primary-hover"
+  >
+    查看生成章节
+  </button>
+  <button
+    wx:else
+    class="secondary-button"
+    bindtap="retryTask"
+    hover-class="secondary-hover"
+  >
+    失败重试入口占位
+  </button>
+</view>

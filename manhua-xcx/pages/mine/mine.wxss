@@ -1,0 +1,162 @@
+page {
+  min-height: 100%;
+  background: #fffaf5;
+  color: #50332a;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+
+button::after {
+  border: 0;
+}
+
+.mine-page {
+  min-height: 100vh;
+  padding: 36rpx 28rpx 58rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 226, 176, 0.35), transparent 220rpx),
+    radial-gradient(circle at 88% 14%, rgba(255, 216, 224, 0.38), transparent 260rpx),
+    #fffaf5;
+}
+
+.user-card,
+.stats-card,
+.quota-card,
+.menu-card {
+  margin-top: 24rpx;
+  padding: 28rpx;
+  border: 2rpx solid #efd9cc;
+  border-radius: 30rpx;
+  background: rgba(255, 254, 250, 0.94);
+  box-shadow: 0 12rpx 30rpx rgba(114, 75, 54, 0.09);
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+}
+
+.avatar {
+  position: relative;
+  flex: 0 0 116rpx;
+  width: 116rpx;
+  height: 116rpx;
+  margin-right: 24rpx;
+  border-radius: 38rpx;
+  background: #fff0d9;
+}
+
+.avatar-face {
+  position: absolute;
+  left: 22rpx;
+  top: 20rpx;
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #ffd8c8;
+  box-shadow: -16rpx -10rpx 0 rgba(184, 130, 96, 0.24), 0 52rpx 0 -24rpx #c6a9ee;
+}
+
+.user-name {
+  color: #4a2b22;
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.user-subtitle,
+.quota-desc,
+.menu-desc,
+.stat-label {
+  margin-top: 8rpx;
+  color: #92786e;
+  font-size: 24rpx;
+}
+
+.stats-title,
+.quota-title,
+.menu-title {
+  color: #4d3029;
+  font-size: 30rpx;
+  font-weight: 800;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.stat-item {
+  padding: 22rpx 10rpx;
+  border-radius: 22rpx;
+  text-align: center;
+  background: #fff7ef;
+}
+
+.stat-number {
+  color: #ef6e83;
+  font-size: 38rpx;
+  font-weight: 800;
+}
+
+.quota-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff7e8;
+}
+
+.quota-number {
+  color: #ef6e83;
+  font-size: 38rpx;
+  font-weight: 800;
+}
+
+.menu-card {
+  padding: 10rpx 24rpx;
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 112rpx;
+  border-bottom: 2rpx solid #f3e6dd;
+}
+
+.menu-row:last-child {
+  border-bottom: 0;
+}
+
+.menu-icon {
+  flex: 0 0 54rpx;
+  width: 54rpx;
+  height: 54rpx;
+  margin-right: 18rpx;
+  border-radius: 18rpx;
+  background: linear-gradient(160deg, #ffd7df 0%, #fff0c7 100%);
+}
+
+.menu-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-arrow {
+  color: #b69d92;
+  font-size: 48rpx;
+}
+
+.row-hover {
+  opacity: 0.82;
+}

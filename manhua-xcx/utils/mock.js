@@ -1,13 +1,13 @@
 const pageRoutes = {
   home: '/pages/index/index',
   create: '/pages/create/create',
-  diary: '/pages/diary/index',
-  character: '/pages/character/index',
-  generating: '/pages/generating/index',
-  chapterDetail: '/pages/chapter-detail/index',
-  share: '/pages/share/index',
-  mine: '/pages/mine/index',
-  quotaEmpty: '/pages/quota-empty/index',
+  diary: '/pages/diary/diary',
+  character: '/pages/character/character',
+  generating: '/pages/generating/generating',
+  chapterDetail: '/pages/chapter-detail/chapter-detail',
+  share: '/pages/share/share',
+  mine: '/pages/mine/mine',
+  quotaEmpty: '/pages/quota-empty/quota-empty',
 }
 
 const chapterStatuses = {
@@ -104,9 +104,143 @@ const createChapterMock = {
   note: '这些标签会帮助我们更好地把握章节的氛围，不会限制你的创作哦~',
 }
 
+const diaryMock = {
+  title: '填写今天的日记和照片',
+  subtitle: '只记录想变成漫画的片段就好，慢慢写也可以',
+  chapterSummary: {
+    title: '和小猫一起的傍晚',
+    dateLabel: '2026-05-18 今天',
+    pageModeText: '自定义 1 张',
+    tags: ['温馨', '治愈', '可爱'],
+  },
+  diaryPlaceholder: '写下今天最想留住的一幕，比如天气、心情、遇到的人，或一张照片背后的小故事。',
+  diaryTextMaxLength: 800,
+  photoLimit: 9,
+  photoPlaceholders: [
+    { id: 'photo-1', label: '照片 1', tone: 'peach' },
+    { id: 'photo-2', label: '照片 2', tone: 'mint' },
+  ],
+  characterHint: '会参考你的角色档案生成主角，帮助保持 Q 版形象一致。',
+  privacyHint: '日记原文不会公开，分享页只展示你允许分享的标题、摘要和漫画图。',
+}
+
+const characterMock = {
+  title: '我的漫画主角',
+  subtitle: '让每一章里的你都保持熟悉又可爱',
+  avatarText: 'Q',
+  nickname: '小满',
+  relation: '默认漫画书主角',
+  description: '喜欢暖色外套，戴着小发夹，表情软软的 Q 版女孩。',
+  personalityTags: [
+    { value: 'gentle', label: '温柔', selected: true },
+    { value: 'curious', label: '好奇', selected: true },
+    { value: 'brave', label: '勇敢', selected: false },
+    { value: 'quiet', label: '安静', selected: false },
+    { value: 'sunny', label: '元气', selected: true },
+  ],
+  appearanceTags: [
+    { value: 'short-hair', label: '短发', selected: true },
+    { value: 'pink-pin', label: '粉色发夹', selected: true },
+    { value: 'warm-coat', label: '暖色外套', selected: true },
+    { value: 'round-eyes', label: '圆圆眼睛', selected: false },
+  ],
+  notes: [
+    '角色档案只用于本地静态展示，当前不会训练模型。',
+    '后续生成漫画时会把这些描述作为角色一致性提示。',
+  ],
+}
+
+const generatingMock = {
+  title: '漫画正在生成中',
+  subtitle: '把今天的小事慢慢装进分镜里',
+  taskId: 'mock-task-20260518',
+  chapterTitle: '和小猫一起的傍晚',
+  statusText: '本地模拟生成中',
+  estimatedText: '预计还需要 1-2 分钟',
+  progressStart: 18,
+  steps: [
+    { id: 'step-1', label: '分析日记', detail: '提取今天的故事重点' },
+    { id: 'step-2', label: '理解照片', detail: '记录照片里的场景线索' },
+    { id: 'step-3', label: '保持角色一致', detail: '参考主角档案' },
+    { id: 'step-4', label: '生成分镜', detail: '排成 Q 版漫画画面' },
+    { id: 'step-5', label: '保存章节', detail: '放进你的私人漫画书' },
+  ],
+}
+
+const chapterDetailMock = {
+  id: 'chapter-003',
+  title: '和小猫一起的傍晚',
+  date: '2026-05-18',
+  privacyLabel: '私密章节',
+  tags: ['温馨', '治愈', '可爱'],
+  summary: '傍晚散步时遇到一只小猫，夕阳、点心和轻轻的风一起变成了今天的漫画记忆。',
+  comicPages: [
+    { id: 'page-1', title: '第 1 张', tone: 'sunny', panels: ['遇见', '靠近', '陪伴', '回家'] },
+    { id: 'page-2', title: '第 2 张', tone: 'home', panels: ['点心', '晚霞', '合影', '收藏'] },
+  ],
+  privacyNote: '这里只展示摘要和漫画结果占位，不展示完整原始日记。',
+}
+
+const shareMock = {
+  title: '和小猫一起的傍晚',
+  date: '2026-05-18',
+  visibility: '仅私密链接可见',
+  linkStatus: '私密链接已生成',
+  shareUrl: 'mock://private-chapter/chapter-003',
+  summary: '一段适合分享的温柔摘要，不包含完整日记原文。',
+  comicPreview: [
+    { id: 'share-page-1', title: '漫画预览 1', tone: 'sunny' },
+    { id: 'share-page-2', title: '漫画预览 2', tone: 'home' },
+  ],
+  notes: [
+    '访问者只能通过链接查看这一章。',
+    '不会公开整本漫画书，也不会展示未授权内容。',
+    '当前为静态占位，不会调用真实分享接口。',
+  ],
+}
+
+const mineMock = {
+  user: {
+    nickname: '小满',
+    subtitle: '私人漫画书记录中',
+  },
+  bookStats: {
+    title: '我的漫画书',
+    chapterCount: 3,
+    completedCount: 1,
+    generatingCount: 1,
+  },
+  freeQuotaRemaining: 2,
+  freeQuotaTotal: 3,
+  menuItems: [
+    { id: 'character', title: '角色档案', desc: '维护漫画主角形象', action: 'character' },
+    { id: 'privacy', title: '隐私说明', desc: '了解日记和分享边界', action: 'toast' },
+    { id: 'about', title: '关于产品', desc: '私人日记漫画本', action: 'toast' },
+    { id: 'settings', title: '设置', desc: '基础设置占位', action: 'toast' },
+  ],
+}
+
+const quotaEmptyMock = {
+  title: '今日免费次数已用完',
+  subtitle: '今天的漫画能量先休息一下，明天再继续记录吧。',
+  resetHint: '免费次数会在明天恢复，今天可以先整理下一章想画的日记片段。',
+  actions: {
+    home: '返回首页',
+    chapter: '查看已有漫画',
+  },
+  tips: ['可以先整理明天想画的日记片段', '也可以回看已经生成的章节'],
+}
+
 module.exports = {
   pageRoutes,
   chapterStatuses,
   homeMock,
   createChapterMock,
+  diaryMock,
+  characterMock,
+  generatingMock,
+  chapterDetailMock,
+  shareMock,
+  mineMock,
+  quotaEmptyMock,
 }

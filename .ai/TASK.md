@@ -441,3 +441,57 @@ PRD + AGENTS 初始化。
 - 已确认首页 WXML/WXSS 中没有本地 Windows 反斜杠素材路径。
 - `git diff --check` 通过，仅有 CRLF 换行提示。
 - `node --check manhua-xcx/pages/index/index.js` 通过。
+
+## 本轮任务：补齐小程序 MVP 剩余静态页面
+
+本轮使用 Figma Implement Design skill。项目当前不连接 Figma MCP，只根据已完成首页风格、PRD、UI 页面映射和 `docs/ui/03-diary-input.png` 至 `docs/ui/09-Failure.png` 作为本地视觉参考。
+
+## 本轮目标
+
+- 一次性补齐剩余 MVP 小程序页面静态 UI。
+- 覆盖 diary、character、generating、chapter-detail、share、mine、quota-empty。
+- 保持首页已完成的暖白背景、圆角卡片、轻阴影、粉色主按钮和低信息密度风格。
+
+## 本轮处理内容
+
+- 新增日记输入 / 照片记录页静态 UI，支持本地字数统计、照片占位新增和删除。
+- 新增角色档案页静态 UI，支持本地输入和标签选择。
+- 新增漫画生成等待页静态 UI，使用本地 timer 模拟进度。
+- 新增章节详情页静态 UI，只展示标题、摘要和漫画结果占位，不展示完整原始日记。
+- 新增章节私密分享页静态 UI，只做复制链接和微信分享 toast 占位。
+- 新增我的页静态 UI，包含用户卡片、默认漫画书统计、免费次数、角色档案入口和设置类占位入口。
+- 新增免费次数不足页静态 UI，不展示充值、购买、会员入口。
+- 补充 `utils/mock.js` 中的 diaryMock、characterMock、generatingMock、chapterDetailMock、shareMock、mineMock、quotaEmptyMock。
+- 因当前 app.json 注册路径仍为 `pages/*/index`，而本轮页面文件和验证命令均为 `pages/*/*.js`，最小更新 app.json 页面路径和 mine tabBar 路径，确保页面可被小程序加载。
+
+## 本轮未做
+
+- 未修改首页 UI。
+- 未修改创建章节页 UI。
+- 未接真实接口。
+- 未使用 wx.request。
+- 未使用 wx.uploadFile。
+- 未接 AI 服务。
+- 未真实上传图片。
+- 未实现真实登录。
+- 未创建 Java 后端代码。
+- 未创建数据库文件。
+- 未引入依赖。
+- 未加入社区、评论、点赞、关注、公开广场。
+- 未加入支付、充值、会员。
+- 未修改 project.config.json。
+- 未修改 PRD 核心结论。
+- 未自动 push。
+
+## 本轮验证
+
+- 待执行 `git status --short`。
+- 待执行 `git diff --check`。
+- 待执行所有新增页面 JS 和 `utils/mock.js` 的 `node --check`。
+# 本轮最新验证结果
+
+- `git status --short` 已检查，变更仅限本轮页面、mock、任务记录和必要的 app.json 路由修正。
+- `git diff --check` 通过，仅有 CRLF 换行提示。
+- `node --check` 已覆盖 diary、character、generating、chapter-detail、share、mine、quota-empty 和 utils/mock.js，均通过。
+- `app.json` 已通过 JSON 解析检查。
+- 已扫描本轮页面和 mock，未发现 `wx.request`、`wx.uploadFile` 或支付、社区类实现。

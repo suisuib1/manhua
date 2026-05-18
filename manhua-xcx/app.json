@@ -2,13 +2,13 @@
   "pages": [
     "pages/index/index",
     "pages/create/create",
-    "pages/diary/index",
-    "pages/character/index",
-    "pages/generating/index",
-    "pages/chapter-detail/index",
-    "pages/share/index",
-    "pages/mine/index",
-    "pages/quota-empty/index"
+    "pages/diary/diary",
+    "pages/character/character",
+    "pages/generating/generating",
+    "pages/chapter-detail/chapter-detail",
+    "pages/share/share",
+    "pages/mine/mine",
+    "pages/quota-empty/quota-empty"
   ],
   "window": {
     "navigationBarTextStyle": "black",
@@ -32,7 +32,7 @@
         "text": "创建"
       },
       {
-        "pagePath": "pages/mine/index",
+        "pagePath": "pages/mine/mine",
         "text": "我的"
       }
     ]

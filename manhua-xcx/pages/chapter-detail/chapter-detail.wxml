@@ -1,0 +1,43 @@
+<view class="detail-page">
+  <view class="chapter-header">
+    <view class="privacy-pill">{{mock.privacyLabel}}</view>
+    <view class="chapter-title">{{mock.title}}</view>
+    <view class="chapter-meta">
+      <text>{{mock.date}}</text>
+      <text wx:for="{{mock.tags}}" wx:key="*this">#{{item}}</text>
+    </view>
+  </view>
+
+  <view class="comic-list">
+    <view
+      wx:for="{{mock.comicPages}}"
+      wx:key="id"
+      class="comic-page-card"
+    >
+      <view class="comic-title">{{item.title}}</view>
+      <view class="comic-cover {{item.tone}}">
+        <view
+          wx:for="{{item.panels}}"
+          wx:for-item="panel"
+          wx:key="*this"
+          class="comic-panel"
+        >
+          <view class="panel-sun"></view>
+          <view class="panel-text">{{panel}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="summary-card">
+    <view class="card-title">章节摘要</view>
+    <view class="summary-copy">{{mock.summary}}</view>
+    <view class="privacy-note">{{mock.privacyNote}}</view>
+  </view>
+
+  <view class="action-grid">
+    <button class="secondary-button" bindtap="regenerateChapter" hover-class="button-hover">重新生成</button>
+    <button class="primary-button" bindtap="goShare" hover-class="button-hover">私密分享</button>
+  </view>
+  <button class="delete-button" bindtap="confirmDelete" hover-class="button-hover">删除章节占位</button>
+</view>

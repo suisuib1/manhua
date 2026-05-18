@@ -1,0 +1,189 @@
+page {
+  min-height: 100%;
+  background: #fffaf5;
+  color: #50332a;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+button::after {
+  border: 0;
+}
+
+.detail-page {
+  min-height: 100vh;
+  padding: 36rpx 28rpx 58rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 226, 176, 0.35), transparent 220rpx),
+    radial-gradient(circle at 88% 14%, rgba(255, 216, 224, 0.38), transparent 260rpx),
+    #fffaf5;
+}
+
+.chapter-header,
+.summary-card,
+.comic-page-card {
+  padding: 28rpx;
+  border: 2rpx solid #efd9cc;
+  border-radius: 30rpx;
+  background: rgba(255, 254, 250, 0.94);
+  box-shadow: 0 12rpx 30rpx rgba(114, 75, 54, 0.09);
+}
+
+.chapter-header {
+  text-align: center;
+}
+
+.privacy-pill {
+  display: inline-flex;
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  color: #cf6d79;
+  font-size: 23rpx;
+  background: #ffe8ea;
+}
+
+.chapter-title {
+  margin-top: 22rpx;
+  color: #4a2b22;
+  font-size: 42rpx;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.chapter-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14rpx;
+  margin-top: 20rpx;
+  color: #8d7166;
+  font-size: 24rpx;
+}
+
+.comic-list {
+  margin-top: 28rpx;
+}
+
+.comic-page-card {
+  margin-top: 22rpx;
+}
+
+.comic-title,
+.card-title {
+  color: #4d3029;
+  font-size: 31rpx;
+  font-weight: 800;
+}
+
+.comic-cover {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14rpx;
+  height: 420rpx;
+  margin-top: 22rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.comic-cover.sunny {
+  background: linear-gradient(160deg, #bceaff 0%, #ffe9a7 62%, #bfe7ad 100%);
+}
+
+.comic-cover.home {
+  background: linear-gradient(160deg, #ffe1c2 0%, #fff4df 50%, #cbe8df 100%);
+}
+
+.comic-panel {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 18rpx;
+  box-sizing: border-box;
+  border: 4rpx solid rgba(255, 255, 255, 0.8);
+  border-radius: 18rpx;
+  color: #5c4037;
+  font-size: 24rpx;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.panel-sun {
+  position: absolute;
+  left: 20rpx;
+  top: 20rpx;
+  width: 34rpx;
+  height: 34rpx;
+  border-radius: 50%;
+  background: #ffd96a;
+}
+
+.summary-card {
+  margin-top: 28rpx;
+}
+
+.summary-copy,
+.privacy-note {
+  margin-top: 16rpx;
+  color: #715247;
+  font-size: 26rpx;
+  line-height: 1.65;
+}
+
+.privacy-note {
+  padding: 18rpx;
+  border-radius: 20rpx;
+  color: #9b6a76;
+  background: #fff1f4;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18rpx;
+  margin-top: 30rpx;
+}
+
+.primary-button,
+.secondary-button,
+.delete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  border-radius: 999rpx;
+  font-size: 29rpx;
+  font-weight: 800;
+}
+
+.primary-button {
+  border: 4rpx solid #ffffff;
+  color: #ffffff;
+  background: linear-gradient(180deg, #ff96a7 0%, #f77187 100%);
+}
+
+.secondary-button,
+.delete-button {
+  border: 2rpx solid #f0d6c8;
+  color: #7b5b51;
+  background: #fffdf9;
+}
+
+.delete-button {
+  width: 100%;
+  margin-top: 18rpx;
+  color: #bf6b70;
+}
+
+.button-hover {
+  opacity: 0.86;
+}

@@ -1,0 +1,234 @@
+page {
+  min-height: 100%;
+  background: #fffaf5;
+  color: #50332a;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  line-height: 1;
+}
+
+button::after {
+  border: 0;
+}
+
+.diary-page {
+  min-height: 100vh;
+  padding: 36rpx 28rpx 58rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 226, 176, 0.35), transparent 220rpx),
+    radial-gradient(circle at 88% 14%, rgba(255, 216, 224, 0.38), transparent 260rpx),
+    #fffaf5;
+}
+
+.page-header {
+  padding: 18rpx 4rpx 10rpx;
+  text-align: center;
+}
+
+.page-title {
+  color: #4a2b22;
+  font-size: 40rpx;
+  font-weight: 800;
+}
+
+.page-subtitle {
+  margin-top: 18rpx;
+  color: #75574c;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.summary-card,
+.form-card,
+.tip-card,
+.privacy-card {
+  margin-top: 28rpx;
+  padding: 28rpx;
+  border: 2rpx solid #efd9cc;
+  border-radius: 30rpx;
+  background: rgba(255, 254, 250, 0.94);
+  box-shadow: 0 12rpx 30rpx rgba(114, 75, 54, 0.09);
+}
+
+.summary-head,
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.summary-label,
+.card-hint,
+.count-line {
+  color: #a68b80;
+  font-size: 23rpx;
+}
+
+.summary-title,
+.card-title,
+.privacy-title {
+  color: #4d3029;
+  font-size: 31rpx;
+  font-weight: 800;
+}
+
+.summary-date {
+  padding: 12rpx 18rpx;
+  border-radius: 999rpx;
+  color: #cf6d79;
+  font-size: 22rpx;
+  background: #ffe8ea;
+}
+
+.summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 22rpx;
+  color: #8d7166;
+  font-size: 24rpx;
+}
+
+.diary-textarea {
+  width: 100%;
+  min-height: 292rpx;
+  margin-top: 22rpx;
+  padding: 22rpx;
+  box-sizing: border-box;
+  border: 2rpx dashed #efcfc5;
+  border-radius: 24rpx;
+  color: #5c3b33;
+  font-size: 28rpx;
+  line-height: 1.65;
+  background: #fffdfb;
+}
+
+.input-placeholder {
+  color: #c8aaa0;
+}
+
+.count-line {
+  margin-top: 14rpx;
+  text-align: right;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.photo-tile,
+.photo-add {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 146rpx;
+  border: 2rpx solid #efd4c8;
+  border-radius: 24rpx;
+  color: #765248;
+  font-size: 23rpx;
+  overflow: hidden;
+  background: #fff8ef;
+}
+
+.photo-tile.mint {
+  background: #f1fbef;
+}
+
+.photo-sun {
+  width: 34rpx;
+  height: 34rpx;
+  margin-bottom: 18rpx;
+  border-radius: 50%;
+  background: #ffd96a;
+  box-shadow: 42rpx 14rpx 0 -10rpx rgba(255, 255, 255, 0.86);
+}
+
+.photo-remove {
+  position: absolute;
+  right: 8rpx;
+  top: 8rpx;
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 28rpx;
+  background: rgba(226, 120, 128, 0.9);
+}
+
+.add-plus {
+  margin-bottom: 12rpx;
+  color: #ef7185;
+  font-size: 46rpx;
+  font-weight: 700;
+}
+
+.tip-card {
+  display: flex;
+  align-items: center;
+  background: #fff7e8;
+}
+
+.tip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 64rpx;
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: 20rpx;
+  border-radius: 22rpx;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 800;
+  background: #c8a6ee;
+}
+
+.tip-copy,
+.privacy-copy {
+  color: #715247;
+  font-size: 25rpx;
+  line-height: 1.65;
+}
+
+.privacy-card {
+  border-color: #f0d3dc;
+  background: #fff8fb;
+}
+
+.privacy-copy {
+  margin-top: 14rpx;
+}
+
+.primary-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 620rpx;
+  max-width: 100%;
+  height: 96rpx;
+  margin: 32rpx auto 0;
+  border: 4rpx solid #ffffff;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 800;
+  background: linear-gradient(180deg, #ff96a7 0%, #f77187 100%);
+  box-shadow: 0 16rpx 30rpx rgba(238, 98, 119, 0.23);
+}
+
+.primary-hover,
+.button-hover {
+  opacity: 0.86;
+}
