@@ -395,3 +395,49 @@ PRD + AGENTS 初始化。
 - 未修改 PRD 核心结论。
 - 未实现社区、评论、点赞、关注、公开广场。
 - 未实现支付、充值、会员、订单或余额。
+## 本轮任务：首页图标素材接入
+
+本轮目标是根据首页原型图，将 `manhua-xcx/subpackage/` 下已经放好的 PNG 素材接入首页页面，用真实图片替换首页里的占位插画、图标和轻量装饰。
+
+## 素材确认
+
+- 已只读确认 `manhua-xcx/subpackage/` 下存在 9 个预期 PNG 文件。
+- 文件名均与预期一致，未发现 PNG 文件名被建成文件夹。
+- 目录中另有 `packageA` 文件夹，本轮未修改、未移动、未删除。
+
+## 素材映射
+
+- `icon-home-mascot-star.png`：用于首页顶部欢迎区域右侧 Q 版女孩插画位置。
+- `icon-home-pencil.png`：用于“写今天的漫画日记”主按钮左侧图标位置。
+- `icon-home-character-profile.png`：用于“角色档案”入口卡片左侧图标位置。
+- `icon-home-settings-book.png`：用于“我的 / 设置”入口卡片左侧图标位置。
+- `icon-home-sleeping-cat.png`：用于首页空状态 / 提示卡片右侧小猫装饰位置。
+- `icon-home-heart.png`：用于漫画书卡片右侧轻量装饰。
+- `icon-home-star-badge.png`：用于漫画书卡片右侧轻量装饰。
+- `icon-home-smile.png`：用于漫画书卡片右侧轻量装饰。
+- `icon-home-create-plus.png`：已确认素材存在；当前项目使用微信原生 tabBar，首页页面内没有自定义底部创建按钮，且本轮禁止改路由和全局结构，因此本轮未接入该图标。
+
+## 本轮处理内容
+
+- 更新 `manhua-xcx/pages/index/index.wxml`，将首页欢迎插画、主按钮图标、入口卡片图标、空状态小猫和漫画书卡片装饰替换为真实图片。
+- 更新 `manhua-xcx/pages/index/index.wxss`，为新增 image 设置明确 class、尺寸和定位。
+- 所有图片路径统一使用 `/subpackage/xxx.png`。
+
+## 本轮未做
+
+- 未新增页面。
+- 未改路由。
+- 未改 mock 数据结构。
+- 未改业务逻辑。
+- 未修改其他页面。
+- 未移动素材文件。
+- 未修改素材文件名。
+- 未删除现有首页模块。
+
+## 验证结果
+
+- 已确认 9 个预期 PNG 素材均为文件，不是文件夹。
+- 已确认首页新增图片路径均使用 `/subpackage/xxx.png`。
+- 已确认首页 WXML/WXSS 中没有本地 Windows 反斜杠素材路径。
+- `git diff --check` 通过，仅有 CRLF 换行提示。
+- `node --check manhua-xcx/pages/index/index.js` 通过。

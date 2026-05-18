@@ -117,47 +117,15 @@ button::after {
 
 .mascot-wrap {
   position: relative;
-  width: 150rpx;
-  height: 136rpx;
+  width: 176rpx;
+  height: 156rpx;
   margin-left: 18rpx;
 }
 
-.mascot-face {
-  position: absolute;
-  right: 12rpx;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 112rpx;
-  height: 112rpx;
-  border: 4rpx solid #f2a7aa;
-  border-radius: 48% 52% 46% 54%;
-  color: #a35f5c;
-  font-size: 48rpx;
-  font-weight: 800;
-  background: linear-gradient(145deg, #ffe3da, #ffd0dd);
-  box-shadow: 0 8rpx 18rpx rgba(238, 130, 145, 0.16);
-}
-
-.mascot-spark {
-  position: absolute;
-  border-radius: 50%;
-  background: #ffd66f;
-}
-
-.spark-one {
-  top: 18rpx;
-  left: 14rpx;
-  width: 18rpx;
-  height: 18rpx;
-}
-
-.spark-two {
-  top: 52rpx;
-  right: 0;
-  width: 12rpx;
-  height: 12rpx;
+.home-mascot {
+  width: 176rpx;
+  height: 156rpx;
+  display: block;
 }
 
 .book-card {
@@ -181,6 +149,34 @@ button::after {
   border: 2rpx dashed #f2beb6;
   border-radius: 28rpx;
   pointer-events: none;
+}
+
+.home-decor-icon {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.book-heart-decor {
+  right: 18rpx;
+  top: 70rpx;
+  width: 42rpx;
+  height: 42rpx;
+}
+
+.book-star-decor {
+  right: 18rpx;
+  top: 132rpx;
+  width: 44rpx;
+  height: 44rpx;
+}
+
+.book-smile-decor {
+  right: 18rpx;
+  top: 196rpx;
+  width: 42rpx;
+  height: 42rpx;
 }
 
 .book-cover {
@@ -344,9 +340,12 @@ button::after {
   opacity: 0.9;
 }
 
-.create-icon {
+.create-button-icon {
+  flex: 0 0 58rpx;
+  width: 58rpx;
+  height: 58rpx;
   margin-right: 18rpx;
-  font-size: 36rpx;
+  display: block;
 }
 
 .quota-line {
@@ -620,35 +619,14 @@ button::after {
   line-height: 1.6;
 }
 
-.sleepy-cat {
+.home-empty-cat {
   position: absolute;
-  right: 40rpx;
-  bottom: 22rpx;
-  width: 124rpx;
-  height: 76rpx;
-}
-
-.cat-body,
-.cat-head {
-  position: absolute;
-  background: #ffffff;
-  border: 2rpx solid #e0b6a3;
-}
-
-.cat-body {
-  right: 0;
-  bottom: 0;
-  width: 98rpx;
-  height: 52rpx;
-  border-radius: 50rpx 48rpx 36rpx 34rpx;
-}
-
-.cat-head {
-  left: 0;
-  bottom: 4rpx;
-  width: 56rpx;
-  height: 46rpx;
-  border-radius: 48% 52% 46% 54%;
+  right: 34rpx;
+  bottom: 16rpx;
+  width: 138rpx;
+  height: 92rpx;
+  z-index: 1;
+  display: block;
 }
 
 .quick-grid {
@@ -677,41 +655,11 @@ button::after {
   background: linear-gradient(145deg, #fbf7ff 0%, #f7f1ff 100%);
 }
 
-.quick-illustration {
-  position: relative;
+.home-entry-icon {
   flex: 0 0 70rpx;
   width: 70rpx;
   height: 70rpx;
-  border-radius: 18rpx;
-  background: #fff8ec;
-  box-shadow: inset 0 0 0 3rpx rgba(214, 157, 131, 0.4);
-}
-
-.mine-illustration {
-  background: #f3e8ff;
-  box-shadow: inset 0 0 0 3rpx rgba(169, 137, 211, 0.34);
-}
-
-.quick-heart {
-  position: absolute;
-  left: 20rpx;
-  top: 18rpx;
-  width: 30rpx;
-  height: 30rpx;
-  border-radius: 50% 50% 0 50%;
-  background: #ff9c9c;
-  transform: rotate(45deg);
-}
-
-.quick-star {
-  position: absolute;
-  left: 18rpx;
-  top: 18rpx;
-  width: 34rpx;
-  height: 34rpx;
-  border-radius: 50%;
-  background: #ffd46b;
-  box-shadow: 0 0 0 8rpx rgba(255, 212, 107, 0.25);
+  display: block;
 }
 
 .quick-copy {

@@ -10,13 +10,14 @@
       <view class="greeting-text">{{user.greetingText}}</view>
     </view>
     <view class="mascot-wrap">
-      <view class="mascot-face">Q</view>
-      <view class="mascot-spark spark-one"></view>
-      <view class="mascot-spark spark-two"></view>
+      <image class="home-mascot" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
     </view>
   </view>
 
   <view class="book-card">
+    <image class="home-decor-icon book-heart-decor" src="/subpackage/icon-home-heart.png" mode="aspectFit" />
+    <image class="home-decor-icon book-star-decor" src="/subpackage/icon-home-star-badge.png" mode="aspectFit" />
+    <image class="home-decor-icon book-smile-decor" src="/subpackage/icon-home-smile.png" mode="aspectFit" />
     <view class="book-cover">
       <view class="cover-sky"></view>
       <view class="cover-character">
@@ -35,7 +36,7 @@
   </view>
 
   <button class="create-button" hover-class="create-button-hover" bindtap="goCreateChapter">
-    <text class="create-icon">✎</text>
+    <image class="create-button-icon" src="/subpackage/icon-home-pencil.png" mode="aspectFit" />
     <text>写今天的漫画日记</text>
   </button>
 
@@ -85,17 +86,12 @@
       <view>还没有更多章节时，</view>
       <view>会在这里慢慢收藏你的回忆。</view>
     </view>
-    <view class="sleepy-cat">
-      <view class="cat-head"></view>
-      <view class="cat-body"></view>
-    </view>
+    <image class="home-empty-cat" src="/subpackage/icon-home-sleeping-cat.png" mode="aspectFit" />
   </view>
 
   <view class="quick-grid">
     <view class="quick-card character-card" bindtap="goCharacter">
-      <view class="quick-illustration character-illustration">
-        <view class="quick-heart"></view>
-      </view>
+      <image class="home-entry-icon" src="/subpackage/icon-home-character-profile.png" mode="aspectFit" />
       <view class="quick-copy">
         <view class="quick-title">角色档案</view>
         <view class="quick-desc">管理你的专属角色和故事设定</view>
@@ -104,9 +100,7 @@
     </view>
 
     <view class="quick-card mine-card" bindtap="goMine">
-      <view class="quick-illustration mine-illustration">
-        <view class="quick-star"></view>
-      </view>
+      <image class="home-entry-icon" src="/subpackage/icon-home-settings-book.png" mode="aspectFit" />
       <view class="quick-copy">
         <view class="quick-title">我的 / 设置</view>
         <view class="quick-desc">隐私与偏好设置安心记录</view>
