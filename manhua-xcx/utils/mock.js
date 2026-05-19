@@ -5,9 +5,19 @@ const pageRoutes = {
   character: '/pages/character/character',
   generating: '/pages/generating/generating',
   chapterDetail: '/pages/chapter-detail/chapter-detail',
+  comicBook: '/pages/comic-book/comic-book',
+  continuousChapter: '/pages/continuous-chapter/continuous-chapter',
   share: '/pages/share/share',
   mine: '/pages/mine/mine',
   quotaEmpty: '/pages/quota-empty/quota-empty',
+  privacy: '/pages/privacy/privacy',
+  about: '/pages/about/about',
+  settings: '/pages/settings/settings',
+}
+
+const storageKeys = {
+  generatedComicChapters: 'generatedComicChapters',
+  draftComicChapter: 'draftComicChapter',
 }
 
 const chapterStatuses = {
@@ -41,6 +51,18 @@ const homeMock = {
       status: chapterStatuses.completed,
       statusText: '已完成',
       coverTone: 'sunny',
+      pages: [
+        {
+          pageId: 'chapter-003-page-1',
+          images: ['/subpackage/icon-home-mascot-star.png', '/subpackage/icon-home-heart.png', '/subpackage/icon-home-smile.png', '/subpackage/icon-home-star-badge.png'],
+          caption: '草地上铺开小毯子，阳光像软软的糖落在点心旁边。',
+        },
+        {
+          pageId: 'chapter-003-page-2',
+          images: ['/subpackage/icon-home-mascot-star.png', '/subpackage/icon-home-pencil.png'],
+          caption: '把今天的风、花和笑声画进最后一格，变成春天的书签。',
+        },
+      ],
     },
     {
       id: 'chapter-002',
@@ -51,6 +73,18 @@ const homeMock = {
       status: chapterStatuses.generating,
       statusText: '生成中',
       coverTone: 'home',
+      pages: [
+        {
+          pageId: 'chapter-002-page-1',
+          images: ['/subpackage/icon-home-settings-book.png', '/subpackage/icon-home-smile.png', '/subpackage/icon-home-heart.png'],
+          caption: '雨点轻轻敲窗，热茶冒着小小的云，房间慢慢亮起来。',
+        },
+        {
+          pageId: 'chapter-002-page-2',
+          images: ['/subpackage/icon-home-mascot-star.png'],
+          caption: '窝在柔软的毯子里，连发呆也像一格安静的漫画。',
+        },
+      ],
     },
     {
       id: 'chapter-001',
@@ -61,6 +95,18 @@ const homeMock = {
       status: chapterStatuses.failed,
       statusText: '生成失败',
       coverTone: 'rain',
+      pages: [
+        {
+          pageId: 'chapter-001-page-1',
+          images: ['/subpackage/icon-home-mascot-star.png', '/subpackage/icon-home-create-plus.png'],
+          caption: '本来只是普通的一天，却在转角遇见一点点闪光。',
+        },
+        {
+          pageId: 'chapter-001-page-2',
+          images: ['/subpackage/icon-home-heart.png', '/subpackage/icon-home-pencil.png', '/subpackage/icon-home-smile.png', '/subpackage/icon-home-star-badge.png'],
+          caption: '把雨声和小确幸一起收好，今天也值得被认真画下来。',
+        },
+      ],
     },
   ],
 }
@@ -115,11 +161,8 @@ const diaryMock = {
   },
   diaryPlaceholder: '写下今天最想留住的一幕，比如天气、心情、遇到的人，或一张照片背后的小故事。',
   diaryTextMaxLength: 800,
-  photoLimit: 9,
-  photoPlaceholders: [
-    { id: 'photo-1', label: '照片 1', tone: 'peach' },
-    { id: 'photo-2', label: '照片 2', tone: 'mint' },
-  ],
+  photoLimit: 1,
+  photoPlaceholders: [],
   characterHint: '会参考你的角色档案生成主角，帮助保持 Q 版形象一致。',
   privacyHint: '日记原文不会公开，分享页只展示你允许分享的标题、摘要和漫画图。',
 }
@@ -145,8 +188,8 @@ const characterMock = {
     { value: 'round-eyes', label: '圆圆眼睛', selected: false },
   ],
   notes: [
-    '角色档案只用于本地静态展示，当前不会训练模型。',
-    '后续生成漫画时会把这些描述作为角色一致性提示。',
+    '修改角色档案只会影响之后生成的漫画。',
+    '不会影响之前已经生成的漫画。',
   ],
 }
 
@@ -210,14 +253,43 @@ const mineMock = {
     completedCount: 1,
     generatingCount: 1,
   },
+  chapters: homeMock.recentChapters,
   freeQuotaRemaining: 2,
   freeQuotaTotal: 3,
   menuItems: [
     { id: 'character', title: '角色档案', desc: '维护漫画主角形象', action: 'character' },
-    { id: 'privacy', title: '隐私说明', desc: '了解日记和分享边界', action: 'toast' },
-    { id: 'about', title: '关于产品', desc: '私人日记漫画本', action: 'toast' },
-    { id: 'settings', title: '设置', desc: '基础设置占位', action: 'toast' },
+    { id: 'privacy', title: '隐私说明', desc: '了解日记和分享边界', action: 'privacy' },
+    { id: 'about', title: '关于产品', desc: '私人日记漫画本', action: 'about' },
+    { id: 'settings', title: '设置', desc: '基础设置占位', action: 'settings' },
   ],
+}
+
+const comicBookMock = {
+  book: homeMock.defaultComicBook,
+  user: mineMock.user,
+  comics: [
+    {
+      id: 'book-001',
+      title: '我的漫画书',
+      subtitle: '私人漫画书记录中',
+      progressText: '继续阅读到第2章',
+      chapterCount: 3,
+      lastReadChapterId: 'chapter-002',
+      coverTone: 'sunny',
+    },
+  ],
+  chapters: homeMock.recentChapters,
+  readingHint: '像翻开一本自己的漫画书，一页一页继续读。',
+}
+
+const continuousChapterMock = {
+  comic: {
+    id: 'book-001',
+    title: '我的漫画书',
+    subtitle: '私人漫画书记录中',
+  },
+  currentChapterId: 'chapter-002',
+  chapters: homeMock.recentChapters,
 }
 
 const quotaEmptyMock = {
@@ -240,7 +312,10 @@ module.exports = {
   characterMock,
   generatingMock,
   chapterDetailMock,
+  comicBookMock,
+  continuousChapterMock,
   shareMock,
   mineMock,
   quotaEmptyMock,
+  storageKeys,
 }

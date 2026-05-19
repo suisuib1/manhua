@@ -1,4 +1,68 @@
-const { generatingMock, pageRoutes } = require('../../utils/mock')
+const { generatingMock, pageRoutes, storageKeys } = require('../../utils/mock')
+
+function getDefaultPanelImages() {
+  return [
+    '/subpackage/icon-home-mascot-star.png',
+    '/subpackage/icon-home-heart.png',
+    '/subpackage/icon-home-smile.png',
+    '/subpackage/icon-home-star-badge.png',
+  ]
+}
+
+function buildGeneratedChapter(draft) {
+  const chapterTitle = draft && draft.chapterTitle ? draft.chapterTitle : generatingMock.chapterTitle
+  const pageCount = Math.max(2, Number(draft && draft.pageCount ? draft.pageCount : 2))
+  const photoPath = draft && (draft.photoPath || (draft.photoItem && draft.photoItem.path) || draft.imagePath)
+  const primaryImages = photoPath ? [photoPath] : getDefaultPanelImages()
+  const defaultImages = getDefaultPanelImages()
+  const pages = Array.from({ length: pageCount }).map((_, index) => {
+    const pageImages = photoPath
+      ? [photoPath]
+      : (index === 0 ? defaultImages.slice(0, 2) : defaultImages.slice(2, 4))
+
+    return {
+      pageId: `${chapterTitle}-${index + 1}`,
+      images: pageImages.length > 0 ? pageImages : defaultImages,
+      caption: index === 0
+        ? `${draft && draft.diaryText ? draft.diaryText : '今天的故事'}`
+        : `第 ${index + 1} 页的漫画分镜。`,
+    }
+  })
+
+  return {
+    id: `local-${Date.now()}`,
+    title: chapterTitle,
+    date: draft && draft.diaryDate ? draft.diaryDate : '2026-05-18',
+    chapterNo: 1,
+    chapterIndex: 0,
+    diaryText: draft && draft.diaryText ? draft.diaryText : '',
+    summary: draft && draft.diaryText ? draft.diaryText.slice(0, 24) : '今天的故事',
+    caption: draft && draft.diaryText ? draft.diaryText.slice(0, 24) : '今天的故事',
+    images: primaryImages,
+    pages,
+  }
+}
+
+function loadGeneratedChapters() {
+  return wx.getStorageSync(storageKeys.generatedComicChapters) || []
+}
+
+function saveGeneratedChapters(chapters) {
+  wx.setStorageSync(storageKeys.generatedComicChapters, chapters)
+}
+
+function loadPendingDraft() {
+  return wx.getStorageSync(storageKeys.draftComicChapter) || null
+}
+
+function finalizeGeneratedChapter(draft) {
+  const generatedChapter = buildGeneratedChapter(draft)
+  const generatedChapters = [generatedChapter].concat(loadGeneratedChapters())
+
+  saveGeneratedChapters(generatedChapters)
+
+  return generatedChapter
+}
 
 Page({
   timer: null,
@@ -8,9 +72,14 @@ Page({
     progress: generatingMock.progressStart,
     activeStepIndex: 0,
     canViewChapter: false,
+    pendingDraft: null,
+    generatedChapterId: '',
   },
 
   onLoad() {
+    this.setData({
+      pendingDraft: loadPendingDraft(),
+    })
     this.startMockProgress()
   },
 
@@ -35,6 +104,10 @@ Page({
       })
 
       if (nextProgress >= 100) {
+        const generatedChapter = finalizeGeneratedChapter(this.data.pendingDraft)
+        this.setData({
+          generatedChapterId: generatedChapter.id,
+        })
         this.clearMockTimer()
       }
     }, 800)
@@ -49,7 +122,7 @@ Page({
 
   goChapterDetail() {
     wx.navigateTo({
-      url: pageRoutes.chapterDetail,
+      url: `${pageRoutes.continuousChapter}?chapterId=${this.data.generatedChapterId}`,
     })
   },
 
@@ -60,3 +133,12 @@ Page({
     })
   },
 })
+
+module.exports = {
+  buildGeneratedChapter,
+  finalizeGeneratedChapter,
+  loadGeneratedChapters,
+  saveGeneratedChapters,
+  loadPendingDraft,
+  getDefaultPanelImages,
+}

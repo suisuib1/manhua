@@ -1,11 +1,47 @@
-const { diaryMock, pageRoutes } = require('../../utils/mock')
+const { diaryMock, pageRoutes, storageKeys } = require('../../utils/mock')
+
+function decodeDraft(query) {
+  if (!query) return null
+
+  try {
+    return JSON.parse(decodeURIComponent(query))
+  } catch (err) {
+    return null
+  }
+}
+
+function buildPendingDraft(baseDraft, diaryText, photoItem) {
+  return {
+    chapterTitle: baseDraft && baseDraft.chapterTitle ? baseDraft.chapterTitle : diaryMock.chapterSummary.title,
+    diaryDate: baseDraft && baseDraft.diaryDate ? baseDraft.diaryDate : diaryMock.chapterSummary.dateLabel.slice(0, 10),
+    pageCount: baseDraft && baseDraft.pageCount ? baseDraft.pageCount : 1,
+    pageMode: baseDraft && baseDraft.pageMode ? baseDraft.pageMode : 'custom',
+    selectedTags: baseDraft && baseDraft.selectedTags ? baseDraft.selectedTags : diaryMock.chapterSummary.tags,
+    diaryText,
+    photoPath: photoItem ? photoItem.path : '',
+  }
+}
+
+function savePendingDraft(draft) {
+  wx.setStorageSync(storageKeys.draftComicChapter, draft)
+}
 
 Page({
   data: {
     mock: diaryMock,
     diaryText: '',
     textCount: 0,
-    photoList: diaryMock.photoPlaceholders,
+    photoLimit: 1,
+    photoItem: null,
+    createDraft: null,
+  },
+
+  onLoad(options) {
+    const createDraft = decodeDraft(options && options.draft)
+
+    this.setData({
+      createDraft,
+    })
   },
 
   onDiaryInput(event) {
@@ -18,32 +54,24 @@ Page({
   },
 
   addPhotoPlaceholder() {
-    const { photoList, mock } = this.data
-
-    if (photoList.length >= mock.photoLimit) {
-      wx.showToast({
-        title: '最多记录 9 张照片',
-        icon: 'none',
-      })
-      return
-    }
-
-    const nextIndex = photoList.length + 1
-
-    this.setData({
-      photoList: photoList.concat({
-        id: `photo-${Date.now()}`,
-        label: `照片 ${nextIndex}`,
-        tone: nextIndex % 2 === 0 ? 'mint' : 'peach',
-      }),
-    })
-  },
-
-  removePhoto(event) {
-    const { id } = event.currentTarget.dataset
-
-    this.setData({
-      photoList: this.data.photoList.filter((photo) => photo.id !== id),
+    wx.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        this.setData({
+          photoItem: {
+            id: `photo-${Date.now()}`,
+            path: res.tempFilePaths[0],
+          },
+        })
+      },
+      fail: () => {
+        wx.showToast({
+          title: '未选择照片',
+          icon: 'none',
+        })
+      },
     })
   },
 
@@ -54,8 +82,15 @@ Page({
   },
 
   goGenerating() {
+    const draft = buildPendingDraft(this.data.createDraft, this.data.diaryText, this.data.photoItem)
+    savePendingDraft(draft)
     wx.navigateTo({
       url: pageRoutes.generating,
     })
   },
 })
+
+module.exports = {
+  buildPendingDraft,
+  decodeDraft,
+}

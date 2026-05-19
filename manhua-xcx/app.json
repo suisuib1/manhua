@@ -6,9 +6,14 @@
     "pages/character/character",
     "pages/generating/generating",
     "pages/chapter-detail/chapter-detail",
+    "pages/comic-book/comic-book",
+    "pages/continuous-chapter/continuous-chapter",
     "pages/share/share",
     "pages/mine/mine",
-    "pages/quota-empty/quota-empty"
+    "pages/quota-empty/quota-empty",
+    "pages/privacy/privacy",
+    "pages/about/about",
+    "pages/settings/settings"
   ],
   "window": {
     "navigationBarTextStyle": "black",
@@ -25,15 +30,21 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "首页"
+        "text": "首页",
+        "iconPath": "subpackage/packageA/assets/icons/tabbar/home.png",
+        "selectedIconPath": "subpackage/packageA/assets/icons/tabbar/home.png"
       },
       {
         "pagePath": "pages/create/create",
-        "text": "创建"
+        "text": "创建",
+        "iconPath": "subpackage/packageA/assets/icons/tabbar/create.png",
+        "selectedIconPath": "subpackage/packageA/assets/icons/tabbar/create.png"
       },
       {
         "pagePath": "pages/mine/mine",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "subpackage/packageA/assets/icons/tabbar/mine (2).png",
+        "selectedIconPath": "subpackage/packageA/assets/icons/tabbar/mine (2).png"
       }
     ]
   },
