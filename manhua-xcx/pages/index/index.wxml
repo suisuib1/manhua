@@ -1,8 +1,8 @@
-<view class="home-page">
-  <view class="home-header">
-    <view class="home-title">我的漫画日记本</view>
-  </view>
+<view class="home-navbar" style="height: {{navBarHeight}}px;">
+  <view class="home-nav-title" style="top: {{navTitleTop}}px; height: {{navTitleHeight}}px;">我的漫画日记本</view>
+</view>
 
+<view class="home-page" style="padding-top: {{navBarHeight}}px;">
   <view class="greeting-card">
     <view class="greeting-copy">
       <view class="greeting-title">{{user.greetingTitle}}，</view>
@@ -57,10 +57,6 @@
         <view class="chapter-subtitle">{{item.subtitle}}</view>
         <view class="chapter-date">{{item.date}}</view>
         <view class="chapter-summary">{{item.summary}}</view>
-        <view class="chapter-status {{item.statusClass}}">
-          <text class="status-dot"></text>
-          <text>{{item.statusText}}</text>
-        </view>
       </view>
     </scroll-view>
   </view>

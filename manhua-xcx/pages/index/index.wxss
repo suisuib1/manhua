@@ -18,6 +18,29 @@ button::after {
   border: 0;
 }
 
+.home-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: #fffaf5;
+}
+
+.home-nav-title {
+  position: absolute;
+  left: 168rpx;
+  right: 168rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a2b22;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .home-page {
   min-height: 100vh;
   padding: 34rpx 28rpx 56rpx;
@@ -26,28 +49,6 @@ button::after {
     radial-gradient(circle at 12% 7%, rgba(255, 226, 176, 0.4), transparent 220rpx),
     radial-gradient(circle at 86% 16%, rgba(255, 214, 224, 0.42), transparent 250rpx),
     #fffaf5;
-}
-
-.home-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 92rpx;
-  padding: 8rpx 24rpx 10rpx;
-  box-sizing: border-box;
-}
-
-.home-title {
-  position: relative;
-  z-index: 1;
-  max-width: 100%;
-  color: #4a2b22;
-  font-size: 36rpx;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-align: center;
-  line-height: 1.25;
 }
 
 .button-hover {
@@ -363,48 +364,6 @@ button::after {
   line-height: 1.45;
   white-space: normal;
   overflow: hidden;
-}
-
-.chapter-status {
-  display: flex;
-  align-items: center;
-  margin-top: auto;
-  padding-top: 16rpx;
-  color: #8c766d;
-  font-size: 23rpx;
-  font-weight: 600;
-}
-
-.status-dot {
-  width: 22rpx;
-  height: 22rpx;
-  margin-right: 8rpx;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.is-completed {
-  color: #73b861;
-}
-
-.is-generating {
-  color: #f2a21c;
-}
-
-.is-generating .status-dot {
-  width: 8rpx;
-  height: 8rpx;
-  box-shadow: 14rpx 0 0 currentColor, 28rpx 0 0 currentColor;
-}
-
-.is-failed {
-  color: #f45e75;
-}
-
-.is-failed .status-dot {
-  box-sizing: border-box;
-  border: 4rpx solid currentColor;
-  background: transparent;
 }
 
 .memory-note {

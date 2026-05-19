@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 const test = require('node:test')
 
 function loadPage() {
@@ -45,4 +47,11 @@ test('首页最近章节进入漫画书阅读器而不是旧章节详情', () =>
   assert.deepEqual(navigateCalls[0], {
     url: '/pages/continuous-chapter/continuous-chapter?chapterId=chapter-002',
   })
+})
+
+test('首页最近章节卡片不再显示状态标签', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'index.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('chapter-status'), false)
+  assert.equal(wxml.includes('status-dot'), false)
 })
