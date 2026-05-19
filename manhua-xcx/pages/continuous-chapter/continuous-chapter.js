@@ -45,6 +45,14 @@ function buildReaderState(currentIndex, flatPages) {
   }
 }
 
+function findInitialPageIndex(flatPages, chapterId) {
+  if (!chapterId) return 0
+
+  const pageIndex = flatPages.findIndex((page) => page.chapterId === chapterId)
+
+  return pageIndex === -1 ? 0 : pageIndex
+}
+
 function buildReaderChapters() {
   return mergeStoredChapters(homeMock.recentChapters.slice().reverse(), loadStoredChapters())
 }
@@ -65,9 +73,7 @@ Page({
   },
 
   onLoad(options) {
-    const startIndex = options && options.chapterId
-      ? Math.max(flatPages.findIndex((page) => page.chapterId === options.chapterId), 0)
-      : 0
+    const startIndex = findInitialPageIndex(flatPages, options && options.chapterId)
 
     this.setData(buildReaderState(startIndex, flatPages))
   },
@@ -85,8 +91,8 @@ Page({
   },
 
   backToCover() {
-    wx.navigateBack({
-      delta: 1,
+    wx.redirectTo({
+      url: pageRoutes.comicBook,
     })
   },
 })
@@ -94,6 +100,7 @@ Page({
 module.exports = {
   buildFlatPages,
   buildReaderState,
+  findInitialPageIndex,
   mergeStoredChapters,
   buildReaderChapters,
 }

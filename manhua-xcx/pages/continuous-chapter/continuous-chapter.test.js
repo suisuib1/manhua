@@ -6,6 +6,7 @@ const test = require('node:test')
 function loadPage() {
   let pageConfig
   const backCalls = []
+  const redirectCalls = []
   const setDataCalls = []
   const storage = {}
 
@@ -20,6 +21,9 @@ function loadPage() {
   global.wx = {
     navigateBack(options) {
       backCalls.push(options)
+    },
+    redirectTo(options) {
+      redirectCalls.push(options)
     },
     getStorageSync(key) {
       return storage[key]
@@ -36,7 +40,7 @@ function loadPage() {
   delete require.cache[require.resolve('./continuous-chapter')]
   const moduleExports = require('./continuous-chapter')
 
-  return { pageConfig, backCalls, setDataCalls, moduleExports }
+  return { pageConfig, backCalls, redirectCalls, setDataCalls, moduleExports }
 }
 
 test('阅读器使用 swiper 翻页而不是章节列表', () => {
@@ -51,12 +55,12 @@ test('阅读器使用 swiper 翻页而不是章节列表', () => {
 })
 
 test('阅读器支持返回漫画书封面', () => {
-  const { pageConfig, backCalls } = loadPage()
+  const { pageConfig, redirectCalls } = loadPage()
 
-  pageConfig.goBackToComicList()
+  pageConfig.backToCover()
 
-  assert.deepEqual(backCalls[0], {
-    delta: 1,
+  assert.deepEqual(redirectCalls[0], {
+    url: '/pages/comic-book/comic-book',
   })
 })
 
@@ -144,4 +148,25 @@ test('滑动翻页时同步当前进度', () => {
 
   assert.equal(setDataCalls[1].currentIndex, 2)
   assert.equal(setDataCalls[1].progressText, '第 2 章 · 第 1 页 / 共 6 页')
+})
+
+test('阅读器可根据 chapterId 定位到目标章节第一页', () => {
+  const { moduleExports } = loadPage()
+  const flatPages = [
+    { chapterId: 'chapter-001', pageNo: 1 },
+    { chapterId: 'chapter-001', pageNo: 2 },
+    { chapterId: 'chapter-002', pageNo: 1 },
+  ]
+
+  assert.equal(moduleExports.findInitialPageIndex(flatPages, 'chapter-002'), 2)
+})
+
+test('阅读器 chapterId 不存在时回退第一页', () => {
+  const { moduleExports } = loadPage()
+  const flatPages = [
+    { chapterId: 'chapter-001', pageNo: 1 },
+    { chapterId: 'chapter-001', pageNo: 2 },
+  ]
+
+  assert.equal(moduleExports.findInitialPageIndex(flatPages, 'missing'), 0)
 })

@@ -13,7 +13,7 @@ Page({
 
   viewChapter() {
     wx.navigateTo({
-      url: pageRoutes.chapterDetail,
+      url: pageRoutes.comicBook,
     })
   },
 })

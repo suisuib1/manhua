@@ -8,6 +8,9 @@ const statusClassMap = {
 
 Page({
   data: {
+    navBarHeight: 88,
+    navTitleTop: 44,
+    navTitleHeight: 32,
     user: homeMock.user,
     defaultComicBook: homeMock.defaultComicBook,
     freeQuotaRemaining: homeMock.freeQuotaRemaining,
@@ -15,6 +18,32 @@ Page({
     recentChapters: homeMock.recentChapters.map((chapter) => Object.assign({}, chapter, {
       statusClass: statusClassMap[chapter.status] || '',
     })),
+  },
+
+  onLoad() {
+    this.setData({
+      ...this.getNavBarMetrics(),
+    })
+  },
+
+  getNavBarMetrics() {
+    const windowInfo = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync()
+    const menuButton = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null
+    const statusBarHeight = windowInfo.statusBarHeight || 20
+
+    if (!menuButton || !menuButton.top || !menuButton.bottom) {
+      return {
+        navBarHeight: statusBarHeight + 44,
+        navTitleTop: statusBarHeight,
+        navTitleHeight: 44,
+      }
+    }
+
+    return {
+      navBarHeight: menuButton.bottom + (menuButton.top - statusBarHeight),
+      navTitleTop: menuButton.top,
+      navTitleHeight: menuButton.height,
+    }
   },
 
   goCreateChapter() {
@@ -27,7 +56,7 @@ Page({
     const { id } = event.currentTarget.dataset
 
     wx.navigateTo({
-      url: `${pageRoutes.chapterDetail}?id=${id}`,
+      url: `${pageRoutes.continuousChapter}?chapterId=${id}`,
     })
   },
 
