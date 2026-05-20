@@ -5,11 +5,13 @@ function errorMiddleware(err, req, res, next) {
     return next(err)
   }
 
-  console.error('[server-error]', err)
-
   const status = err.statusCode || err.status || 500
   const code = err.code || (status === 500 ? 50000 : status)
   const message = err.message || '服务端错误'
+
+  if (status >= 500) {
+    console.error('[server-error]', err)
+  }
 
   return fail(res, code, message, status)
 }
