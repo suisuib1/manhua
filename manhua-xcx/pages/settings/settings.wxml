@@ -1,0 +1,169 @@
+<view class="settings-page polish-page">
+  <view class="settings-header polish-header">
+    <view class="polish-title">设置</view>
+    <view class="polish-subtitle">调整你的漫画日记偏好，设置只保存在本地</view>
+  </view>
+
+  <view class="account-card polish-card" bindtap="handleAccountTap" hover-class="polish-button-hover">
+    <view class="polish-card-content account-card-content">
+      <image class="account-avatar" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
+      <view class="account-copy">
+        <view class="account-name">{{user.nickname}}</view>
+        <view class="account-desc">{{user.subtitle}}</view>
+      </view>
+      <view class="account-action">{{user.loginText}}</view>
+    </view>
+  </view>
+
+  <view class="polish-card settings-card">
+    <view class="polish-card-content">
+      <view class="polish-card-title">创作偏好</view>
+      <view class="polish-card-desc">这些设置会参与你之后的本地创作体验</view>
+
+      <view class="setting-item" bindtap="handleStyleTap" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">默认漫画风格</view>
+          <view class="setting-desc">Q版温暖漫画</view>
+        </view>
+        <view class="setting-value">固定</view>
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-copy">
+          <view class="setting-title">自动保存草稿</view>
+          <view class="setting-desc">离开时自动保存到本地草稿</view>
+        </view>
+        <switch
+          class="setting-switch"
+          checked="{{settings.autoSaveDraft}}"
+          data-key="autoSaveDraft"
+          bindchange="handleToggleChange"
+          color="#f77187"
+        />
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-copy">
+          <view class="setting-title">生成时保留照片情绪</view>
+          <view class="setting-desc">保留照片里的情绪线索参与生成</view>
+        </view>
+        <switch
+          class="setting-switch"
+          checked="{{settings.keepPhotoMood}}"
+          data-key="keepPhotoMood"
+          bindchange="handleToggleChange"
+          color="#f77187"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="polish-card settings-card">
+    <view class="polish-card-content">
+      <view class="polish-card-title">隐私与数据</view>
+      <view class="polish-card-desc">只清理本地缓存，不会删除你的账号信息</view>
+
+      <view class="setting-item">
+        <view class="setting-copy">
+          <view class="setting-title">私密日记模式</view>
+          <view class="setting-desc">仅本地保存，不公开原文</view>
+        </view>
+        <switch
+          class="setting-switch"
+          checked="{{settings.privateMode}}"
+          data-key="privateMode"
+          bindchange="handleToggleChange"
+          color="#f77187"
+        />
+      </view>
+
+      <view class="setting-item action-item" bindtap="clearDraftCache" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">清理临时草稿缓存</view>
+          <view class="setting-desc">只删除 draftComicChapter</view>
+        </view>
+        <view class="setting-action">清理</view>
+      </view>
+
+      <view class="setting-item action-item" bindtap="clearGeneratedCache" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">清理本地生成缓存</view>
+          <view class="setting-desc">只删除 generatedComicChapters</view>
+        </view>
+        <view class="setting-action">清理</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="polish-card settings-card">
+    <view class="polish-card-content">
+      <view class="polish-card-title">通知提醒</view>
+      <view class="polish-card-desc">先保存本地偏好，后续再接入消息提醒</view>
+
+      <view class="setting-item">
+        <view class="setting-copy">
+          <view class="setting-title">每日写日记提醒</view>
+          <view class="setting-desc">提醒你记录今天的漫画日记</view>
+        </view>
+        <switch
+          class="setting-switch"
+          checked="{{settings.diaryReminder}}"
+          data-key="diaryReminder"
+          bindchange="handleToggleChange"
+          color="#f77187"
+        />
+      </view>
+
+      <view class="setting-item">
+        <view class="setting-copy">
+          <view class="setting-title">漫画生成完成提醒</view>
+          <view class="setting-desc">生成结束后提醒你回来查看</view>
+        </view>
+        <switch
+          class="setting-switch"
+          checked="{{settings.generationReminder}}"
+          data-key="generationReminder"
+          bindchange="handleToggleChange"
+          color="#f77187"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="polish-card settings-card">
+    <view class="polish-card-content">
+      <view class="polish-card-title">帮助与关于</view>
+      <view class="polish-card-desc">先提供占位入口，后续再补完整内容</view>
+
+      <view class="setting-item action-item" data-action="faq" bindtap="handleHelpTap" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">常见问题</view>
+        </view>
+        <view class="setting-action">查看</view>
+      </view>
+
+      <view class="setting-item action-item" data-action="feedback" bindtap="handleHelpTap" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">意见反馈</view>
+        </view>
+        <view class="setting-action">反馈</view>
+      </view>
+
+      <view class="setting-item action-item" data-action="privacy" bindtap="handleHelpTap" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">隐私协议</view>
+        </view>
+        <view class="setting-action">查看</view>
+      </view>
+
+      <view class="setting-item action-item" data-action="version" bindtap="handleHelpTap" hover-class="polish-button-hover">
+        <view class="setting-copy">
+          <view class="setting-title">当前版本</view>
+          <view class="setting-desc">{{versionText}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <button class="logout-button" bindtap="handleLogoutTap">退出登录</button>
+</view>

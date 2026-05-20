@@ -1,0 +1,147 @@
+page {
+  min-height: 100%;
+  background: #fffaf5;
+  color: #50332a;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  line-height: 1;
+  border-radius: 0;
+}
+
+button::after {
+  border: 0;
+}
+
+.settings-page {
+  min-height: 100vh;
+  padding-bottom: 56rpx;
+}
+
+.settings-header {
+  padding-top: 12rpx;
+  text-align: left;
+}
+
+.account-card {
+  border-color: #f0b4a8;
+}
+
+.account-card-content {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.account-avatar {
+  flex: 0 0 110rpx;
+  width: 110rpx;
+  height: 110rpx;
+  border: 2rpx solid #f1c6b7;
+  border-radius: 28rpx;
+  background: #fff4ee;
+}
+
+.account-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-name {
+  color: #4a2b22;
+  font-size: 34rpx;
+  font-weight: 800;
+}
+
+.account-desc {
+  margin-top: 8rpx;
+  color: #8d7166;
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.account-action {
+  flex: 0 0 auto;
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  color: #d2687b;
+  font-size: 23rpx;
+  font-weight: 700;
+  background: #ffe8ea;
+}
+
+.settings-card {
+  padding-bottom: 14rpx;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 112rpx;
+  padding: 18rpx 0;
+  border-top: 2rpx solid #f3e6dd;
+}
+
+.setting-item:first-of-type {
+  margin-top: 16rpx;
+  border-top: 0;
+}
+
+.setting-copy {
+  flex: 1;
+  min-width: 0;
+  padding-right: 18rpx;
+}
+
+.setting-title {
+  color: #4d3029;
+  font-size: 29rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.setting-desc {
+  margin-top: 8rpx;
+  color: #92786e;
+  font-size: 23rpx;
+  line-height: 1.45;
+}
+
+.setting-value,
+.setting-action {
+  flex: 0 0 auto;
+  color: #c66d75;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.setting-switch {
+  flex: 0 0 auto;
+  transform: scale(0.9);
+  transform-origin: center right;
+}
+
+.action-item {
+  padding-right: 4rpx;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 96rpx;
+  margin-top: 32rpx;
+  border-radius: 999rpx;
+  color: #8d7166;
+  font-size: 30rpx;
+  font-weight: 700;
+  background: rgba(255, 251, 247, 0.92);
+  border: 2rpx solid #e9d7cc;
+}

@@ -18,6 +18,7 @@ const pageRoutes = {
 const storageKeys = {
   generatedComicChapters: 'generatedComicChapters',
   draftComicChapter: 'draftComicChapter',
+  comicAppSettings: 'comicAppSettings',
 }
 
 const chapterStatuses = {
