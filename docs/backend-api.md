@@ -231,6 +231,103 @@ Header：`Authorization: Bearer <token>`
 - 未传字段保持原值。
 - 不允许更新 `id`、`userId`、`createdAt`、`updatedAt`。
 
+### 7. POST /api/diary-entries
+
+说明：创建当前用户的日记草稿，可同时保存照片元数据。
+
+是否需要登录：是。
+
+Header：`Authorization: Bearer <token>`
+
+请求示例：
+
+```json
+{
+  "chapterTitle": "今天的小确幸",
+  "diaryDate": "2026-05-20",
+  "diaryText": "今天和朋友一起散步。",
+  "pageCount": 4,
+  "pageMode": "continuous",
+  "selectedTags": ["开心", "日常"],
+  "photos": [
+    {
+      "imageUrl": "wxfile://tmp_xxx.jpg",
+      "originalName": "photo.jpg",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 123456,
+      "sortOrder": 0
+    }
+  ]
+}
+```
+
+返回：创建后的日记草稿，包含 `selectedTags` 数组和 `photos`。
+
+注意：不做真实文件上传，`ownerUserId` 只来自当前登录用户。
+
+### 8. GET /api/diary-entries
+
+说明：获取当前用户的日记草稿列表。
+
+是否需要登录：是。
+
+Query：`status` 默认 `draft`，`page` 默认 `1`，`pageSize` 默认 `20` 且最大 `50`。
+
+返回示例：
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "items": [],
+    "pagination": {
+      "page": 1,
+      "pageSize": 20,
+      "total": 0
+    }
+  }
+}
+```
+
+### 9. GET /api/diary-entries/:id
+
+说明：获取当前用户的单个日记草稿详情。
+
+是否需要登录：是。
+
+返回：日记草稿详情和照片元数据。不存在、已删除、或不属于当前用户时返回 `404`。
+
+### 10. PUT /api/diary-entries/:id
+
+说明：更新当前用户的日记草稿。
+
+是否需要登录：是。
+
+允许字段：`chapterTitle`、`diaryDate`、`diaryText`、`pageCount`、`pageMode`、`selectedTags`、`photos`。
+
+注意：`photos` 传入时采用整体替换策略；旧照片元数据会软删除，新照片元数据会重新创建。
+
+### 11. DELETE /api/diary-entries/:id
+
+说明：软删除当前用户的日记草稿。
+
+是否需要登录：是。
+
+返回示例：
+
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "deleted": true
+  }
+}
+```
+
+注意：删除会设置 `DiaryEntry.deletedAt`，并同步软删除关联 `DiaryPhoto`。
+
 ## 四、常见错误码
 
 - `400`：请求参数错误
