@@ -27,7 +27,6 @@
     <view class="date-select">
       <text>{{diaryDateLabel}}</text>
     </view>
-    <view class="small-hint">{{dateHint}}</view>
   </view>
 
   <view class="form-card choice-card">
