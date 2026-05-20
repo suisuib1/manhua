@@ -1,4 +1,6 @@
 const { storageKeys } = require('../../utils/mock')
+const { request } = require('../../utils/api')
+const { clearAuthSession, getAuthToken, getCurrentUser, loginWithWechat } = require('../../utils/auth')
 
 const defaultSettings = {
   autoSaveDraft: true,
@@ -7,6 +9,8 @@ const defaultSettings = {
   diaryReminder: false,
   generationReminder: true,
 }
+
+const settingKeys = Object.keys(defaultSettings)
 
 function cloneDefaultSettings() {
   return Object.assign({}, defaultSettings)
@@ -20,22 +24,79 @@ function saveSettings(settings) {
   wx.setStorageSync(storageKeys.comicAppSettings, Object.assign(cloneDefaultSettings(), settings))
 }
 
-Page({
-  data: {
-    versionText: 'v1.0.0',
-    user: {
+function pickSettings(input) {
+  return settingKeys.reduce((settings, key) => {
+    if (input && Object.prototype.hasOwnProperty.call(input, key)) {
+      settings[key] = input[key]
+    }
+    return settings
+  }, {})
+}
+
+function buildUserState(user) {
+  if (!user || !user.id) {
+    return {
       nickname: '未登录',
       subtitle: '登录后同步你的漫画日记设置',
       avatar: '/subpackage/icon-home-mascot-star.png',
       loginText: '点击登录',
-    },
+    }
+  }
+
+  return {
+    nickname: user.nickname || '漫画日记用户',
+    subtitle: '已登录，同步后端设置',
+    avatar: user.avatarUrl || '/subpackage/icon-home-mascot-star.png',
+    loginText: '已登录',
+  }
+}
+
+Page({
+  data: {
+    versionText: 'v1.0.0',
+    user: buildUserState(null),
     settings: cloneDefaultSettings(),
   },
 
   onLoad() {
+    this.loadSettings()
+  },
+
+  onShow() {
+    this.setData({
+      user: buildUserState(getCurrentUser()),
+    })
+    this.loadSettings()
+  },
+
+  async loadSettings() {
     this.setData({
       settings: readSettings(),
     })
+
+    if (!getAuthToken()) {
+      return
+    }
+
+    try {
+      const backendSettings = await request({
+        url: '/api/users/me/settings',
+        method: 'GET',
+        auth: true,
+      })
+      const nextSettings = Object.assign(cloneDefaultSettings(), pickSettings(backendSettings))
+      this.setData({
+        settings: nextSettings,
+      })
+      saveSettings(nextSettings)
+    } catch (error) {
+      if (error && error.statusCode === 401) {
+        clearAuthSession()
+        this.setData({
+          user: buildUserState(null),
+        })
+      }
+    }
   },
 
   syncSettings(patch) {
@@ -46,11 +107,45 @@ Page({
     saveSettings(nextSettings)
   },
 
-  handleAccountTap() {
-    wx.showToast({
-      title: '登录功能开发中',
-      icon: 'none',
+  async saveSettingsPatch(patch) {
+    const safePatch = pickSettings(patch)
+
+    if (!getAuthToken()) {
+      this.syncSettings(safePatch)
+      return this.data.settings
+    }
+
+    const backendSettings = await request({
+      url: '/api/users/me/settings',
+      method: 'PUT',
+      data: safePatch,
+      auth: true,
     })
+    const nextSettings = Object.assign(cloneDefaultSettings(), pickSettings(backendSettings))
+    this.setData({
+      settings: nextSettings,
+    })
+    saveSettings(nextSettings)
+    return nextSettings
+  },
+
+  async handleAccountTap() {
+    if (getAuthToken()) {
+      return
+    }
+
+    try {
+      const user = await loginWithWechat({})
+      this.setData({
+        user: buildUserState(user),
+      })
+      await this.loadSettings()
+    } catch (error) {
+      wx.showToast({
+        title: '登录失败，请稍后重试',
+        icon: 'none',
+      })
+    }
   },
 
   handleStyleTap() {
@@ -60,11 +155,37 @@ Page({
     })
   },
 
-  handleToggleChange(event) {
+  async handleToggleChange(event) {
     const { key } = event.currentTarget.dataset
-    this.syncSettings({
-      [key]: event.detail.value,
-    })
+
+    if (!Object.prototype.hasOwnProperty.call(defaultSettings, key)) {
+      return
+    }
+
+    const previousSettings = Object.assign({}, this.data.settings)
+
+    try {
+      await this.saveSettingsPatch({
+        [key]: event.detail.value,
+      })
+    } catch (error) {
+      this.setData({
+        settings: previousSettings,
+      })
+      saveSettings(previousSettings)
+
+      if (error && error.statusCode === 401) {
+        clearAuthSession()
+        this.setData({
+          user: buildUserState(null),
+        })
+      }
+
+      wx.showToast({
+        title: '保存失败',
+        icon: 'none',
+      })
+    }
   },
 
   confirmAndClearStorage(storageKey, successTitle) {
@@ -113,8 +234,12 @@ Page({
   },
 
   handleLogoutTap() {
+    clearAuthSession()
+    this.setData({
+      user: buildUserState(null),
+    })
     wx.showToast({
-      title: '当前未登录',
+      title: '已退出登录',
       icon: 'none',
     })
   },

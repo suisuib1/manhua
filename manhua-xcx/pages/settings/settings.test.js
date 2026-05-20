@@ -99,28 +99,35 @@ test('清理草稿和生成缓存只删除指定 storage key', () => {
   assert.equal(storage.token, 'keep-me')
 })
 
-test('账号入口和帮助入口只显示占位提示', () => {
-  const { pageConfig, toastCalls } = loadPage()
+test('帮助入口保留提示，退出登录只清理登录态', () => {
+  const storage = {
+    authToken: 'token-keep',
+    currentUser: { id: 'user-keep' },
+    draftComicChapter: { id: 'draft-1' },
+    generatedComicChapters: [{ id: 'chapter-1' }],
+    comicAppSettings: { privateMode: true },
+  }
+  const { pageConfig, toastCalls } = loadPage(storage)
 
-  pageConfig.handleAccountTap()
   pageConfig.handleHelpTap({ currentTarget: { dataset: { action: 'faq' } } })
   pageConfig.handleHelpTap({ currentTarget: { dataset: { action: 'version' } } })
   pageConfig.handleLogoutTap()
 
   assert.deepEqual(toastCalls[0], {
-    title: '登录功能开发中',
-    icon: 'none',
-  })
-  assert.deepEqual(toastCalls[1], {
     title: '功能后续接入',
     icon: 'none',
   })
-  assert.deepEqual(toastCalls[2], {
+  assert.deepEqual(toastCalls[1], {
     title: '当前版本 v1.0.0',
     icon: 'none',
   })
-  assert.deepEqual(toastCalls[3], {
-    title: '当前未登录',
+  assert.deepEqual(toastCalls[2], {
+    title: '已退出登录',
     icon: 'none',
   })
+  assert.equal(storage.authToken, undefined)
+  assert.equal(storage.currentUser, undefined)
+  assert.deepEqual(storage.draftComicChapter, { id: 'draft-1' })
+  assert.deepEqual(storage.generatedComicChapters, [{ id: 'chapter-1' }])
+  assert.deepEqual(storage.comicAppSettings, { privateMode: true })
 })

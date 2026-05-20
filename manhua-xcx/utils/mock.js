@@ -19,6 +19,8 @@ const storageKeys = {
   generatedComicChapters: 'generatedComicChapters',
   draftComicChapter: 'draftComicChapter',
   comicAppSettings: 'comicAppSettings',
+  authToken: 'authToken',
+  currentUser: 'currentUser',
 }
 
 const chapterStatuses = {

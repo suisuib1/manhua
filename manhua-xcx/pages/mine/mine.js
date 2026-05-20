@@ -1,8 +1,52 @@
 const { mineMock, pageRoutes } = require('../../utils/mock')
+const { clearAuthSession, getAuthToken, loginWithWechat, refreshCurrentUser } = require('../../utils/auth')
+
+const loggedOutUser = {
+  nickname: '未登录',
+  subtitle: '点击登录同步你的漫画日记',
+}
+
+function buildMockWithUser(user) {
+  return Object.assign({}, mineMock, {
+    user: user && user.id
+      ? {
+        nickname: user.nickname || '漫画日记用户',
+        subtitle: '私人漫画书同步中',
+      }
+      : loggedOutUser,
+  })
+}
 
 Page({
   data: {
-    mock: mineMock,
+    mock: buildMockWithUser(null),
+  },
+
+  onShow() {
+    this.refreshUserProfile()
+  },
+
+  applyUser(user) {
+    this.setData({
+      mock: buildMockWithUser(user),
+    })
+  },
+
+  async refreshUserProfile() {
+    if (!getAuthToken()) {
+      this.applyUser(null)
+      return
+    }
+
+    try {
+      const { user } = await refreshCurrentUser()
+      this.applyUser(user)
+    } catch (error) {
+      if (error && error.statusCode === 401) {
+        clearAuthSession()
+      }
+      this.applyUser(null)
+    }
   },
 
   openComicBook() {
@@ -11,11 +55,21 @@ Page({
     })
   },
 
-  handleUserInfoTap() {
-    wx.showToast({
-      title: '登录功能暂未开放',
-      icon: 'none',
-    })
+  async handleUserInfoTap() {
+    if (getAuthToken()) {
+      await this.refreshUserProfile()
+      return
+    }
+
+    try {
+      const user = await loginWithWechat({})
+      this.applyUser(user)
+    } catch (error) {
+      wx.showToast({
+        title: '登录失败，请稍后重试',
+        icon: 'none',
+      })
+    }
   },
 
   handleMenuTap(event) {
