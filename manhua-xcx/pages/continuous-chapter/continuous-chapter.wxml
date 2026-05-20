@@ -1,0 +1,29 @@
+<view class="reader-page">
+  <view class="reader-topbar">
+    <view class="reader-progress-card">
+      <view class="reader-title">{{mock.comic.title}}</view>
+      <view class="reader-progress">{{chapterToast}}</view>
+    </view>
+  </view>
+
+  <view class="page-shell" bindtouchstart="handleTouchStart" bindtouchend="handleTouchEnd">
+    <view wx:if="{{currentPage && currentPage.image}}" class="comic-page-card">
+      <view class="page-meta">
+        <view class="chapter-title">{{currentPage.chapterTitle}}</view>
+        <view class="chapter-date">{{currentPage.date}}</view>
+      </view>
+      <image class="comic-image" src="{{currentPage.image}}" mode="widthFix" />
+      <view class="page-number">{{progressText}}</view>
+    </view>
+
+    <view wx:else class="empty-card">
+      <view class="empty-title">暂无漫画图片</view>
+      <view class="empty-text">请先生成漫画章节</view>
+    </view>
+  </view>
+
+  <view class="reader-bottom">
+    <view class="nav-hint">左滑上一页</view>
+    <view class="nav-hint">右滑下一页</view>
+  </view>
+</view>
