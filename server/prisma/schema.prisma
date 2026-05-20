@@ -20,6 +20,8 @@ model User {
   setting      UserSetting?
   comicBooks   ComicBook[]
   quota        UserQuota?
+  diaryEntries DiaryEntry[]
+  diaryPhotos  DiaryPhoto[]
 
   @@map("users")
 }
@@ -84,4 +86,50 @@ model UserQuota {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_quotas")
+}
+
+model DiaryEntry {
+  id                String       @id @default(cuid())
+  ownerUserId       String       @map("owner_user_id")
+  chapterTitle      String?      @map("chapter_title")
+  diaryDate         DateTime?    @map("diary_date")
+  diaryText         String?      @map("diary_text")
+  pageCount         Int          @default(4) @map("page_count")
+  pageMode          String?      @map("page_mode")
+  selectedTagsJson  String       @default("[]") @map("selected_tags_json")
+  status            String       @default("draft")
+  createdAt         DateTime     @default(now()) @map("created_at")
+  updatedAt         DateTime     @updatedAt @map("updated_at")
+  deletedAt         DateTime?    @map("deleted_at")
+
+  owner  User         @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  photos DiaryPhoto[]
+
+  @@index([ownerUserId])
+  @@index([ownerUserId, status])
+  @@index([ownerUserId, diaryDate])
+  @@index([ownerUserId, createdAt])
+  @@map("diary_entries")
+}
+
+model DiaryPhoto {
+  id            String      @id @default(cuid())
+  diaryEntryId  String      @map("diary_entry_id")
+  ownerUserId   String      @map("owner_user_id")
+  imageUrl      String      @map("image_url")
+  originalName  String?     @map("original_name")
+  mimeType      String?     @map("mime_type")
+  sizeBytes     Int?        @map("size_bytes")
+  sortOrder     Int         @default(0) @map("sort_order")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  diaryEntry DiaryEntry @relation(fields: [diaryEntryId], references: [id], onDelete: Cascade)
+  owner      User       @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([diaryEntryId])
+  @@index([ownerUserId])
+  @@index([diaryEntryId, sortOrder])
+  @@map("diary_photos")
 }

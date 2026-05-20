@@ -15,20 +15,23 @@ let migrationApplied = false
 async function applyMigrationOnce() {
   if (migrationApplied) return
 
-  const migrationPath = path.join(
-    prismaDir,
-    'migrations',
-    '20260520024721_init_core_tables',
-    'migration.sql'
-  )
-  const migrationSql = fs.readFileSync(migrationPath, 'utf8')
-  const statements = migrationSql
-    .split(';')
-    .map((statement) => statement.trim())
-    .filter(Boolean)
+  const migrationsDir = path.join(prismaDir, 'migrations')
+  const migrationDirs = fs.readdirSync(migrationsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
 
-  for (const statement of statements) {
-    await prisma.$executeRawUnsafe(statement)
+  for (const migrationDir of migrationDirs) {
+    const migrationPath = path.join(migrationsDir, migrationDir, 'migration.sql')
+    const migrationSql = fs.readFileSync(migrationPath, 'utf8')
+    const statements = migrationSql
+      .split(';')
+      .map((statement) => statement.trim())
+      .filter(Boolean)
+
+    for (const statement of statements) {
+      await prisma.$executeRawUnsafe(statement)
+    }
   }
 
   migrationApplied = true
@@ -36,6 +39,12 @@ async function applyMigrationOnce() {
 
 async function clearCoreTables() {
   await applyMigrationOnce()
+  if (prisma.diaryPhoto) {
+    await prisma.diaryPhoto.deleteMany()
+  }
+  if (prisma.diaryEntry) {
+    await prisma.diaryEntry.deleteMany()
+  }
   await prisma.userQuota.deleteMany()
   await prisma.comicBook.deleteMany()
   await prisma.userSetting.deleteMany()
