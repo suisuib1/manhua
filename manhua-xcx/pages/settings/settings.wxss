@@ -1,7 +1,7 @@
 page {
   min-height: 100%;
-  background: #fffaf5;
-  color: #50332a;
+  background: #f6f6f6;
+  color: #1f1f1f;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
@@ -20,105 +20,96 @@ button::after {
 
 .settings-page {
   min-height: 100vh;
-  padding-bottom: 56rpx;
+  padding: 18rpx 0 56rpx;
+  background: #f6f6f6;
 }
 
-.settings-header {
-  padding-top: 12rpx;
-  text-align: left;
+.settings-section {
+  margin-top: 24rpx;
 }
 
-.account-card {
-  border-color: #f0b4a8;
-}
-
-.account-card-content {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-}
-
-.account-avatar {
-  flex: 0 0 110rpx;
-  width: 110rpx;
-  height: 110rpx;
-  border: 2rpx solid #f1c6b7;
-  border-radius: 28rpx;
-  background: #fff4ee;
-}
-
-.account-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.account-name {
-  color: #4a2b22;
-  font-size: 34rpx;
-  font-weight: 800;
-}
-
-.account-desc {
+.settings-section:first-child {
   margin-top: 8rpx;
-  color: #8d7166;
-  font-size: 24rpx;
-  line-height: 1.45;
 }
 
-.account-action {
-  flex: 0 0 auto;
-  padding: 10rpx 18rpx;
-  border-radius: 999rpx;
-  color: #d2687b;
-  font-size: 23rpx;
-  font-weight: 700;
-  background: #ffe8ea;
+.settings-section-title {
+  padding: 0 32rpx 12rpx;
+  color: #8a8a8a;
+  font-size: 26rpx;
+  line-height: 1.2;
 }
 
-.settings-card {
-  padding-bottom: 14rpx;
+.settings-list {
+  background: #ffffff;
 }
 
-.setting-item {
+.setting-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   min-height: 112rpx;
-  padding: 18rpx 0;
-  border-top: 2rpx solid #f3e6dd;
+  padding: 0 32rpx;
+  box-sizing: border-box;
+  background: #ffffff;
 }
 
-.setting-item:first-of-type {
-  margin-top: 16rpx;
-  border-top: 0;
+.setting-row + .setting-row {
+  border-top: 1rpx solid #eeeeee;
 }
 
-.setting-copy {
+.settings-row-hover {
+  background: #f7f7f7;
+}
+
+.setting-main {
   flex: 1;
   min-width: 0;
-  padding-right: 18rpx;
+  padding-right: 24rpx;
 }
 
 .setting-title {
-  color: #4d3029;
-  font-size: 29rpx;
-  font-weight: 800;
-  line-height: 1.35;
+  color: #222222;
+  font-size: 32rpx;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 .setting-desc {
-  margin-top: 8rpx;
-  color: #92786e;
-  font-size: 23rpx;
-  line-height: 1.45;
+  margin-top: 6rpx;
+  color: #b0b0b0;
+  font-size: 22rpx;
+  line-height: 1.35;
 }
 
-.setting-value,
-.setting-action {
+.setting-side {
+  display: flex;
+  align-items: center;
   flex: 0 0 auto;
-  color: #c66d75;
-  font-size: 24rpx;
-  font-weight: 700;
+  min-width: 0;
+}
+
+.setting-value {
+  color: #999999;
+  font-size: 28rpx;
+  line-height: 1.2;
+}
+
+.setting-value.accent {
+  color: #e56c86;
+}
+
+.setting-value.muted {
+  max-width: 220rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setting-arrow {
+  margin-left: 12rpx;
+  color: #b8b8b8;
+  font-size: 44rpx;
+  line-height: 1;
 }
 
 .setting-switch {
@@ -127,21 +118,17 @@ button::after {
   transform-origin: center right;
 }
 
-.action-item {
-  padding-right: 4rpx;
-}
-
 .logout-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: calc(100% - 64rpx);
   height: 96rpx;
-  margin-top: 32rpx;
-  border-radius: 999rpx;
-  color: #8d7166;
+  margin: 40rpx 32rpx 0;
+  border-radius: 16rpx;
+  color: #e56c86;
   font-size: 30rpx;
-  font-weight: 700;
-  background: rgba(255, 251, 247, 0.92);
-  border: 2rpx solid #e9d7cc;
+  font-weight: 400;
+  background: #ffffff;
+  border: 0;
 }
