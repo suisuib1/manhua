@@ -181,13 +181,13 @@ test('章节最后一页后仍能继续到下一章第一页', () => {
   assert.equal(pages[2].pageNo, 1)
 })
 
-test('自定义滑动翻页时同步当前进度', () => {
+test('自定义滑动翻页时左滑进入下一页右滑返回上一页', () => {
   const { pageConfig, setDataCalls } = loadPage()
 
   pageConfig.onLoad()
   pageConfig.handleTouchStart({ changedTouches: [{ clientX: 100 }] })
-  pageConfig.handleTouchEnd({ changedTouches: [{ clientX: 170 }] })
-  pageConfig.handleTouchStart({ changedTouches: [{ clientX: 170 }] })
+  pageConfig.handleTouchEnd({ changedTouches: [{ clientX: 30 }] })
+  pageConfig.handleTouchStart({ changedTouches: [{ clientX: 30 }] })
   pageConfig.handleTouchEnd({ changedTouches: [{ clientX: 100 }] })
 
   assert.equal(setDataCalls[1].currentIndex, 1)
@@ -214,7 +214,7 @@ test('custom touch paging keeps page index within bounds', () => {
 
   pageConfig.onLoad()
   pageConfig.handleTouchStart({ changedTouches: [{ clientX: 100 }] })
-  pageConfig.handleTouchEnd({ changedTouches: [{ clientX: 30 }] })
+  pageConfig.handleTouchEnd({ changedTouches: [{ clientX: 170 }] })
 
   assert.equal(pageConfig.data.currentIndex, 0)
   assert.equal(toastCalls[0].title, '已经是第一页')

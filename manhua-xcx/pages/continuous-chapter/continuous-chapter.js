@@ -198,12 +198,12 @@ Page({
     const deltaX = touch.clientX - this.touchStartX
     const threshold = 40
 
-    if (deltaX > threshold) {
+    if (deltaX < -threshold) {
       this.goNextPage()
       return
     }
 
-    if (deltaX < -threshold) {
+    if (deltaX > threshold) {
       this.goPreviousPage()
     }
   },
