@@ -1,4 +1,5 @@
-const { createChapterMock, pageRoutes, storageKeys } = require('../../utils/mock')
+const { createChapterMock, pageRoutes } = require('../../utils/mock')
+const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
 
 function buildCreateDraft(data) {
   return {
@@ -22,10 +23,6 @@ function decodeDraft(query) {
   } catch (err) {
     return null
   }
-}
-
-function saveDraft(draft) {
-  wx.setStorageSync(storageKeys.draftComicChapter, draft)
 }
 
 Page({
@@ -104,7 +101,7 @@ Page({
 
   goNext() {
     const draft = buildCreateDraft(this.data)
-    saveDraft(draft)
+    saveDraftWithBackendFallback(draft)
     wx.navigateTo({
       url: `${pageRoutes.diary}?draft=${encodeDraft(draft)}`,
     })
