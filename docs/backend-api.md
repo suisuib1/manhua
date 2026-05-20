@@ -328,6 +328,32 @@ Query：`status` 默认 `draft`，`page` 默认 `1`，`pageSize` 默认 `20` 且
 
 注意：删除会设置 `DiaryEntry.deletedAt`，并同步软删除关联 `DiaryPhoto`。
 
+### 12. POST /api/uploads/images
+
+说明：上传日记照片，返回图片 URL。
+是否需要登录：是。
+Header：`Authorization: Bearer <token>`
+请求：`multipart/form-data`，字段名 `file`。
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "url": "/uploads/images/xxx.jpg",
+    "filename": "xxx.jpg",
+    "mimeType": "image/jpeg",
+    "sizeBytes": 123456
+  }
+}
+```
+
+注意：
+- 当前只用于本地开发。
+- 生产环境后续迁移 OSS/COS。
+- 返回的 `url` 可作为 `diary-entries` 的 `photos[].imageUrl`。
+
 ## 四、常见错误码
 
 - `400`：请求参数错误
