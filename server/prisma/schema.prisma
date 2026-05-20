@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  wxOpenid     String?       @unique @map("wx_openid")
+  wxUnionid    String?       @map("wx_unionid")
+  status       String        @default("active")
+  lastLoginAt  DateTime?     @map("last_login_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  profile      UserProfile?
+  setting      UserSetting?
+  comicBooks   ComicBook[]
+  quota        UserQuota?
+
+  @@map("users")
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  nickname  String?
+  avatarUrl String?  @map("avatar_url")
+  bio       String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model UserSetting {
+  id                  String   @id @default(cuid())
+  userId              String   @unique @map("user_id")
+  autoSaveDraft       Boolean  @default(true) @map("auto_save_draft")
+  keepPhotoMood       Boolean  @default(true) @map("keep_photo_mood")
+  privateMode         Boolean  @default(true) @map("private_mode")
+  diaryReminder       Boolean  @default(false) @map("diary_reminder")
+  generationReminder  Boolean  @default(true) @map("generation_reminder")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model ComicBook {
+  id             String   @id @default(cuid())
+  ownerUserId    String   @map("owner_user_id")
+  title          String   @default("我的漫画日记")
+  description    String?
+  coverImageUrl  String?  @map("cover_image_url")
+  visibility     String   @default("private")
+  sortOrder      Int      @default(0) @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@index([ownerUserId])
+  @@index([ownerUserId, sortOrder])
+  @@map("comic_books")
+}
+
+model UserQuota {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  totalQuota      Int      @default(0) @map("total_quota")
+  usedQuota       Int      @default(0) @map("used_quota")
+  remainingQuota  Int      @default(0) @map("remaining_quota")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_quotas")
+}
