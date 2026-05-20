@@ -1,12 +1,15 @@
 # 《日记生成漫画后端已完成 API 文档》
 
-## 基础信息
+## 一、基础信息
 
 - 本地开发地址：`http://127.0.0.1:3000`
 - 统一响应格式：`{ code, message, data }`
 - 鉴权方式：`Authorization: Bearer <token>`
+- 前端 token storage key：`authToken`
+- 当前用户 storage key：`currentUser`
+- 设置本地兜底 key：`comicAppSettings`
 
-## 统一响应格式
+## 二、统一响应格式
 
 成功：
 
@@ -28,13 +31,12 @@
 }
 ```
 
-## 接口清单
+## 三、接口清单
 
-### 一、健康检查
+### 1. GET /api/health
 
-**GET** `/api/health`
+说明：健康检查。
 
-说明：检查后端服务是否正常。  
 是否需要登录：否。
 
 返回示例：
@@ -50,11 +52,10 @@
 }
 ```
 
-### 二、微信登录
+### 2. POST /api/auth/wechat/login
 
-**POST** `/api/auth/wechat/login`
+说明：小程序端通过 `wx.login` 获取 `code` 后，换取业务 JWT token。
 
-说明：小程序端通过 `wx.login` 获取 `code` 后，调用该接口换取业务 token。  
 是否需要登录：否。
 
 请求示例：
@@ -88,15 +89,17 @@
 ```
 
 注意：
-- 前端只保存 `token`，不要保存 `openid`。
-- 后端不会返回 `openid`、`unionid`、`session_key`。
+
+- 前端只保存 token，不保存 openid。
+- 后端不返回 openid、unionid、session_key。
 - 开发环境可使用 `WECHAT_LOGIN_MOCK=true`。
 
-### 三、获取当前用户信息
+### 3. GET /api/users/me
 
-**GET** `/api/users/me`
+说明：获取当前登录用户聚合信息。
 
-是否需要登录：是。  
+是否需要登录：是。
+
 Header：`Authorization: Bearer <token>`
 
 返回示例：
@@ -139,11 +142,12 @@ Header：`Authorization: Bearer <token>`
 }
 ```
 
-### 四、更新用户资料
+### 4. PUT /api/users/me/profile
 
-**PUT** `/api/users/me/profile`
+说明：更新当前用户资料。
 
-是否需要登录：是。  
+是否需要登录：是。
+
 Header：`Authorization: Bearer <token>`
 
 请求示例：
@@ -156,7 +160,8 @@ Header：`Authorization: Bearer <token>`
 }
 ```
 
-允许更新字段：
+允许字段：
+
 - `nickname`
 - `avatarUrl`
 - `bio`
@@ -164,14 +169,16 @@ Header：`Authorization: Bearer <token>`
 返回：更新后的 `profile`。
 
 注意：
+
 - 不允许更新 `userId`、`status`、`openid`、`quota` 等字段。
-- 多余字段会被忽略或拒绝，不能生效。
+- 多余字段不能生效。
 
-### 五、获取用户设置
+### 5. GET /api/users/me/settings
 
-**GET** `/api/users/me/settings`
+说明：获取当前用户设置。
 
-是否需要登录：是。  
+是否需要登录：是。
+
 Header：`Authorization: Bearer <token>`
 
 返回示例：
@@ -190,11 +197,12 @@ Header：`Authorization: Bearer <token>`
 }
 ```
 
-### 六、更新用户设置
+### 6. PUT /api/users/me/settings
 
-**PUT** `/api/users/me/settings`
+说明：更新当前用户设置。
 
-是否需要登录：是。  
+是否需要登录：是。
+
 Header：`Authorization: Bearer <token>`
 
 请求示例：
@@ -209,7 +217,8 @@ Header：`Authorization: Bearer <token>`
 }
 ```
 
-允许更新字段：
+允许字段：
+
 - `autoSaveDraft`
 - `keepPhotoMood`
 - `privateMode`
@@ -217,20 +226,22 @@ Header：`Authorization: Bearer <token>`
 - `generationReminder`
 
 注意：
+
 - 字段值必须是 boolean。
 - 未传字段保持原值。
 - 不允许更新 `id`、`userId`、`createdAt`、`updatedAt`。
 
-## 常见错误码
+## 四、常见错误码
 
 - `400`：请求参数错误
 - `401`：未登录或登录失效
 - `404`：接口不存在
 - `500`：服务端错误
 
-## 前端接入建议
+## 五、前端接入建议
 
-- 登录成功后保存 `authToken`
-- 调用需要登录的接口时带上 `Authorization`
-- token 失效时清理 `authToken` 和 `currentUser`
-- 不要清理 `draftComicChapter`、`generatedComicChapters`、`comicAppSettings`
+- 登录成功后保存 `authToken`。
+- 调用需要登录的接口时带 `Authorization`。
+- token 失效时只清理 `authToken` 和 `currentUser`。
+- 不要清理 `draftComicChapter`、`generatedComicChapters`、`comicAppSettings`。
+- 设置页登录失败或接口失败时继续使用 `comicAppSettings` 本地兜底。
