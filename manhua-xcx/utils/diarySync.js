@@ -1,6 +1,23 @@
 const { createDiaryEntry, updateDiaryEntry } = require('./diaryApi')
+const { uploadImage } = require('./uploadApi')
 const { storageKeys } = require('./mock')
 const { getAuthToken } = require('./auth')
+
+function isBackendImageUrl(filePath) {
+  return typeof filePath === 'string' && (
+    filePath.indexOf('/uploads/images/') === 0 ||
+    /^https?:\/\/[^/]+\/uploads\/images\//.test(filePath)
+  )
+}
+
+function shouldUploadPhotoPath(draft) {
+  return Boolean(
+    draft &&
+    draft.photoPath &&
+    !draft.uploadedPhotoUrl &&
+    !isBackendImageUrl(draft.photoPath)
+  )
+}
 
 function mapDraftToDiaryEntryPayload(draft) {
   return {
@@ -31,7 +48,7 @@ function mapDraftPhotos(draft) {
   if (draft.photoPath) {
     return [
       {
-        imageUrl: draft.photoPath,
+        imageUrl: draft.uploadedPhotoUrl || draft.photoPath,
         sortOrder: 0,
       },
     ]
@@ -54,15 +71,45 @@ function saveServerDiaryEntryId(draft, serverDiaryEntryId) {
 }
 
 async function syncDraftToBackend(draft) {
-  const payload = mapDraftToDiaryEntryPayload(draft)
+  const draftForSync = await prepareDraftForBackendSync(draft)
+  const payload = mapDraftToDiaryEntryPayload(draftForSync)
 
-  if (draft.serverDiaryEntryId) {
-    const entry = await updateDiaryEntry(draft.serverDiaryEntryId, payload)
-    return entry && entry.id ? entry.id : draft.serverDiaryEntryId
+  if (draftForSync.serverDiaryEntryId) {
+    const entry = await updateDiaryEntry(draftForSync.serverDiaryEntryId, payload)
+    return {
+      serverDiaryEntryId: entry && entry.id ? entry.id : draftForSync.serverDiaryEntryId,
+      draftForSync,
+    }
   }
 
   const entry = await createDiaryEntry(payload)
-  return entry && entry.id ? entry.id : ''
+  return {
+    serverDiaryEntryId: entry && entry.id ? entry.id : '',
+    draftForSync,
+  }
+}
+
+async function prepareDraftForBackendSync(draft) {
+  if (!shouldUploadPhotoPath(draft)) {
+    return draft
+  }
+
+  try {
+    const uploadedPhoto = await uploadImage(draft.photoPath)
+
+    if (!uploadedPhoto || !uploadedPhoto.url) {
+      return draft
+    }
+
+    const draftWithUploadedPhoto = Object.assign({}, draft, {
+      uploadedPhotoUrl: uploadedPhoto.url,
+    })
+
+    saveLocalDraft(draftWithUploadedPhoto)
+    return draftWithUploadedPhoto
+  } catch (error) {
+    return draft
+  }
 }
 
 async function saveDraftWithBackendFallback(draft, options = {}) {
@@ -80,12 +127,14 @@ async function saveDraftWithBackendFallback(draft, options = {}) {
   }
 
   try {
-    const serverDiaryEntryId = await syncDraftToBackend(draftToSave)
+    const syncResult = await syncDraftToBackend(draftToSave)
+    const serverDiaryEntryId = syncResult.serverDiaryEntryId
+    const syncedDraft = syncResult.draftForSync || draftToSave
     if (!serverDiaryEntryId) {
-      return draftToSave
+      return syncedDraft
     }
 
-    return saveServerDiaryEntryId(draftToSave, serverDiaryEntryId)
+    return saveServerDiaryEntryId(syncedDraft, serverDiaryEntryId)
   } catch (error) {
     if (options.showFailToast) {
       wx.showToast({
@@ -99,5 +148,6 @@ async function saveDraftWithBackendFallback(draft, options = {}) {
 
 module.exports = {
   mapDraftToDiaryEntryPayload,
+  prepareDraftForBackendSync,
   saveDraftWithBackendFallback,
 }
