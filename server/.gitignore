@@ -6,3 +6,5 @@ prisma/test.db
 prisma/test.db-journal
 tests/test_issue2_*.db
 tests/test_issue2_*.db-journal
+tests/test_issue_backend_*.db
+tests/test_issue_backend_*.db-journal
