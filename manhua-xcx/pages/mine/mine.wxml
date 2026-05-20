@@ -58,7 +58,6 @@
         <view class="menu-icon icon-{{index}}"></view>
         <view class="menu-copy">
           <view class="menu-title">{{item.title}}</view>
-          <view class="menu-desc">{{item.desc}}</view>
         </view>
         <view class="menu-arrow">›</view>
       </button>

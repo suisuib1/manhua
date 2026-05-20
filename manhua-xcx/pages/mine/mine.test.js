@@ -166,6 +166,15 @@ test('个人中心不内嵌章节选择列表', () => {
   assert.equal(wxml.includes('goChapterDetail'), false)
 })
 
+test('个人中心不展示顶部和菜单副说明文案', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'mine.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('book-open-hint'), false)
+  assert.equal(wxml.includes('点开漫画书选择章节阅读'), false)
+  assert.equal(wxml.includes('menu-desc'), false)
+  assert.equal(wxml.includes('{{item.desc}}'), false)
+})
+
 test('点击说明和设置菜单进入对应页面', () => {
   let pageConfig
   const navigateCalls = []
