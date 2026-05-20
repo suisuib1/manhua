@@ -36,7 +36,12 @@ test.beforeEach(async () => {
   await clearCoreTables()
 })
 
-test('mock WeChat login creates a user and returns a business token', async () => {
+test('non-production mock WeChat login creates a user and returns a business token', async () => {
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevMock = process.env.WECHAT_LOGIN_MOCK
+  process.env.NODE_ENV = 'test'
+  process.env.WECHAT_LOGIN_MOCK = 'true'
+
   const server = await listen(app)
 
   try {
@@ -55,6 +60,9 @@ test('mock WeChat login creates a user and returns a business token', async () =
     assert.equal(body.data.user.nickname, '测试用户')
     assert.equal(body.data.user.avatarUrl, 'https://example.com/avatar.png')
     assert.equal(body.data.isNewUser, true)
+    assert.equal(body.data.openid, undefined)
+    assert.equal(body.data.session_key, undefined)
+    assert.equal(body.data.sessionKey, undefined)
 
     const loaded = await prisma.user.findUnique({
       where: { id: body.data.user.id },
@@ -79,6 +87,61 @@ test('mock WeChat login creates a user and returns a business token', async () =
     assert.equal(loaded.quota.usedQuota, 0)
     assert.equal(loaded.quota.remainingQuota, 0)
   } finally {
+    process.env.NODE_ENV = prevNodeEnv
+    process.env.WECHAT_LOGIN_MOCK = prevMock
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test('production environment ignores WECHAT_LOGIN_MOCK and uses real provider flow', async () => {
+  const prevNodeEnv = process.env.NODE_ENV
+  const prevMock = process.env.WECHAT_LOGIN_MOCK
+  const prevAppId = process.env.WECHAT_APP_ID
+  const prevAppSecret = process.env.WECHAT_APP_SECRET
+  const prevFetch = global.fetch
+  process.env.NODE_ENV = 'production'
+  process.env.WECHAT_LOGIN_MOCK = 'true'
+  process.env.WECHAT_APP_ID = 'appid-prod-test'
+  process.env.WECHAT_APP_SECRET = 'secret-prod-test'
+  global.fetch = async (url, options) => {
+    if (String(url).startsWith('http://127.0.0.1:')) {
+      return prevFetch(url, options)
+    }
+
+    return {
+      ok: true,
+      json: async () => ({
+        openid: 'real_openid_prod_test',
+        session_key: 'real_session_key_prod_test',
+      }),
+    }
+  }
+
+  const server = await listen(app)
+
+  try {
+    const { response, body } = await postJson(server, '/api/auth/wechat/login', {
+      code: 'test_issue3_production',
+    })
+
+    assert.equal(response.status, 200)
+    assert.equal(body.code, 0)
+    assert.equal(Boolean(body.data.user.id), true)
+    assert.equal(body.data.user.nickname, null)
+    assert.equal(body.data.user.avatarUrl, null)
+    assert.equal(body.data.session_key, undefined)
+    assert.equal(body.data.sessionKey, undefined)
+
+    const loaded = await prisma.user.findUnique({
+      where: { id: body.data.user.id },
+    })
+    assert.equal(loaded.wxOpenid, 'real_openid_prod_test')
+  } finally {
+    global.fetch = prevFetch
+    process.env.NODE_ENV = prevNodeEnv
+    process.env.WECHAT_LOGIN_MOCK = prevMock
+    process.env.WECHAT_APP_ID = prevAppId
+    process.env.WECHAT_APP_SECRET = prevAppSecret
     await new Promise((resolve) => server.close(resolve))
   }
 })
