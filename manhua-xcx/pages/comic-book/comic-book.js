@@ -1,11 +1,10 @@
-const { comicBookMock, pageRoutes, storageKeys, homeMock } = require('../../utils/mock')
+const { comicBookMock, pageRoutes, homeMock } = require('../../utils/mock')
+const { buildChapterList, loadStoredChapters } = require('../../utils/chapterCatalog')
 
-function loadStoredChapters() {
-  return wx.getStorageSync(storageKeys.generatedComicChapters) || []
-}
+const chapterListRoute = '/pages/chapter-list/chapter-list'
 
 function mergeStoredChapters(defaultChapters, storedChapters) {
-  return defaultChapters.concat(storedChapters)
+  return buildChapterList(defaultChapters, storedChapters)
 }
 
 function getComicBookStats(chapters) {
@@ -40,7 +39,7 @@ Page({
 
   openComic() {
     wx.navigateTo({
-      url: `${pageRoutes.continuousChapter}?comicId=${comicBookMock.comics[0].id}`,
+      url: chapterListRoute,
     })
   },
 })

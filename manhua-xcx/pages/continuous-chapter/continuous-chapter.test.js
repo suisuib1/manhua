@@ -3,13 +3,13 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
-function loadPage() {
+function loadPage(initialStorage) {
   let pageConfig
   const backCalls = []
   const redirectCalls = []
   const toastCalls = []
   const setDataCalls = []
-  const storage = {}
+  const storage = Object.assign({}, initialStorage)
 
   global.Page = (config) => {
     pageConfig = config
@@ -60,7 +60,7 @@ test('阅读器使用 swiper 翻页而不是章节列表', () => {
   assert.equal(wxml.includes('comic-panel'), false)
   assert.equal(wxml.includes('flow-card'), false)
   assert.equal(wxml.includes('readChapter'), false)
-  assert.equal(wxml.includes('reader-progress-card'), true)
+  assert.equal(wxml.includes('reader-progress-card'), false)
   assert.equal(wxml.includes('back-button'), false)
 })
 
@@ -220,23 +220,62 @@ test('custom touch paging keeps page index within bounds', () => {
   assert.equal(toastCalls[0].title, '已经是第一页')
 })
 
-test('阅读器可根据 chapterId 定位到目标章节第一页', () => {
+test('阅读器可根据 chapterId 筛选目标章节并从第一页开始', () => {
   const { moduleExports } = loadPage()
-  const flatPages = [
-    { chapterId: 'chapter-001', pageNo: 1 },
-    { chapterId: 'chapter-001', pageNo: 2 },
-    { chapterId: 'chapter-002', pageNo: 1 },
+  const chapters = [
+    { id: 'chapter-001', title: '第一章', date: '05-16', pages: [{ pageId: 'p1', images: ['a'] }] },
+    { id: 'chapter-002', title: '第二章', date: '05-17', pages: [{ pageId: 'p2-1', images: ['b'] }, { pageId: 'p2-2', images: ['c'] }] },
   ]
+  const pages = moduleExports.buildPagesForReader(chapters, 'chapter-002')
+  const state = moduleExports.buildReaderState(0, pages)
 
-  assert.equal(moduleExports.findInitialPageIndex(flatPages, 'chapter-002'), 2)
+  assert.deepEqual(pages.map((page) => page.pageId), ['p2-1', 'p2-2'])
+  assert.equal(state.currentIndex, 0)
+  assert.equal(state.currentPage.pageId, 'p2-1')
+  assert.equal(state.progressText, '第 1 / 2 页')
 })
 
-test('阅读器 chapterId 不存在时回退第一页', () => {
+test('阅读器没有 chapterId 时打开最新章节第一页', () => {
   const { moduleExports } = loadPage()
-  const flatPages = [
-    { chapterId: 'chapter-001', pageNo: 1 },
-    { chapterId: 'chapter-001', pageNo: 2 },
+  const chapters = [
+    { id: 'chapter-001', title: '旧章节', date: '2026-05-16', pages: [{ pageId: 'old-1', images: ['a'] }] },
+    { id: 'chapter-002', title: '新章节', date: '2026-05-18', pages: [{ pageId: 'new-1', images: ['b'] }] },
   ]
+  const pages = moduleExports.buildPagesForReader(chapters)
 
-  assert.equal(moduleExports.findInitialPageIndex(flatPages, 'missing'), 0)
+  assert.equal(pages[0].chapterId, 'chapter-002')
+  assert.equal(moduleExports.buildReaderState(0, pages).progressText, '第 1 / 1 页')
+})
+
+test('阅读器页面按 sortOrder pageIndex index 升序排列', () => {
+  const { moduleExports } = loadPage()
+  const pages = moduleExports.buildPagesForReader([{
+    id: 'chapter-001',
+    title: '排序章节',
+    date: '2026-05-18',
+    pages: [
+      { pageId: 'by-index', index: 3, images: ['c'] },
+      { pageId: 'by-sort-order', sortOrder: 1, images: ['a'] },
+      { pageId: 'by-page-index', pageIndex: 2, images: ['b'] },
+    ],
+  }], 'chapter-001')
+
+  assert.deepEqual(pages.map((page) => page.pageId), ['by-sort-order', 'by-page-index', 'by-index'])
+})
+
+test('onLoad 使用 chapterId 时 currentPage 初始化为目标章节第一页', () => {
+  const { pageConfig, setDataCalls } = loadPage({
+    generatedComicChapters: [{
+      id: 'local-001',
+      title: '本地章节',
+      date: '2026-05-20',
+      pages: [{ pageId: 'local-2', sortOrder: 2, images: ['b'] }, { pageId: 'local-1', sortOrder: 1, images: ['a'] }],
+    }],
+  })
+
+  pageConfig.onLoad({ chapterId: 'local-001' })
+
+  assert.equal(setDataCalls[0].currentIndex, 0)
+  assert.equal(setDataCalls[0].currentPage.pageId, 'local-1')
+  assert.equal(setDataCalls[0].progressText, '第 1 / 2 页')
 })

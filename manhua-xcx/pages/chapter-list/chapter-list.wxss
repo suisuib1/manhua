@@ -1,0 +1,169 @@
+page {
+  min-height: 100%;
+  background: #fff6ea;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  line-height: 1;
+}
+
+button::after {
+  border: 0;
+}
+
+.chapter-list-page {
+  min-height: 100vh;
+  padding: 28rpx 28rpx calc(42rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  color: #4a2b22;
+  background:
+    radial-gradient(circle at 12% 2%, rgba(255, 205, 215, 0.32), transparent 230rpx),
+    radial-gradient(circle at 92% 9%, rgba(255, 224, 180, 0.42), transparent 260rpx),
+    #fff6ea;
+}
+
+.chapter-list-head {
+  padding: 12rpx 6rpx 22rpx;
+}
+
+.page-title {
+  color: #4a2b22;
+  font-size: 42rpx;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.page-subtitle {
+  margin-top: 10rpx;
+  color: #9a7064;
+  font-size: 25rpx;
+  line-height: 1.5;
+}
+
+.chapter-list {
+  display: grid;
+  gap: 22rpx;
+}
+
+.chapter-card {
+  display: grid;
+  grid-template-columns: 150rpx minmax(0, 1fr);
+  gap: 22rpx;
+  padding: 22rpx;
+  border-radius: 30rpx;
+  box-sizing: border-box;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 18rpx 38rpx rgba(116, 69, 52, 0.1);
+}
+
+.chapter-card-hover {
+  transform: translateY(2rpx);
+  opacity: 0.9;
+}
+
+.chapter-cover {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 24rpx;
+  background: #fff1e4;
+}
+
+.chapter-info {
+  min-width: 0;
+}
+
+.chapter-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.chapter-title {
+  min-width: 0;
+  color: #6a3c31;
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.chapter-date {
+  flex-shrink: 0;
+  color: #b48a7f;
+  font-size: 22rpx;
+  line-height: 1.45;
+}
+
+.chapter-summary {
+  margin-top: 12rpx;
+  color: #8e6c61;
+  font-size: 24rpx;
+  line-height: 1.45;
+}
+
+.chapter-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  min-width: 0;
+}
+
+.chapter-tag {
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  color: #c66d75;
+  font-size: 20rpx;
+  background: #ffe8ea;
+}
+
+.chapter-action {
+  flex-shrink: 0;
+  color: #e56c86;
+  font-size: 23rpx;
+  font-weight: 800;
+}
+
+.empty-card {
+  margin-top: 40rpx;
+  padding: 72rpx 34rpx;
+  border-radius: 32rpx;
+  text-align: center;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 18rpx 38rpx rgba(116, 69, 52, 0.1);
+}
+
+.empty-title {
+  color: #7a5048;
+  font-size: 28rpx;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.create-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 240rpx;
+  height: 76rpx;
+  margin: 28rpx auto 0;
+  border-radius: 999rpx;
+  color: #ffffff;
+  font-size: 26rpx;
+  font-weight: 900;
+  background: #f86f91;
+}
+
+.button-hover {
+  opacity: 0.9;
+}

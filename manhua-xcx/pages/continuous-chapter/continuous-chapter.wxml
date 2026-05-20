@@ -1,11 +1,4 @@
 <view class="reader-page">
-  <view class="reader-topbar">
-    <view class="reader-progress-card">
-      <view class="reader-title">{{mock.comic.title}}</view>
-      <view class="reader-progress">{{chapterToast}}</view>
-    </view>
-  </view>
-
   <view class="page-shell" bindtouchstart="handleTouchStart" bindtouchend="handleTouchEnd">
     <view wx:if="{{currentPage && currentPage.image}}" class="comic-page-card">
       <view class="page-meta">

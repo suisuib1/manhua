@@ -1,46 +1,23 @@
-const { continuousChapterMock, storageKeys, pageRoutes, homeMock } = require('../../utils/mock')
+const { continuousChapterMock, pageRoutes } = require('../../utils/mock')
+const { buildReadableChapters, collectImageUrls, getChapterImages, normalizeChapter } = require('../../utils/chapterCatalog')
 
-function loadStoredChapters() {
-  return wx.getStorageSync(storageKeys.generatedComicChapters) || []
+function getPageSortValue(page, fallbackIndex) {
+  const value = [page && page.sortOrder, page && page.pageIndex, page && page.index]
+    .find((item) => item !== undefined && item !== null && item !== '')
+  const numericValue = Number(value)
+
+  return Number.isNaN(numericValue) ? fallbackIndex : numericValue
 }
 
-function mergeStoredChapters(defaultChapters, storedChapters) {
-  return defaultChapters.concat(storedChapters)
-}
+function sortChapterPages(pages) {
+  return pages
+    .map((page, originalIndex) => ({ page, originalIndex }))
+    .sort((a, b) => {
+      const sortDiff = getPageSortValue(a.page, a.originalIndex) - getPageSortValue(b.page, b.originalIndex)
 
-function pickImageUrl(item) {
-  if (!item) return ''
-  if (typeof item === 'string') return item
-
-  return item.imageUrl || item.url || item.src || item.path || item.tempFilePath || ''
-}
-
-function collectImageUrls(items) {
-  if (!Array.isArray(items)) return []
-
-  return items.map(pickImageUrl).filter(Boolean)
-}
-
-function getChapterImages(chapter) {
-  if (!chapter) return []
-
-  const imageFields = ['images', 'comicImages', 'pageImages', 'panels']
-  const images = imageFields.reduce((result, field) => {
-    return result.concat(collectImageUrls(chapter[field]))
-  }, [])
-
-  if (Array.isArray(chapter.pages)) {
-    chapter.pages.forEach((page) => {
-      images.push(...getChapterImages(page))
+      return sortDiff || a.originalIndex - b.originalIndex
     })
-  }
-
-  ;['imageUrl', 'coverImage', 'generatedImage'].forEach((field) => {
-    const image = pickImageUrl(chapter[field])
-    if (image) images.push(image)
-  })
-
-  return images
+    .map((entry) => entry.page)
 }
 
 function buildPageFromChapterImage(chapter, chapterIndex, image, pageIndex, totalPages) {
@@ -87,8 +64,10 @@ function buildPageFromPage(chapter, chapterIndex, page, pageIndex, totalPages) {
 function buildFlatPages(chapters) {
   return chapters.reduce((pages, chapter, chapterIndex) => {
     if (Array.isArray(chapter.pages) && chapter.pages.length > 0) {
-      chapter.pages.forEach((page, pageIndex) => {
-        pages.push(buildPageFromPage(chapter, chapterIndex, page, pageIndex, chapter.pages.length))
+      const sortedPages = sortChapterPages(chapter.pages)
+
+      sortedPages.forEach((page, pageIndex) => {
+        pages.push(buildPageFromPage(chapter, chapterIndex, page, pageIndex, sortedPages.length))
       })
       return pages
     }
@@ -100,6 +79,30 @@ function buildFlatPages(chapters) {
 
     return pages
   }, [])
+}
+
+function findChapterForReader(chapters, chapterId) {
+  const sortedChapters = chapters.slice().sort((a, b) => {
+    if (b.sortTime !== a.sortTime) return b.sortTime - a.sortTime
+    return a.sourceIndex - b.sourceIndex
+  })
+
+  if (chapterId) {
+    const chapter = sortedChapters.find((item) => item.id === chapterId || item.chapterId === chapterId)
+
+    if (chapter) return chapter
+  }
+
+  return sortedChapters[0] || null
+}
+
+function buildPagesForReader(chapters, chapterId) {
+  const readableChapters = chapters.map((chapter, index) => {
+    return chapter.sortTime === undefined ? normalizeChapter(chapter, index) : chapter
+  })
+  const chapter = findChapterForReader(readableChapters, chapterId)
+
+  return chapter ? buildFlatPages([chapter]) : []
 }
 
 function buildReaderState(currentIndex, flatPages) {
@@ -136,11 +139,11 @@ function findInitialPageIndex(flatPages, chapterId) {
 }
 
 function buildReaderChapters() {
-  return mergeStoredChapters(homeMock.recentChapters.slice().reverse(), loadStoredChapters())
+  return buildReadableChapters()
 }
 
 const readerChapters = buildReaderChapters()
-const flatPages = buildFlatPages(readerChapters)
+const flatPages = buildPagesForReader(readerChapters)
 
 Page({
   data: {
@@ -158,9 +161,13 @@ Page({
   touchStartX: 0,
 
   onLoad(options) {
-    const startIndex = findInitialPageIndex(flatPages, options && options.chapterId)
+    const chapters = buildReaderChapters()
+    const pages = buildPagesForReader(chapters, options && options.chapterId)
 
-    this.setData(buildReaderState(startIndex, flatPages))
+    this.setData(Object.assign({
+      flatPages: pages,
+      totalPages: pages.length,
+    }, buildReaderState(0, pages)))
   },
 
   goBackToComicList() {
@@ -238,9 +245,10 @@ Page({
 
 module.exports = {
   buildFlatPages,
+  buildPagesForReader,
   buildReaderState,
   getChapterImages,
   findInitialPageIndex,
-  mergeStoredChapters,
   buildReaderChapters,
+  sortChapterPages,
 }

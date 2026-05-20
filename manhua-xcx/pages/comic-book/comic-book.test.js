@@ -63,13 +63,13 @@ test('我的漫画书页面展示实体书封面而不是普通列表', () => {
   assert.equal(wxml.includes('comic-card'), false)
 })
 
-test('点击漫画书封面进入阅读器', () => {
+test('点击漫画书封面进入章节选择页', () => {
   const { pageConfig, navigateCalls } = loadPage()
 
   pageConfig.openComic()
 
   assert.deepEqual(navigateCalls[0], {
-    url: '/pages/continuous-chapter/continuous-chapter?comicId=book-001',
+    url: '/pages/chapter-list/chapter-list',
   })
 })
 

@@ -1,0 +1,37 @@
+<view class="chapter-list-page">
+  <view class="chapter-list-head">
+    <view class="page-title">漫画章节</view>
+    <view class="page-subtitle">选择一章，从第一页开始阅读</view>
+  </view>
+
+  <view wx:if="{{hasChapters}}" class="chapter-list">
+    <view
+      wx:for="{{chapters}}"
+      wx:key="id"
+      class="chapter-card"
+      data-chapter-id="{{item.id}}"
+      bindtap="openChapter"
+      hover-class="chapter-card-hover"
+    >
+      <image class="chapter-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      <view class="chapter-info">
+        <view class="chapter-main">
+          <view class="chapter-title">{{item.subtitle || item.title}}</view>
+          <view class="chapter-date">{{item.date || item.createdAt}}</view>
+        </view>
+        <view class="chapter-summary">{{item.summary || item.caption || '点击查看这一章的漫画分镜'}}</view>
+        <view class="chapter-footer">
+          <view class="tag-row">
+            <text wx:for="{{item.tags}}" wx:key="*this" class="chapter-tag">#{{item}}</text>
+          </view>
+          <view class="chapter-action">{{item.pageCountText}} · 查看章节</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-card">
+    <view class="empty-title">还没有漫画章节，先去写一篇日记吧</view>
+    <button class="create-button" bindtap="goCreateChapter" hover-class="button-hover">去创建</button>
+  </view>
+</view>
