@@ -49,7 +49,12 @@ Page({
     }
   },
 
-  openComicBook() {
+  async openComicBook() {
+    if (!getAuthToken()) {
+      await this.handleUserInfoTap()
+      return
+    }
+
     wx.navigateTo({
       url: pageRoutes.comicBook,
     })
