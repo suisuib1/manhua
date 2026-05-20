@@ -61,15 +61,6 @@
     </scroll-view>
   </view>
 
-  <view class="memory-note">
-    <view class="note-pin"></view>
-    <view class="memory-copy">
-      <view>还没有更多章节时，</view>
-      <view>会在这里慢慢收藏你的回忆。</view>
-    </view>
-    <image class="home-empty-cat" src="/subpackage/icon-home-sleeping-cat.png" mode="aspectFit" />
-  </view>
-
   <view class="quick-grid">
     <view class="quick-card character-card" bindtap="goCharacter">
       <image class="home-entry-icon" src="/subpackage/icon-home-character-profile.png" mode="aspectFit" />

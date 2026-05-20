@@ -55,3 +55,11 @@ test('首页最近章节卡片不再显示状态标签', () => {
   assert.equal(wxml.includes('chapter-status'), false)
   assert.equal(wxml.includes('status-dot'), false)
 })
+
+test('首页不展示更多章节占位提示卡片', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'index.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('memory-note'), false)
+  assert.equal(wxml.includes('还没有更多章节时'), false)
+  assert.equal(wxml.includes('home-empty-cat'), false)
+})
