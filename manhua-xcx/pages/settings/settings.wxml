@@ -1,8 +1,9 @@
 <view class="settings-page polish-page">
   <view class="settings-section">
-    <view class="settings-section-title">账号</view>
+    <view class="settings-section-title"><text class="section-dot"></text>账号</view>
     <view class="settings-list">
       <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
+        <view class="setting-icon icon-user"></view>
         <view class="setting-main">
           <view class="setting-title">个人资料</view>
         </view>
@@ -13,6 +14,7 @@
       </view>
 
       <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
+        <view class="setting-icon icon-lock"></view>
         <view class="setting-main">
           <view class="setting-title">登录状态</view>
         </view>
@@ -25,18 +27,21 @@
   </view>
 
   <view class="settings-section">
-    <view class="settings-section-title">创作偏好</view>
+    <view class="settings-section-title"><text class="section-dot"></text>创作偏好</view>
     <view class="settings-list">
       <view class="setting-row" bindtap="handleStyleTap" hover-class="settings-row-hover">
+        <view class="setting-icon icon-palette"></view>
         <view class="setting-main">
           <view class="setting-title">默认漫画风格</view>
         </view>
         <view class="setting-side">
           <view class="setting-value accent">Q版</view>
+          <view class="setting-arrow">›</view>
         </view>
       </view>
 
       <view class="setting-row">
+        <view class="setting-icon icon-save"></view>
         <view class="setting-main">
           <view class="setting-title">自动保存草稿</view>
         </view>
@@ -50,6 +55,7 @@
       </view>
 
       <view class="setting-row">
+        <view class="setting-icon icon-smile"></view>
         <view class="setting-main">
           <view class="setting-title">生成时保留照片情绪</view>
         </view>
@@ -65,9 +71,10 @@
   </view>
 
   <view class="settings-section">
-    <view class="settings-section-title">隐私与数据</view>
+    <view class="settings-section-title"><text class="section-dot"></text>隐私与数据</view>
     <view class="settings-list">
       <view class="setting-row">
+        <view class="setting-icon icon-lock"></view>
         <view class="setting-main">
           <view class="setting-title">私密日记模式</view>
         </view>
@@ -81,31 +88,36 @@
       </view>
 
       <view class="setting-row" bindtap="clearDraftCache" hover-class="settings-row-hover">
+        <view class="setting-icon icon-clean"></view>
         <view class="setting-main">
           <view class="setting-title">清理临时草稿缓存</view>
           <view class="setting-desc">draftComicChapter</view>
         </view>
         <view class="setting-side">
           <view class="setting-value accent">清理</view>
+          <view class="setting-arrow">›</view>
         </view>
       </view>
 
       <view class="setting-row" bindtap="clearGeneratedCache" hover-class="settings-row-hover">
+        <view class="setting-icon icon-box"></view>
         <view class="setting-main">
           <view class="setting-title">清理本地生成缓存</view>
           <view class="setting-desc">generatedComicChapters</view>
         </view>
         <view class="setting-side">
           <view class="setting-value accent">清理</view>
+          <view class="setting-arrow">›</view>
         </view>
       </view>
     </view>
   </view>
 
   <view class="settings-section">
-    <view class="settings-section-title">通知提醒</view>
+    <view class="settings-section-title"><text class="section-dot"></text>通知提醒</view>
     <view class="settings-list">
       <view class="setting-row">
+        <view class="setting-icon icon-bell"></view>
         <view class="setting-main">
           <view class="setting-title">每日写日记提醒</view>
         </view>
@@ -119,6 +131,7 @@
       </view>
 
       <view class="setting-row">
+        <view class="setting-icon icon-bell"></view>
         <view class="setting-main">
           <view class="setting-title">漫画生成完成提醒</view>
         </view>
@@ -134,41 +147,16 @@
   </view>
 
   <view class="settings-section">
-    <view class="settings-section-title">帮助与关于</view>
+    <view class="settings-section-title"><text class="section-dot"></text>帮助与关于</view>
     <view class="settings-list">
-      <view class="setting-row" data-action="faq" bindtap="handleHelpTap" hover-class="settings-row-hover">
+      <view class="setting-row" data-action="about" bindtap="handleHelpTap" hover-class="settings-row-hover">
+        <view class="setting-icon icon-help"></view>
         <view class="setting-main">
-          <view class="setting-title">常见问题</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-arrow">›</view>
-        </view>
-      </view>
-
-      <view class="setting-row" data-action="feedback" bindtap="handleHelpTap" hover-class="settings-row-hover">
-        <view class="setting-main">
-          <view class="setting-title">意见反馈</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-arrow">›</view>
-        </view>
-      </view>
-
-      <view class="setting-row" data-action="privacy" bindtap="handleHelpTap" hover-class="settings-row-hover">
-        <view class="setting-main">
-          <view class="setting-title">隐私协议</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-arrow">›</view>
-        </view>
-      </view>
-
-      <view class="setting-row" data-action="version" bindtap="handleHelpTap" hover-class="settings-row-hover">
-        <view class="setting-main">
-          <view class="setting-title">当前版本</view>
+          <view class="setting-title">帮助与关于</view>
         </view>
         <view class="setting-side">
           <view class="setting-value muted">{{versionText}}</view>
+          <view class="setting-arrow">›</view>
         </view>
       </view>
     </view>
