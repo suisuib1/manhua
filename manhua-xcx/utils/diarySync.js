@@ -44,6 +44,15 @@ function saveLocalDraft(draft) {
   wx.setStorageSync(storageKeys.draftComicChapter, draft)
 }
 
+function saveServerDiaryEntryId(draft, serverDiaryEntryId) {
+  const latestLocalDraft = wx.getStorageSync(storageKeys.draftComicChapter) || draft
+  const nextDraft = Object.assign({}, latestLocalDraft, {
+    serverDiaryEntryId,
+  })
+  saveLocalDraft(nextDraft)
+  return nextDraft
+}
+
 async function syncDraftToBackend(draft) {
   const payload = mapDraftToDiaryEntryPayload(draft)
 
@@ -76,11 +85,7 @@ async function saveDraftWithBackendFallback(draft, options = {}) {
       return draftToSave
     }
 
-    const nextDraft = Object.assign({}, draftToSave, {
-      serverDiaryEntryId,
-    })
-    saveLocalDraft(nextDraft)
-    return nextDraft
+    return saveServerDiaryEntryId(draftToSave, serverDiaryEntryId)
   } catch (error) {
     if (options.showFailToast) {
       wx.showToast({

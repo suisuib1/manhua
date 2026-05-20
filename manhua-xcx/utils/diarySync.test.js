@@ -170,6 +170,59 @@ test('后端同步失败时保留本地草稿并不修改生成章节缓存', as
   assert.equal(toastCalls[0].title, '已保存到本地，登录同步失败')
 })
 
+test('后端同步成功回写 id 时不会覆盖当前更完整的本地草稿', async () => {
+  const storage = {
+    authToken: 'token-issue8',
+  }
+  const { diarySync, storage: nextStorage } = loadSync(storage, (options) => {
+    nextStorage.draftComicChapter = {
+      chapterTitle: '完整日记草稿',
+      diaryText: '日记页已经补充的正文',
+      photoPath: 'wxfile://full.jpg',
+    }
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'entry-late-sync',
+        },
+      },
+    })
+  })
+
+  await diarySync.saveDraftWithBackendFallback({
+    chapterTitle: '创建页草稿',
+  })
+
+  assert.equal(nextStorage.draftComicChapter.serverDiaryEntryId, 'entry-late-sync')
+  assert.equal(nextStorage.draftComicChapter.chapterTitle, '完整日记草稿')
+  assert.equal(nextStorage.draftComicChapter.diaryText, '日记页已经补充的正文')
+  assert.equal(nextStorage.draftComicChapter.photoPath, 'wxfile://full.jpg')
+})
+
+test('后端请求失败时本地创建日记流程仍保留草稿', async () => {
+  const storage = {
+    authToken: 'token-issue8',
+  }
+  const { diarySync, requestCalls, storage: nextStorage } = loadSync(storage, (options) => {
+    options.fail({
+      errMsg: 'request:fail url not in domain list',
+    })
+  })
+
+  const draft = await diarySync.saveDraftWithBackendFallback({
+    chapterTitle: '登录接口未配置时的本地草稿',
+    diaryText: '请求失败也不影响本地创建',
+  })
+
+  assert.equal(requestCalls.length, 1)
+  assert.equal(draft.serverDiaryEntryId, undefined)
+  assert.equal(nextStorage.draftComicChapter.chapterTitle, '登录接口未配置时的本地草稿')
+  assert.equal(nextStorage.draftComicChapter.diaryText, '请求失败也不影响本地创建')
+})
+
 test('单图 photoPath 会映射为后端 photos[0].imageUrl', () => {
   const { diarySync } = loadSync({}, () => {})
   const payload = diarySync.mapDraftToDiaryEntryPayload({
