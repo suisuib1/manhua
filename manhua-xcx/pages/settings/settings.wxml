@@ -1,163 +1,138 @@
 <view class="settings-page polish-page">
-  <view class="settings-section">
-    <view class="settings-section-title"><text class="section-dot"></text>账号</view>
-    <view class="settings-list">
-      <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
-        <view class="setting-icon icon-user"></view>
-        <view class="setting-main">
-          <view class="setting-title">个人资料</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value muted">{{user.nickname}}</view>
-          <view class="setting-arrow">›</view>
-        </view>
+  <view class="settings-form">
+    <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
+      <view class="setting-icon icon-user"></view>
+      <view class="setting-main">
+        <view class="setting-title">个人资料</view>
       </view>
-
-      <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
-        <view class="setting-icon icon-lock"></view>
-        <view class="setting-main">
-          <view class="setting-title">登录状态</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value accent">{{user.loginText}}</view>
-          <view class="setting-arrow">›</view>
-        </view>
+      <view class="setting-side">
+        <view class="setting-value muted">{{user.nickname}}</view>
+        <view class="setting-arrow">›</view>
       </view>
     </view>
-  </view>
 
-  <view class="settings-section">
-    <view class="settings-section-title"><text class="section-dot"></text>创作偏好</view>
-    <view class="settings-list">
-      <view class="setting-row" bindtap="handleStyleTap" hover-class="settings-row-hover">
-        <view class="setting-icon icon-palette"></view>
-        <view class="setting-main">
-          <view class="setting-title">默认漫画风格</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value accent">Q版</view>
-          <view class="setting-arrow">›</view>
-        </view>
+    <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
+      <view class="setting-icon icon-lock"></view>
+      <view class="setting-main">
+        <view class="setting-title">登录状态</view>
       </view>
-
-      <view class="setting-row">
-        <view class="setting-icon icon-save"></view>
-        <view class="setting-main">
-          <view class="setting-title">自动保存草稿</view>
-        </view>
-        <switch
-          class="setting-switch"
-          checked="{{settings.autoSaveDraft}}"
-          data-key="autoSaveDraft"
-          bindchange="handleToggleChange"
-          color="#f77187"
-        />
-      </view>
-
-      <view class="setting-row">
-        <view class="setting-icon icon-smile"></view>
-        <view class="setting-main">
-          <view class="setting-title">生成时保留照片情绪</view>
-        </view>
-        <switch
-          class="setting-switch"
-          checked="{{settings.keepPhotoMood}}"
-          data-key="keepPhotoMood"
-          bindchange="handleToggleChange"
-          color="#f77187"
-        />
+      <view class="setting-side">
+        <view class="setting-value accent">{{user.loginText}}</view>
+        <view class="setting-arrow">›</view>
       </view>
     </view>
-  </view>
 
-  <view class="settings-section">
-    <view class="settings-section-title"><text class="section-dot"></text>隐私与数据</view>
-    <view class="settings-list">
-      <view class="setting-row">
-        <view class="setting-icon icon-lock"></view>
-        <view class="setting-main">
-          <view class="setting-title">私密日记模式</view>
-        </view>
-        <switch
-          class="setting-switch"
-          checked="{{settings.privateMode}}"
-          data-key="privateMode"
-          bindchange="handleToggleChange"
-          color="#f77187"
-        />
+    <view class="setting-row" bindtap="handleStyleTap" hover-class="settings-row-hover">
+      <view class="setting-icon icon-palette"></view>
+      <view class="setting-main">
+        <view class="setting-title">默认漫画风格</view>
       </view>
-
-      <view class="setting-row" bindtap="clearDraftCache" hover-class="settings-row-hover">
-        <view class="setting-icon icon-clean"></view>
-        <view class="setting-main">
-          <view class="setting-title">清理临时草稿缓存</view>
-          <view class="setting-desc">draftComicChapter</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value accent">清理</view>
-          <view class="setting-arrow">›</view>
-        </view>
-      </view>
-
-      <view class="setting-row" bindtap="clearGeneratedCache" hover-class="settings-row-hover">
-        <view class="setting-icon icon-box"></view>
-        <view class="setting-main">
-          <view class="setting-title">清理本地生成缓存</view>
-          <view class="setting-desc">generatedComicChapters</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value accent">清理</view>
-          <view class="setting-arrow">›</view>
-        </view>
+      <view class="setting-side">
+        <view class="setting-value accent">Q版</view>
+        <view class="setting-arrow">›</view>
       </view>
     </view>
-  </view>
 
-  <view class="settings-section">
-    <view class="settings-section-title"><text class="section-dot"></text>通知提醒</view>
-    <view class="settings-list">
-      <view class="setting-row">
-        <view class="setting-icon icon-bell"></view>
-        <view class="setting-main">
-          <view class="setting-title">每日写日记提醒</view>
-        </view>
-        <switch
-          class="setting-switch"
-          checked="{{settings.diaryReminder}}"
-          data-key="diaryReminder"
-          bindchange="handleToggleChange"
-          color="#f77187"
-        />
+    <view class="setting-row">
+      <view class="setting-icon icon-save"></view>
+      <view class="setting-main">
+        <view class="setting-title">自动保存草稿</view>
       </view>
+      <switch
+        class="setting-switch"
+        checked="{{settings.autoSaveDraft}}"
+        data-key="autoSaveDraft"
+        bindchange="handleToggleChange"
+        color="#f77187"
+      />
+    </view>
 
-      <view class="setting-row">
-        <view class="setting-icon icon-bell"></view>
-        <view class="setting-main">
-          <view class="setting-title">漫画生成完成提醒</view>
-        </view>
-        <switch
-          class="setting-switch"
-          checked="{{settings.generationReminder}}"
-          data-key="generationReminder"
-          bindchange="handleToggleChange"
-          color="#f77187"
-        />
+    <view class="setting-row">
+      <view class="setting-icon icon-smile"></view>
+      <view class="setting-main">
+        <view class="setting-title">生成时保留照片情绪</view>
+      </view>
+      <switch
+        class="setting-switch"
+        checked="{{settings.keepPhotoMood}}"
+        data-key="keepPhotoMood"
+        bindchange="handleToggleChange"
+        color="#f77187"
+      />
+    </view>
+
+    <view class="setting-row">
+      <view class="setting-icon icon-lock"></view>
+      <view class="setting-main">
+        <view class="setting-title">私密日记模式</view>
+      </view>
+      <switch
+        class="setting-switch"
+        checked="{{settings.privateMode}}"
+        data-key="privateMode"
+        bindchange="handleToggleChange"
+        color="#f77187"
+      />
+    </view>
+
+    <view class="setting-row" bindtap="clearDraftCache" hover-class="settings-row-hover">
+      <view class="setting-icon icon-clean"></view>
+      <view class="setting-main">
+        <view class="setting-title">清理临时草稿缓存</view>
+      </view>
+      <view class="setting-side">
+        <view class="setting-value accent">清理</view>
+        <view class="setting-arrow">›</view>
       </view>
     </view>
-  </view>
 
-  <view class="settings-section">
-    <view class="settings-section-title"><text class="section-dot"></text>帮助与关于</view>
-    <view class="settings-list">
-      <view class="setting-row" data-action="about" bindtap="handleHelpTap" hover-class="settings-row-hover">
-        <view class="setting-icon icon-help"></view>
-        <view class="setting-main">
-          <view class="setting-title">帮助与关于</view>
-        </view>
-        <view class="setting-side">
-          <view class="setting-value muted">{{versionText}}</view>
-          <view class="setting-arrow">›</view>
-        </view>
+    <view class="setting-row" bindtap="clearGeneratedCache" hover-class="settings-row-hover">
+      <view class="setting-icon icon-box"></view>
+      <view class="setting-main">
+        <view class="setting-title">清理本地生成缓存</view>
+      </view>
+      <view class="setting-side">
+        <view class="setting-value accent">清理</view>
+        <view class="setting-arrow">›</view>
+      </view>
+    </view>
+
+    <view class="setting-row">
+      <view class="setting-icon icon-bell"></view>
+      <view class="setting-main">
+        <view class="setting-title">每日写日记提醒</view>
+      </view>
+      <switch
+        class="setting-switch"
+        checked="{{settings.diaryReminder}}"
+        data-key="diaryReminder"
+        bindchange="handleToggleChange"
+        color="#f77187"
+      />
+    </view>
+
+    <view class="setting-row">
+      <view class="setting-icon icon-bell"></view>
+      <view class="setting-main">
+        <view class="setting-title">漫画生成完成提醒</view>
+      </view>
+      <switch
+        class="setting-switch"
+        checked="{{settings.generationReminder}}"
+        data-key="generationReminder"
+        bindchange="handleToggleChange"
+        color="#f77187"
+      />
+    </view>
+
+    <view class="setting-row" data-action="about" bindtap="handleHelpTap" hover-class="settings-row-hover">
+      <view class="setting-icon icon-help"></view>
+      <view class="setting-main">
+        <view class="setting-title">帮助与关于</view>
+      </view>
+      <view class="setting-side">
+        <view class="setting-value muted">{{versionText}}</view>
+        <view class="setting-arrow">›</view>
       </view>
     </view>
   </view>

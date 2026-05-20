@@ -42,16 +42,21 @@ function loadPage(storage = {}) {
   return { pageConfig, storage, toastCalls, modalCalls }
 }
 
-test('设置页 wxml 使用分组列表结构，并保留偏好、隐私、提醒、关于和退出登录', () => {
+test('设置页 wxml 使用单表单结构，并保留偏好、隐私、提醒、关于和退出登录', () => {
   const wxml = fs.readFileSync(path.join(__dirname, 'settings.wxml'), 'utf8')
 
   assert.equal(wxml.includes('account-card'), false)
   assert.equal(wxml.includes('settings-header'), false)
-  assert.equal(wxml.includes('settings-section'), true)
-  assert.equal(wxml.includes('settings-list'), true)
+  assert.equal(wxml.includes('settings-section'), false)
+  assert.equal(wxml.includes('settings-section-title'), false)
+  assert.equal(wxml.includes('section-dot'), false)
+  assert.equal(wxml.includes('settings-list'), false)
+  assert.equal(wxml.includes('settings-form'), true)
   assert.equal(wxml.includes('setting-row'), true)
   assert.equal(wxml.includes('settings-card'), false)
   assert.equal(wxml.includes('polish-card'), false)
+  assert.equal(wxml.includes('draftComicChapter'), false)
+  assert.equal(wxml.includes('generatedComicChapters'), false)
   assert.equal(wxml.includes('个人资料'), true)
   assert.equal(wxml.includes('autoSaveDraft'), true)
   assert.equal(wxml.includes('keepPhotoMood'), true)
