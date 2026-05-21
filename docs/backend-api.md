@@ -368,3 +368,76 @@ Header：`Authorization: Bearer <token>`
 - token 失效时只清理 `authToken` 和 `currentUser`。
 - 不要清理 `draftComicChapter`、`generatedComicChapters`、`comicAppSettings`。
 - 设置页登录失败或接口失败时继续使用 `comicAppSettings` 本地兜底。
+
+## GenerationTask mock API
+
+### POST /api/generation-tasks
+
+说明：基于当前登录用户自己的日记草稿创建一个 mock 生成任务。
+
+是否需要登录：是。
+Header：`Authorization: Bearer <token>`
+
+请求示例：
+```json
+{
+  "diaryEntryId": "diary_entry_id"
+}
+```
+
+当前行为：
+- 只校验并创建本地 mock 任务，不接真实 AI。
+- 不启动 worker、queue 或定时任务。
+- 同步写入 `completed` 状态。
+- `diaryEntryId` 必填，且日记必须存在、未软删除、属于当前登录用户。
+- 日记不存在、已删除或不属于当前登录用户时返回 `404`。
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "id": "generation_task_id",
+    "status": "completed",
+    "taskType": "diary_to_comic",
+    "diaryEntryId": "diary_entry_id",
+    "input": {},
+    "result": {
+      "chapter": {
+        "diaryEntryId": "diary_entry_id",
+        "title": "章节标题",
+        "date": "2026-05-21T00:00:00.000Z"
+      },
+      "pages": [
+        {
+          "pageIndex": 0,
+          "sortOrder": 0,
+          "caption": "mock comic page",
+          "imageUrl": null,
+          "mock": true
+        }
+      ]
+    },
+    "errorMessage": null,
+    "retryCount": 0,
+    "createdAt": "2026-05-21T00:00:00.000Z",
+    "startedAt": "2026-05-21T00:00:00.000Z",
+    "finishedAt": "2026-05-21T00:00:00.000Z"
+  }
+}
+```
+
+### GET /api/generation-tasks/:id
+
+说明：读取当前登录用户自己的生成任务详情。
+
+是否需要登录：是。
+Header：`Authorization: Bearer <token>`
+
+当前行为：
+- 只读取任务，不推进任务状态。
+- 不调用外部 AI 服务。
+- 只能读取当前登录用户自己的任务。
+- 任务不存在或不属于当前登录用户时返回 `404`。
+- 返回体不会暴露 `ownerUserId`。
