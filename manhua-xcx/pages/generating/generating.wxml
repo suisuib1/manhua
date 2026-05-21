@@ -1,18 +1,6 @@
 <view class="generating-page polish-page">
-  <view class="polish-header">
-    <view class="polish-title">{{mock.title}}</view>
-    <view class="polish-subtitle">{{mock.subtitle}}</view>
-  </view>
-
   <view class="stage-card polish-card">
     <view class="polish-card-content">
-      <view class="binder-row">
-        <view class="binder"></view>
-        <view class="binder"></view>
-        <view class="binder"></view>
-        <view class="binder"></view>
-        <view class="binder"></view>
-      </view>
       <view class="stage-illustration">
         <image class="stage-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
         <view class="stage-star star-a"></view>
@@ -36,10 +24,6 @@
       </view>
       <view class="wait-pill">{{mock.estimatedText}}</view>
     </view>
-  </view>
-
-  <view class="polish-note wait-note">
-    你可以先去做其他可爱的事，回来时这一章会继续为你生成中。
   </view>
 
   <button

@@ -17,27 +17,8 @@ button::after {
 
 .stage-card {
   min-height: 640rpx;
-  padding-top: 46rpx;
   border-radius: 40rpx;
   background: linear-gradient(180deg, #fffdf9 0%, #fff4ee 100%);
-}
-
-.binder-row {
-  position: absolute;
-  left: 46rpx;
-  right: 46rpx;
-  top: -28rpx;
-  display: flex;
-  justify-content: space-between;
-}
-
-.binder {
-  width: 28rpx;
-  height: 70rpx;
-  border: 5rpx solid #efaa9f;
-  border-bottom: 0;
-  border-radius: 20rpx 20rpx 0 0;
-  background: #fffaf5;
 }
 
 .stage-illustration {
@@ -168,8 +149,4 @@ button::after {
   color: #4c7d9e;
   background: #eef6ff;
   border-color: #d9e9fb;
-}
-
-.wait-note {
-  text-align: center;
 }
