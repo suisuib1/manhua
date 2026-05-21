@@ -1,9 +1,10 @@
 const { mineMock, pageRoutes } = require('../../utils/mock')
-const { clearAuthSession, getAuthToken, loginWithWechat, refreshCurrentUser } = require('../../utils/auth')
+const { clearAuthSession, getAuthToken, getCurrentUser, loginWithWechat, refreshCurrentUser } = require('../../utils/auth')
 
 const loggedOutUser = {
   nickname: '未登录',
   subtitle: '点击登录同步你的漫画日记',
+  avatar: '/subpackage/icon-home-mascot-star.png',
 }
 
 function buildMockWithUser(user) {
@@ -12,6 +13,7 @@ function buildMockWithUser(user) {
       ? {
         nickname: user.nickname || '漫画日记用户',
         subtitle: '私人漫画书同步中',
+        avatar: user.avatarUrl || '/subpackage/icon-home-mascot-star.png',
       }
       : loggedOutUser,
   })
@@ -37,6 +39,8 @@ Page({
       this.applyUser(null)
       return
     }
+
+    this.applyUser(getCurrentUser())
 
     try {
       const { user } = await refreshCurrentUser()

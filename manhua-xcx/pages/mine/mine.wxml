@@ -4,10 +4,10 @@
     <view class="polish-subtitle">收藏今天，也照顾好自己的小小故事</view>
   </view>
 
-  <view class="book-profile polish-card">
+  <view class="book-profile polish-card" bindtap="handleUserInfoTap" hover-class="polish-button-hover">
     <view class="polish-card-content book-profile-content">
       <view class="book-cover-mini">
-        <image class="book-cover-mini-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
+        <image class="book-cover-mini-image" src="{{mock.user.avatar}}" mode="aspectFill" />
       </view>
       <view class="book-copy">
         <view class="user-name">{{mock.user.nickname}}</view>
@@ -34,14 +34,6 @@
         </view>
       </view>
     </view>
-  </view>
-
-  <view class="quota-card polish-note" bindtap="goQuotaEmpty">
-    <view>
-      <view class="quota-title">今日免费次数</view>
-      <view class="quota-desc">剩余次数会用于生成新的漫画章节</view>
-    </view>
-    <view class="quota-number">{{mock.freeQuotaRemaining}} / {{mock.freeQuotaTotal}}</view>
   </view>
 
   <view class="menu-card polish-card">

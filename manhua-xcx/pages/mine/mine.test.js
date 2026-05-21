@@ -70,6 +70,74 @@ test('个人中心不展示今日免费次数卡片', () => {
   assert.equal(wxml.includes('goQuotaEmpty'), false)
 })
 
+test('用户信息卡片绑定登录入口且不依赖外部菜单图标资源', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'mine.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('bindtap="handleUserInfoTap"'), true)
+  assert.equal(wxml.includes('bindtap="openComicBook"'), false)
+  assert.equal(wxml.includes('src="{{item.icon}}"'), false)
+  assert.equal(wxml.includes('menu-icon icon-{{index}}'), true)
+})
+
+test('未登录时用户信息区显示未登录', () => {
+  let pageConfig
+
+  global.Page = (config) => {
+    pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
+  }
+
+  global.wx = {
+    getStorageSync() {
+      return null
+    },
+  }
+
+  delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('./mine')]
+  require('./mine')
+
+  pageConfig.onShow()
+
+  assert.equal(pageConfig.data.mock.user.nickname, '未登录')
+})
+
+test('已登录时优先展示本地 currentUser 昵称和头像', () => {
+  let pageConfig
+  const storage = {
+    authToken: 'token-local',
+    currentUser: {
+      id: 'user-local',
+      nickname: '本地小满',
+      avatarUrl: '/avatar-local.png',
+    },
+  }
+
+  global.Page = (config) => {
+    pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
+  }
+
+  global.wx = {
+    getStorageSync(key) {
+      return storage[key]
+    },
+  }
+
+  delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('./mine')]
+  require('./mine')
+
+  pageConfig.onShow()
+
+  assert.equal(pageConfig.data.mock.user.nickname, '本地小满')
+  assert.equal(pageConfig.data.mock.user.avatar, '/avatar-local.png')
+})
+
 test('点击漫画书进入独立漫画书页面', () => {
   let pageConfig
   let navigateOptions
