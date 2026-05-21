@@ -39,6 +39,9 @@ async function applyMigrationOnce() {
 
 async function clearCoreTables() {
   await applyMigrationOnce()
+  if (prisma.generationTask) {
+    await prisma.generationTask.deleteMany()
+  }
   if (prisma.diaryPhoto) {
     await prisma.diaryPhoto.deleteMany()
   }

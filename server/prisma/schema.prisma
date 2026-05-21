@@ -22,6 +22,7 @@ model User {
   quota        UserQuota?
   diaryEntries DiaryEntry[]
   diaryPhotos  DiaryPhoto[]
+  generationTasks GenerationTask[]
 
   @@map("users")
 }
@@ -104,6 +105,7 @@ model DiaryEntry {
 
   owner  User         @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
   photos DiaryPhoto[]
+  generationTasks GenerationTask[]
 
   @@index([ownerUserId])
   @@index([ownerUserId, status])
@@ -132,4 +134,31 @@ model DiaryPhoto {
   @@index([ownerUserId])
   @@index([diaryEntryId, sortOrder])
   @@map("diary_photos")
+}
+
+model GenerationTask {
+  id              String    @id @default(cuid())
+  ownerUserId     String    @map("owner_user_id")
+  diaryEntryId    String?   @map("diary_entry_id")
+  status          String    @default("pending")
+  taskType        String    @default("diary_to_comic") @map("task_type")
+  promptSnapshot  String?   @map("prompt_snapshot")
+  inputJson       String    @default("{}") @map("input_json")
+  resultJson      String?   @map("result_json")
+  errorMessage    String?   @map("error_message")
+  retryCount      Int       @default(0) @map("retry_count")
+  startedAt       DateTime? @map("started_at")
+  finishedAt      DateTime? @map("finished_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  owner      User        @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  diaryEntry DiaryEntry? @relation(fields: [diaryEntryId], references: [id], onDelete: SetNull)
+
+  @@index([ownerUserId])
+  @@index([ownerUserId, status])
+  @@index([diaryEntryId])
+  @@index([createdAt])
+  @@map("generation_tasks")
 }
