@@ -1,0 +1,262 @@
+page {
+  min-height: 100%;
+  background: #fff9f7;
+  color: #1f1f1f;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  line-height: 1;
+}
+
+button::after {
+  border: 0;
+}
+
+.profile-page {
+  min-height: 100vh;
+  padding: 44rpx 38rpx calc(56rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 8% 18%, rgba(255, 229, 224, 0.7), transparent 270rpx),
+    radial-gradient(circle at 92% 8%, rgba(255, 244, 236, 0.85), transparent 320rpx),
+    #fff9f7;
+}
+
+.profile-hero {
+  display: grid;
+  grid-template-columns: 190rpx minmax(0, 1fr);
+  column-gap: 34rpx;
+  row-gap: 42rpx;
+  align-items: center;
+  padding: 46rpx 42rpx 48rpx;
+  border-radius: 30rpx;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24rpx 58rpx rgba(179, 126, 112, 0.12);
+}
+
+.avatar-wrap {
+  position: relative;
+  width: 174rpx;
+  height: 174rpx;
+}
+
+.profile-avatar {
+  display: block;
+  width: 174rpx;
+  height: 174rpx;
+  border-radius: 50%;
+  background: #ffe7e8;
+}
+
+.camera-button {
+  position: absolute;
+  right: 2rpx;
+  bottom: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  min-width: 56rpx;
+  min-height: 56rpx;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #f8738b;
+  box-shadow: 0 8rpx 18rpx rgba(248, 115, 139, 0.24);
+}
+
+.camera-button-hover,
+.edit-button-hover,
+.profile-row-hover {
+  opacity: 0.86;
+}
+
+.camera-icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 28rpx;
+  height: 21rpx;
+  border: 4rpx solid #ffffff;
+  border-radius: 6rpx;
+  box-sizing: border-box;
+}
+
+.camera-icon::before {
+  position: absolute;
+  left: 5rpx;
+  top: 4rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border: 3rpx solid #ffffff;
+  border-radius: 50%;
+  content: "";
+}
+
+.camera-icon::after {
+  position: absolute;
+  left: 6rpx;
+  top: -9rpx;
+  width: 10rpx;
+  height: 6rpx;
+  border-radius: 4rpx 4rpx 0 0;
+  background: #ffffff;
+  content: "";
+}
+
+.profile-copy {
+  min-width: 0;
+}
+
+.profile-name {
+  color: #222222;
+  font-size: 42rpx;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.profile-subtitle {
+  margin-top: 22rpx;
+  color: #8a8a8a;
+  font-size: 30rpx;
+  line-height: 1.4;
+}
+
+.edit-button {
+  grid-column: 1 / 3;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 292rpx;
+  height: 82rpx;
+  border: 3rpx solid #ff7c91;
+  border-radius: 999rpx;
+  color: #ff758c;
+  font-size: 30rpx;
+  font-weight: 500;
+  background: #ffffff;
+}
+
+.profile-list {
+  margin-top: 40rpx;
+  padding: 0 42rpx;
+  border-radius: 30rpx;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24rpx 58rpx rgba(179, 126, 112, 0.12);
+}
+
+.profile-row {
+  display: grid;
+  grid-template-columns: 56rpx 1fr auto 28rpx;
+  gap: 22rpx;
+  align-items: center;
+  min-height: 144rpx;
+}
+
+.profile-row + .profile-row {
+  border-top: 1rpx solid #eeeeee;
+}
+
+.profile-icon {
+  position: relative;
+  width: 48rpx;
+  height: 48rpx;
+  color: #ff7c91;
+  box-sizing: border-box;
+}
+
+.profile-label {
+  color: #222222;
+  font-size: 34rpx;
+  line-height: 1.35;
+}
+
+.profile-value {
+  max-width: 270rpx;
+  overflow: hidden;
+  color: #777777;
+  font-size: 30rpx;
+  line-height: 1.35;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-arrow {
+  color: #9c9c9c;
+  font-size: 58rpx;
+  line-height: 1;
+}
+
+.icon-user::before,
+.icon-user::after,
+.icon-calendar::before,
+.icon-calendar::after,
+.icon-location::before,
+.icon-location::after {
+  position: absolute;
+  content: "";
+  box-sizing: border-box;
+}
+
+.icon-user::before {
+  left: 15rpx;
+  top: 4rpx;
+  width: 18rpx;
+  height: 18rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 50%;
+}
+
+.icon-user::after {
+  left: 6rpx;
+  bottom: 3rpx;
+  width: 36rpx;
+  height: 25rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 22rpx 22rpx 6rpx 6rpx;
+}
+
+.icon-calendar::before {
+  left: 5rpx;
+  top: 10rpx;
+  width: 38rpx;
+  height: 33rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 7rpx;
+}
+
+.icon-calendar::after {
+  left: 12rpx;
+  top: 4rpx;
+  width: 24rpx;
+  height: 14rpx;
+  border-left: 4rpx solid currentColor;
+  border-right: 4rpx solid currentColor;
+}
+
+.icon-location::before {
+  left: 8rpx;
+  top: 3rpx;
+  width: 32rpx;
+  height: 40rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 50% 50% 50% 8rpx;
+  transform: rotate(-45deg);
+}
+
+.icon-location::after {
+  left: 19rpx;
+  top: 15rpx;
+  width: 10rpx;
+  height: 10rpx;
+  border: 4rpx solid currentColor;
+  border-radius: 50%;
+}

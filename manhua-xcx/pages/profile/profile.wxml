@@ -1,0 +1,40 @@
+<view class="profile-page">
+  <view class="profile-hero">
+    <view class="avatar-wrap">
+      <image class="profile-avatar" src="{{profile.avatar}}" mode="aspectFill" />
+      <view class="camera-button" bindtap="handleAvatarTap" aria-label="更换头像" hover-class="camera-button-hover">
+        <view class="camera-icon"></view>
+      </view>
+    </view>
+
+    <view class="profile-copy">
+      <view class="profile-name">{{profile.nickname}}</view>
+      <view class="profile-subtitle">{{profile.subtitle}}</view>
+    </view>
+
+    <button class="edit-button" bindtap="handleEditTap" hover-class="edit-button-hover">编辑资料</button>
+  </view>
+
+  <view class="profile-list">
+    <view class="profile-row" bindtap="handleEditTap" hover-class="profile-row-hover">
+      <view class="profile-icon icon-user"></view>
+      <view class="profile-label">用户名</view>
+      <view class="profile-value">{{profile.username}}</view>
+      <view class="profile-arrow">›</view>
+    </view>
+
+    <view class="profile-row" bindtap="handleEditTap" hover-class="profile-row-hover">
+      <view class="profile-icon icon-calendar"></view>
+      <view class="profile-label">生日</view>
+      <view class="profile-value">{{profile.birthday}}</view>
+      <view class="profile-arrow">›</view>
+    </view>
+
+    <view class="profile-row" bindtap="handleEditTap" hover-class="profile-row-hover">
+      <view class="profile-icon icon-location"></view>
+      <view class="profile-label">所在地区</view>
+      <view class="profile-value">{{profile.region}}</view>
+      <view class="profile-arrow">›</view>
+    </view>
+  </view>
+</view>

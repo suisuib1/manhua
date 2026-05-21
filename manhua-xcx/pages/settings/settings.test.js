@@ -7,6 +7,7 @@ function loadPage(storage = {}) {
   let pageConfig
   const toastCalls = []
   const modalCalls = []
+  const navigateCalls = []
 
   global.Page = (config) => {
     pageConfig = config
@@ -34,12 +35,15 @@ function loadPage(storage = {}) {
         options.success({ confirm: true, cancel: false })
       }
     },
+    navigateTo(options) {
+      navigateCalls.push(options)
+    },
   }
 
   delete require.cache[require.resolve('./settings')]
   require('./settings')
 
-  return { pageConfig, storage, toastCalls, modalCalls }
+  return { pageConfig, storage, toastCalls, modalCalls, navigateCalls }
 }
 
 test('设置页 wxml 使用单表单结构，并保留偏好、隐私、提醒、关于和退出登录', () => {
@@ -64,6 +68,16 @@ test('设置页 wxml 使用单表单结构，并保留偏好、隐私、提醒�
   assert.equal(wxml.includes('diaryReminder'), true)
   assert.equal(wxml.includes('generationReminder'), true)
   assert.equal(wxml.includes('logout-button'), true)
+})
+
+test('个人资料入口会进入个人资料页', () => {
+  const { pageConfig, navigateCalls } = loadPage()
+
+  pageConfig.openProfile()
+
+  assert.deepEqual(navigateCalls[0], {
+    url: '/pages/profile/profile',
+  })
 })
 
 test('设置页默认从本地缓存读取默认值', () => {

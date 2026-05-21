@@ -148,6 +148,12 @@ Page({
     }
   },
 
+  openProfile() {
+    wx.navigateTo({
+      url: '/pages/profile/profile',
+    })
+  },
+
   handleStyleTap() {
     wx.showToast({
       title: '当前默认 Q 版温暖漫画',

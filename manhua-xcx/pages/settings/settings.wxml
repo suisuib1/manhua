@@ -1,6 +1,6 @@
 <view class="settings-page polish-page">
   <view class="settings-form">
-    <view class="setting-row" bindtap="handleAccountTap" hover-class="settings-row-hover">
+    <view class="setting-row" bindtap="openProfile" hover-class="settings-row-hover">
       <view class="setting-icon icon-user"></view>
       <view class="setting-main">
         <view class="setting-title">个人资料</view>
