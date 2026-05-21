@@ -5,8 +5,9 @@ Page({
     mock: characterMock,
     nickname: characterMock.nickname,
     description: characterMock.description,
-    personalityTags: characterMock.personalityTags,
-    appearanceTags: characterMock.appearanceTags,
+    personalityText: characterMock.personalityTags.map((tag) => tag.label).join('、'),
+    appearanceText: characterMock.appearanceTags.map((tag) => tag.label).join('、'),
+    referenceImage: '/subpackage/icon-home-mascot-star.png',
   },
 
   onNicknameInput(event) {
@@ -21,20 +22,33 @@ Page({
     })
   },
 
-  togglePersonalityTag(event) {
-    this.toggleTag('personalityTags', event.currentTarget.dataset.value)
-  },
-
-  toggleAppearanceTag(event) {
-    this.toggleTag('appearanceTags', event.currentTarget.dataset.value)
-  },
-
-  toggleTag(key, value) {
+  onPersonalityInput(event) {
     this.setData({
-      [key]: this.data[key].map((tag) => ({
-        ...tag,
-        selected: tag.value === value ? !tag.selected : tag.selected,
-      })),
+      personalityText: event.detail.value,
+    })
+  },
+
+  onAppearanceInput(event) {
+    this.setData({
+      appearanceText: event.detail.value,
+    })
+  },
+
+  chooseReferenceImage() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (res) => {
+        const firstFile = res.tempFiles && res.tempFiles[0]
+        if (!firstFile) {
+          return
+        }
+
+        this.setData({
+          referenceImage: firstFile.tempFilePath,
+        })
+      },
     })
   },
 

@@ -153,44 +153,58 @@ button::after {
   color: #c8aaa0;
 }
 
-.tag-section {
+.input-section {
   margin-top: 26rpx;
 }
 
-.tag-section .polish-chip-row {
-  margin-top: 16rpx;
+.trait-input {
+  width: 100%;
+  min-height: 112rpx;
+  margin-top: 14rpx;
+  padding: 20rpx 22rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #f1d5cc;
+  border-radius: 24rpx;
+  color: #5c3b33;
+  font-size: 26rpx;
+  line-height: 1.55;
+  background: #fffdfb;
 }
 
-.reference-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16rpx;
+.reference-section {
   margin-top: 28rpx;
 }
 
-.reference-card,
-.reference-add {
-  height: 126rpx;
-  border-radius: 22rpx;
+.reference-single {
+  position: relative;
+  width: 196rpx;
+  height: 196rpx;
+  margin-top: 16rpx;
+  border-radius: 26rpx;
   border: 2rpx solid #efd4c8;
+  background: #fffdf9;
+  overflow: hidden;
 }
 
 .reference-card {
   display: block;
   width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  overflow: hidden;
 }
 
-.reference-add {
+.reference-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-style: dashed;
-  color: #ef7185;
-  font-size: 44rpx;
-  font-weight: 800;
-  background: #fffdf9;
+  min-height: 46rpx;
+  color: #fff;
+  font-size: 22rpx;
+  background: rgba(77, 48, 41, 0.58);
 }
 
 .character-note {
