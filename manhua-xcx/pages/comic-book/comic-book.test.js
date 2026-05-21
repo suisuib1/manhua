@@ -103,3 +103,22 @@ test('漫画书统计会合并本地生成章节', () => {
   assert.equal(stats.pageCount, 5)
   assert.equal(stats.updatedChapterText, '已更新到第 2 章')
 })
+
+test('漫画书统计兼容本地章节的图片字段', () => {
+  const { moduleExports } = (() => {
+    global.Page = () => {}
+    const { wx } = createMockStorage()
+    global.wx = wx
+    delete require.cache[require.resolve('./comic-book')]
+    const moduleExports = require('./comic-book')
+    return { moduleExports }
+  })()
+
+  const stats = moduleExports.getComicBookStats([
+    { images: ['a.jpg', 'b.jpg'] },
+    { generatedImage: 'single.jpg' },
+  ])
+
+  assert.equal(stats.chapterCount, 2)
+  assert.equal(stats.pageCount, 3)
+})

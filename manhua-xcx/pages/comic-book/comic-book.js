@@ -1,5 +1,5 @@
 const { comicBookMock, pageRoutes, homeMock } = require('../../utils/mock')
-const { buildChapterList, loadStoredChapters } = require('../../utils/chapterCatalog')
+const { buildChapterList, getChapterPageCount, loadStoredChapters } = require('../../utils/chapterCatalog')
 
 const chapterListRoute = '/pages/chapter-list/chapter-list'
 
@@ -9,7 +9,7 @@ function mergeStoredChapters(defaultChapters, storedChapters) {
 
 function getComicBookStats(chapters) {
   const chapterCount = chapters.length
-  const pageCount = chapters.reduce((total, chapter) => total + chapter.pages.length, 0)
+  const pageCount = chapters.reduce((total, chapter) => total + getChapterPageCount(chapter), 0)
 
   return {
     chapterCount,

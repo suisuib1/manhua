@@ -1,0 +1,23 @@
+<view class="comic-book-page">
+  <view class="page-title"></view>
+
+  <view class="book-stage" bindtap="openComic" hover-class="book-hover">
+    <view class="book-shadow"></view>
+    <view class="book-thickness"></view>
+    <view class="book-cover">
+      <view class="book-spine"></view>
+      <view class="cover-content">
+        <view class="cover-tag">私人漫画回忆本</view>
+        <view class="cover-title">{{mock.book.title}}</view>
+        <image class="cover-mascot" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
+        <view class="cover-meta">{{mock.bookSummary.updatedChapterText}}</view>
+        <view class="cover-stats">
+          <text>{{mock.bookSummary.chapterText}}</text>
+          <text>{{mock.bookSummary.pageText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <button class="open-book-button" bindtap="openComic" hover-class="polish-button-hover">打开漫画书</button>
+</view>
