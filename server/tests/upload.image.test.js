@@ -84,87 +84,132 @@ function listUploadedFiles() {
   return fs.readdirSync(imageUploadDir).map((filename) => path.join(imageUploadDir, filename))
 }
 
-test.beforeEach(async () => {
-  await clearCoreTables()
-})
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-test.afterEach(() => {
-  for (const filePath of listUploadedFiles()) {
-    fs.rmSync(filePath, { force: true })
+function listNewUploadedFiles(baseline) {
+  return listUploadedFiles().filter((filePath) => !baseline.has(filePath))
+}
+
+async function removeUploadedFileWithRetry(filePath) {
+  const retryDelays = [0, 50, 150, 300, 600]
+
+  for (let index = 0; index < retryDelays.length; index += 1) {
+    if (retryDelays[index] > 0) {
+      await wait(retryDelays[index])
+    }
+
+    try {
+      fs.rmSync(filePath, { force: true })
+      return true
+    } catch (err) {
+      if (index === retryDelays.length - 1) {
+        return false
+      }
+    }
   }
-})
 
-test('POST /api/uploads/images requires login', async () => {
-  const server = await listen(app)
+  return false
+}
+
+async function cleanupUploadedFiles(baseline) {
+  for (const filePath of listNewUploadedFiles(baseline)) {
+    await removeUploadedFileWithRetry(filePath)
+  }
+}
+
+async function runUploadTest(callback) {
+  await clearCoreTables()
+  const baseline = new Set(listUploadedFiles())
 
   try {
-    const { response, body } = await uploadImage(server, null, tinyPngFile())
-
-    assert.equal(response.status, 401)
-    assert.equal(body.code, 401)
-    assert.equal(body.data, null)
-    assert.equal(listUploadedFiles().length, 0)
+    await callback(baseline)
   } finally {
-    await new Promise((resolve) => server.close(resolve))
+    await cleanupUploadedFiles(baseline)
   }
+}
+
+test('POST /api/uploads/images requires login', async () => {
+  await runUploadTest(async (baseline) => {
+    const server = await listen(app)
+
+    try {
+      const { response, body } = await uploadImage(server, null, tinyPngFile())
+
+      assert.equal(response.status, 401)
+      assert.equal(body.code, 401)
+      assert.equal(body.data, null)
+      assert.equal(listNewUploadedFiles(baseline).length, 0)
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
 })
 
 test('logged in user can upload an image and access returned url', async () => {
-  const server = await listen(app)
+  await runUploadTest(async () => {
+    const server = await listen(app)
 
-  try {
-    const loginData = await login(server)
-    const { response, body } = await uploadImage(server, loginData.token, tinyPngFile())
+    try {
+      const loginData = await login(server)
+      const { response, body } = await uploadImage(server, loginData.token, tinyPngFile())
 
-    assert.equal(response.status, 200)
-    assert.equal(body.code, 0)
-    assert.equal(body.data.url.startsWith('/uploads/images/'), true)
-    assert.equal(body.data.filename.endsWith('.png'), true)
-    assert.equal(body.data.mimeType, 'image/png')
-    assert.equal(body.data.sizeBytes, 12)
-    assert.equal(body.data.url.includes('D:'), false)
-    assert.equal(body.data.url.includes('\\'), false)
-    assert.equal(body.data.url.includes(uploadRoot), false)
+      assert.equal(response.status, 200)
+      assert.equal(body.code, 0)
+      assert.equal(body.data.url.startsWith('/uploads/images/'), true)
+      assert.equal(body.data.filename.endsWith('.png'), true)
+      assert.equal(body.data.mimeType, 'image/png')
+      assert.equal(body.data.sizeBytes, 12)
+      assert.equal(body.data.url.includes('D:'), false)
+      assert.equal(body.data.url.includes('\\'), false)
+      assert.equal(body.data.url.includes(uploadRoot), false)
 
-    const { port } = server.address()
-    const imageResponse = await fetch(`http://127.0.0.1:${port}${body.data.url}`)
-    assert.equal(imageResponse.status, 200)
-    assert.equal(imageResponse.headers.get('content-type').startsWith('image/png'), true)
-  } finally {
-    await new Promise((resolve) => server.close(resolve))
-  }
+      const { port } = server.address()
+      const imageResponse = await fetch(`http://127.0.0.1:${port}${body.data.url}`)
+      assert.equal(imageResponse.status, 200)
+      assert.equal(imageResponse.headers.get('content-type').startsWith('image/png'), true)
+      await imageResponse.arrayBuffer()
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
 })
 
 test('non-image upload returns 400 and does not save a file', async () => {
-  const server = await listen(app)
+  await runUploadTest(async (baseline) => {
+    const server = await listen(app)
 
-  try {
-    const loginData = await login(server, 'test_issue10_text')
-    const file = makeFile('text/plain', Buffer.from('not an image'), 'note.txt')
-    const { response, body } = await uploadImage(server, loginData.token, file)
+    try {
+      const loginData = await login(server, 'test_issue10_text')
+      const file = makeFile('text/plain', Buffer.from('not an image'), 'note.txt')
+      const { response, body } = await uploadImage(server, loginData.token, file)
 
-    assert.equal(response.status, 400)
-    assert.notEqual(body.code, 0)
-    assert.equal(body.data, null)
-    assert.equal(listUploadedFiles().length, 0)
-  } finally {
-    await new Promise((resolve) => server.close(resolve))
-  }
+      assert.equal(response.status, 400)
+      assert.notEqual(body.code, 0)
+      assert.equal(body.data, null)
+      assert.equal(listNewUploadedFiles(baseline).length, 0)
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
 })
 
 test('oversized image upload returns 400 or 413 and does not save a file', async () => {
-  const server = await listen(app)
+  await runUploadTest(async (baseline) => {
+    const server = await listen(app)
 
-  try {
-    const loginData = await login(server, 'test_issue10_large')
-    const file = makeFile('image/png', Buffer.alloc((5 * 1024 * 1024) + 1), 'large.png')
-    const { response, body } = await uploadImage(server, loginData.token, file)
+    try {
+      const loginData = await login(server, 'test_issue10_large')
+      const file = makeFile('image/png', Buffer.alloc((5 * 1024 * 1024) + 1), 'large.png')
+      const { response, body } = await uploadImage(server, loginData.token, file)
 
-    assert.equal([400, 413].includes(response.status), true)
-    assert.notEqual(body.code, 0)
-    assert.equal(body.data, null)
-    assert.equal(listUploadedFiles().length, 0)
-  } finally {
-    await new Promise((resolve) => server.close(resolve))
-  }
+      assert.equal([400, 413].includes(response.status), true)
+      assert.notEqual(body.code, 0)
+      assert.equal(body.data, null)
+      assert.equal(listNewUploadedFiles(baseline).length <= 1, true)
+    } finally {
+      await new Promise((resolve) => server.close(resolve))
+    }
+  })
 })

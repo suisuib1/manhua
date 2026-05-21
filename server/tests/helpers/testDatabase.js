@@ -1,15 +1,16 @@
 const fs = require('node:fs')
+const os = require('node:os')
 const path = require('node:path')
 const test = require('node:test')
 
 process.env.NODE_ENV = 'test'
-process.env.DATABASE_URL = process.env.DATABASE_URL || `file:../tests/test_issue_backend_${process.pid}.db`
+const testDatabaseDir = fs.mkdtempSync(path.join(os.tmpdir(), `manhua-test-${process.pid}-`))
+const testDatabasePath = path.join(testDatabaseDir, 'test.db')
+process.env.DATABASE_URL = process.env.DATABASE_URL || `file:${testDatabasePath.replace(/\\/g, '/')}`
 
 const { prisma } = require('../../src/utils/prisma')
 
 const prismaDir = path.join(__dirname, '..', '..', 'prisma')
-const testDatabasePath = path.join(__dirname, '..', `test_issue_backend_${process.pid}.db`)
-const testJournalPath = path.join(__dirname, '..', `test_issue_backend_${process.pid}.db-journal`)
 let migrationApplied = false
 
 async function applyMigrationOnce() {
@@ -65,9 +66,8 @@ test.after(async () => {
   await prisma.$disconnect()
 
   try {
-    fs.rmSync(testDatabasePath, { force: true })
-    fs.rmSync(testJournalPath, { force: true })
+    fs.rmSync(testDatabaseDir, { recursive: true, force: true })
   } catch (err) {
-    if (err.code !== 'EPERM') throw err
+    // Keep test outcomes focused on application failures, not OS cleanup races.
   }
 })
