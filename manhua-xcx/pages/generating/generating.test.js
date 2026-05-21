@@ -3,10 +3,11 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
-function loadPage() {
+function loadPage(storageSeed = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
-  const storage = {}
+  const requestCalls = []
+  const storage = Object.assign({}, storageSeed)
 
   global.Page = (config) => {
     pageConfig = config
@@ -25,17 +26,31 @@ function loadPage() {
     getStorageSync(key) {
       return storage[key]
     },
+    request(options) {
+      requestCalls.push(options)
+      requestImpl(options)
+    },
     removeStorageSync(key) {
       delete storage[key]
     },
     showToast() {},
   }
 
+  delete require.cache[require.resolve('../../utils/api')]
+  delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('../../utils/diaryApi')]
+  delete require.cache[require.resolve('../../utils/diarySync')]
+  delete require.cache[require.resolve('../../utils/generationTaskApi')]
   delete require.cache[require.resolve('./generating')]
   const moduleExports = require('./generating')
   pageConfig.moduleExports = moduleExports
 
-  return { pageConfig, navigateCalls, storage, moduleExports }
+  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports }
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve()
+  await Promise.resolve()
 }
 
 test('生成中页仍显示模拟进度而不是空壳', () => {
@@ -107,5 +122,174 @@ test('完成后会写入本地存储并进入漫画书阅读器', () => {
   assert.equal(storage.generatedComicChapters[0].title, '和小猫一起的傍晚')
   assert.deepEqual(navigateCalls[0], {
     url: '/pages/continuous-chapter/continuous-chapter?chapterId=' + storage.generatedComicChapters[0].id,
+  })
+})
+
+test('unauthenticated generation keeps local fallback', async () => {
+  const { moduleExports, requestCalls, storage } = loadPage()
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    chapterTitle: 'local chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'local generation',
+    pageCount: 2,
+  })
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 0)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(chapter.title, 'local chapter')
+  assert.equal(chapter.generationTaskId, undefined)
+})
+
+test('generation task success adds backend metadata without changing reader pages', async () => {
+  const { moduleExports, requestCalls, storage } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-1',
+          status: 'completed',
+          diaryEntryId: 'entry-1',
+          result: {
+            pages: [{ pageIndex: 0, mock: true }],
+          },
+        },
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-1',
+    chapterTitle: 'backend task chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'keep local reader data',
+    pageCount: 2,
+  })
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks')
+  assert.equal(requestCalls[0].method, 'POST')
+  assert.equal(requestCalls[0].data.diaryEntryId, 'entry-1')
+  assert.equal(chapter.generationTaskId, 'task-1')
+  assert.equal(chapter.generationTaskStatus, 'completed')
+  assert.equal(chapter.serverDiaryEntryId, 'entry-1')
+  assert.deepEqual(chapter.generationResult, {
+    pages: [{ pageIndex: 0, mock: true }],
+  })
+  assert.equal(Array.isArray(chapter.pages), true)
+  assert.equal(storage.generatedComicChapters[0].id, chapter.id)
+})
+
+test('missing serverDiaryEntryId syncs diary before creating generation task', async () => {
+  const { moduleExports, requestCalls, storage } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    if (options.url.endsWith('/api/diary-entries')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'entry-created',
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-created',
+          status: 'completed',
+          diaryEntryId: 'entry-created',
+          result: {},
+        },
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    chapterTitle: 'sync first chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'sync diary before task',
+    pageCount: 2,
+  })
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/diary-entries')
+  assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks')
+  assert.equal(requestCalls[1].data.diaryEntryId, 'entry-created')
+  assert.equal(storage.draftComicChapter.serverDiaryEntryId, 'entry-created')
+  assert.equal(chapter.generationTaskId, 'task-created')
+})
+
+test('generation task failure still writes local generated chapter', async () => {
+  const { moduleExports, requestCalls, storage } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 500,
+      data: {
+        code: 500,
+        message: 'server error',
+        data: null,
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-fail',
+    chapterTitle: 'fallback chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'backend failed',
+    pageCount: 2,
+  })
+
+  assert.equal(requestCalls.length, 1)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(chapter.title, 'fallback chapter')
+  assert.equal(chapter.generationTaskId, undefined)
+})
+
+test('generation task metadata does not change reader navigation', async () => {
+  const { pageConfig, navigateCalls, storage, moduleExports } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-nav',
+          status: 'completed',
+          diaryEntryId: 'entry-nav',
+          result: {},
+        },
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-nav',
+    chapterTitle: 'reader chapter',
+  })
+
+  pageConfig.setData({
+    generatedChapterId: chapter.id,
+  })
+  pageConfig.goChapterDetail()
+
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-nav')
+  assert.deepEqual(navigateCalls[0], {
+    url: '/pages/continuous-chapter/continuous-chapter?chapterId=' + chapter.id,
   })
 })

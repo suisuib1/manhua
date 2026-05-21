@@ -1,4 +1,7 @@
 const { generatingMock, pageRoutes, storageKeys } = require('../../utils/mock')
+const { getAuthToken } = require('../../utils/auth')
+const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
+const { createGenerationTask } = require('../../utils/generationTaskApi')
 
 function getDefaultPanelImages() {
   return [
@@ -55,13 +58,57 @@ function loadPendingDraft() {
   return wx.getStorageSync(storageKeys.draftComicChapter) || null
 }
 
-function finalizeGeneratedChapter(draft) {
-  const generatedChapter = buildGeneratedChapter(draft)
+function buildGenerationTaskMetadata(task) {
+  if (!task || !task.id) {
+    return {}
+  }
+
+  return {
+    generationTaskId: task.id,
+    generationTaskStatus: task.status,
+    serverDiaryEntryId: task.diaryEntryId,
+    generationResult: task.result || {},
+  }
+}
+
+function finalizeGeneratedChapter(draft, task) {
+  const generatedChapter = Object.assign(
+    buildGeneratedChapter(draft),
+    buildGenerationTaskMetadata(task)
+  )
   const generatedChapters = [generatedChapter].concat(loadGeneratedChapters())
 
   saveGeneratedChapters(generatedChapters)
 
   return generatedChapter
+}
+
+async function createBackendTaskForDraft(draft) {
+  if (!getAuthToken()) {
+    return null
+  }
+
+  if (draft && draft.serverDiaryEntryId) {
+    return createGenerationTask(draft.serverDiaryEntryId)
+  }
+
+  const syncedDraft = await saveDraftWithBackendFallback(draft || {})
+  const diaryEntryId = syncedDraft && syncedDraft.serverDiaryEntryId
+
+  if (!diaryEntryId) {
+    return null
+  }
+
+  return createGenerationTask(diaryEntryId)
+}
+
+async function finalizeGeneratedChapterWithBackendFallback(draft) {
+  try {
+    const task = await createBackendTaskForDraft(draft)
+    return finalizeGeneratedChapter(draft, task)
+  } catch (error) {
+    return finalizeGeneratedChapter(draft)
+  }
 }
 
 Page({
@@ -104,9 +151,10 @@ Page({
       })
 
       if (nextProgress >= 100) {
-        const generatedChapter = finalizeGeneratedChapter(this.data.pendingDraft)
-        this.setData({
-          generatedChapterId: generatedChapter.id,
+        finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft).then((generatedChapter) => {
+          this.setData({
+            generatedChapterId: generatedChapter.id,
+          })
         })
         this.clearMockTimer()
       }
@@ -137,8 +185,10 @@ Page({
 module.exports = {
   buildGeneratedChapter,
   finalizeGeneratedChapter,
+  finalizeGeneratedChapterWithBackendFallback,
   loadGeneratedChapters,
   saveGeneratedChapters,
   loadPendingDraft,
   getDefaultPanelImages,
+  buildGenerationTaskMetadata,
 }
