@@ -1,8 +1,4 @@
 <view class="mine-page polish-page">
-  <view class="polish-header">
-    <view class="polish-title">我的漫画日记本</view>
-    <view class="polish-subtitle">收藏今天，也照顾好自己的小小故事</view>
-  </view>
 
   <view class="book-profile polish-card" bindtap="handleUserInfoTap" hover-class="polish-button-hover">
     <view class="polish-card-content book-profile-content">
@@ -38,7 +34,7 @@
 
   <view class="menu-card polish-card">
     <view class="polish-card-content">
-      <button
+      <view
         wx:for="{{mock.menuItems}}"
         wx:key="id"
         class="menu-row"
@@ -52,7 +48,7 @@
           <view class="menu-title">{{item.title}}</view>
         </view>
         <view class="menu-arrow">›</view>
-      </button>
+      </view>
     </view>
   </view>
 </view>
