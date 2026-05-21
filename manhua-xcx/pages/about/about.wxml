@@ -1,0 +1,19 @@
+<view class="info-page">
+  <view class="info-hero">
+    <view class="hero-icon">漫</view>
+    <view class="hero-copy">
+      <view class="hero-title">关于产品</view>
+      <view class="hero-desc">这是一本把日常小事画成回忆的私人漫画日记本。</view>
+    </view>
+  </view>
+
+  <view class="info-card">
+    <view wx:for="{{sections}}" wx:key="title" class="info-row">
+      <view class="row-dot"></view>
+      <view class="row-copy">
+        <view class="row-title">{{item.title}}</view>
+        <view class="row-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+</view>
