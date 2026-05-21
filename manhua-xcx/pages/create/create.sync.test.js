@@ -83,3 +83,23 @@ test('创建页已登录时保存草稿会尝试创建后端草稿', async () =>
   assert.equal(requestCalls[0].method, 'POST')
   assert.equal(nextStorage.draftComicChapter.serverDiaryEntryId, 'entry-create-page')
 })
+
+test('selected date is saved into local draft and diary page query', () => {
+  const { pageConfig, navigateCalls, storage } = loadPage()
+
+  pageConfig.onDateChange({
+    detail: {
+      value: '2026-05-21',
+    },
+  })
+  pageConfig.goNext()
+
+  const encodedDraft = navigateCalls[0].url.split('draft=')[1]
+  const draftFromUrl = JSON.parse(decodeURIComponent(encodedDraft))
+
+  assert.equal(pageConfig.data.diaryDateValue, '2026-05-21')
+  assert.equal(pageConfig.data.diaryDateLabel, '2026-05-21')
+  assert.equal(storage.draftComicChapter.diaryDate, '2026-05-21')
+  assert.equal(draftFromUrl.diaryDate, '2026-05-21')
+  assert.equal(navigateCalls[0].url.startsWith('/pages/diary/diary?draft='), true)
+})

@@ -37,26 +37,6 @@ button::after {
     #fffaf5;
 }
 
-.create-header {
-  width: 100%;
-  margin-bottom: 28rpx;
-  text-align: center;
-}
-
-.page-title {
-  color: #4a2b22;
-  font-size: 38rpx;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.page-subtitle {
-  margin-top: 12rpx;
-  color: #76594f;
-  font-size: 25rpx;
-  line-height: 1.5;
-}
-
 .form-card {
   width: 100%;
   margin-bottom: 24rpx;
@@ -138,9 +118,10 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   height: 76rpx;
+  box-sizing: border-box;
   border-radius: 999rpx;
   color: #87675d;
   font-size: 25rpx;
@@ -157,10 +138,10 @@ button::after {
 .page-count-input-wrap {
   display: flex;
   align-items: center;
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   height: 76rpx;
-  padding: 0 22rpx;
+
   box-sizing: border-box;
   border: 2rpx solid transparent;
   border-radius: 999rpx;
@@ -184,14 +165,6 @@ button::after {
   font-size: 28rpx;
   font-weight: 800;
   text-align: center;
-}
-
-.page-count-unit {
-  flex: 0 0 auto;
-  margin-left: 8rpx;
-  color: #8a6a60;
-  font-size: 25rpx;
-  font-weight: 700;
 }
 
 .tag-grid {
@@ -230,21 +203,6 @@ button::after {
   overflow: hidden;
   text-align: center;
   white-space: nowrap;
-}
-
-.note-card {
-  width: 100%;
-  margin-bottom: 22rpx;
-  padding: 24rpx 28rpx;
-  border-radius: 24rpx;
-  color: #78584d;
-  background: #fff5e5;
-  box-shadow: 0 10rpx 24rpx rgba(146, 101, 62, 0.06);
-}
-
-.note-copy {
-  font-size: 24rpx;
-  line-height: 1.65;
 }
 
 .quota-line {
