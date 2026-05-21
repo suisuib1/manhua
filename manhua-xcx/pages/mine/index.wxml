@@ -1,4 +1,0 @@
-<view class="page-shell">
-  <view class="page-title">{{pageName}}</view>
-  <view class="page-note">Issue 1 页面骨架占位，后续单独实现静态 UI。</view>
-</view>
