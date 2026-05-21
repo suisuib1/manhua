@@ -25,31 +25,6 @@
     <view class="privacy-copy">{{mock.privacyHint}}</view>
   </view>
 
-  <view class="diary-card">
-    <view class="card-head">
-      <view>
-        <view class="card-title">照片贴纸</view>
-        <view class="card-desc">选择 1-9 张最能代表今天故事的照片</view>
-      </view>
-      <view class="count-pill">{{photoList.length}} / {{mock.photoLimit}}</view>
-    </view>
-    <view class="photo-grid">
-      <view
-        wx:for="{{photoList}}"
-        wx:key="id"
-        class="photo-tile {{item.tone}}"
-      >
-        <image class="photo-preview" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
-        <view class="photo-label">{{item.label}}</view>
-      </view>
-      <button class="photo-add" bindtap="addPhotoPlaceholder" hover-class="button-hover">
-        <view class="add-plus">+</view>
-        <view class="add-label">添加照片</view>
-      </button>
-    </view>
-    <view class="photo-tip">照片只用于本地预览占位，本轮不会上传。</view>
-  </view>
-
   <button class="generate-button" bindtap="goGenerating" hover-class="button-hover">
     生成我的漫画
   </button>

@@ -1,4 +1,6 @@
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 const test = require('node:test')
 
 function loadPage(storage = {}, requestImpl = () => {}) {
@@ -132,4 +134,15 @@ test('日记页后端同步失败时仍保留本地草稿并进入生成中', as
   assert.deepEqual(nextStorage.generatedComicChapters, [{ id: 'chapter-1' }])
   assert.equal(navigateCalls[0].url, '/pages/generating/generating')
   assert.equal(toastCalls[0].title, '已保存到本地，登录同步失败')
+})
+test('diary page does not render photo upload entry', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'diary.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('diary-textarea'), true)
+  assert.equal(wxml.includes('goGenerating'), true)
+  assert.equal(wxml.includes('photo-grid'), false)
+  assert.equal(wxml.includes('photo-upload'), false)
+  assert.equal(wxml.includes('photoItem'), false)
+  assert.equal(wxml.includes('photoLimit'), false)
+  assert.equal(wxml.includes('addPhotoPlaceholder'), false)
 })
