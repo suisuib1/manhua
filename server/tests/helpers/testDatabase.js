@@ -49,6 +49,9 @@ async function clearCoreTables() {
   if (prisma.diaryEntry) {
     await prisma.diaryEntry.deleteMany()
   }
+  if (prisma.characterProfile) {
+    await prisma.characterProfile.deleteMany()
+  }
   await prisma.userQuota.deleteMany()
   await prisma.comicBook.deleteMany()
   await prisma.userSetting.deleteMany()

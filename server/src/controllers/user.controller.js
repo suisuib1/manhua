@@ -4,6 +4,8 @@ const {
   updateCurrentUserProfile,
   getCurrentUserSettings,
   updateCurrentUserSettings,
+  getCurrentUserCharacterProfile,
+  updateCurrentUserCharacterProfile,
 } = require('../services/user.service')
 
 async function getMe(req, res, next) {
@@ -42,9 +44,29 @@ async function updateSettings(req, res, next) {
   }
 }
 
+async function getCharacterProfile(req, res, next) {
+  try {
+    const data = await getCurrentUserCharacterProfile(req.user.id)
+    return success(res, data)
+  } catch (err) {
+    return next(err)
+  }
+}
+
+async function updateCharacterProfile(req, res, next) {
+  try {
+    const data = await updateCurrentUserCharacterProfile(req.user.id, req.body || {})
+    return success(res, data)
+  } catch (err) {
+    return next(err)
+  }
+}
+
 module.exports = {
   getMe,
   updateProfile,
   getSettings,
   updateSettings,
+  getCharacterProfile,
+  updateCharacterProfile,
 }

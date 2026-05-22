@@ -20,6 +20,7 @@ model User {
   setting      UserSetting?
   comicBooks   ComicBook[]
   quota        UserQuota?
+  characterProfile CharacterProfile?
   diaryEntries DiaryEntry[]
   diaryPhotos  DiaryPhoto[]
   generationTasks GenerationTask[]
@@ -87,6 +88,23 @@ model UserQuota {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_quotas")
+}
+
+model CharacterProfile {
+  id                 String   @id @default(cuid())
+  ownerUserId        String   @unique @map("owner_user_id")
+  nickname           String?
+  roleTitle          String?  @map("role_title")
+  description        String?
+  personalityText    String?  @map("personality_text")
+  appearanceText     String?  @map("appearance_text")
+  referenceImageUrl  String?  @map("reference_image_url")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  owner User @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  @@map("character_profiles")
 }
 
 model DiaryEntry {

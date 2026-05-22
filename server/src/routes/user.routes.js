@@ -5,6 +5,8 @@ const {
   updateProfile,
   getSettings,
   updateSettings,
+  getCharacterProfile,
+  updateCharacterProfile,
 } = require('../controllers/user.controller')
 
 const router = express.Router()
@@ -14,5 +16,7 @@ router.get('/me', getMe)
 router.put('/me/profile', updateProfile)
 router.get('/me/settings', getSettings)
 router.put('/me/settings', updateSettings)
+router.get('/me/character-profile', getCharacterProfile)
+router.put('/me/character-profile', updateCharacterProfile)
 
 module.exports = router

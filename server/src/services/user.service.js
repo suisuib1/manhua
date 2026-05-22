@@ -8,6 +8,24 @@ const settingKeys = [
   'generationReminder',
 ]
 
+const defaultCharacterProfile = {
+  nickname: '',
+  roleTitle: '默认漫画书主角',
+  description: '',
+  personalityText: '',
+  appearanceText: '',
+  referenceImageUrl: '',
+}
+
+const characterProfileFields = [
+  ['nickname', 50, '角色昵称最多 50 个字符'],
+  ['roleTitle', 50, '角色身份最多 50 个字符'],
+  ['description', 300, '角色描述最多 300 个字符'],
+  ['personalityText', 200, '性格关键词最多 200 个字符'],
+  ['appearanceText', 300, '外观特征最多 300 个字符'],
+  ['referenceImageUrl', 500, '参考图地址最多 500 个字符'],
+]
+
 async function getCurrentUserBundle(userId) {
   await ensureUserCoreRecords(userId)
 
@@ -69,6 +87,36 @@ async function updateCurrentUserSettings(userId, input) {
   })
 
   return formatSettings(setting)
+}
+
+async function getCurrentUserCharacterProfile(userId) {
+  const profile = await prisma.characterProfile.findUnique({
+    where: {
+      ownerUserId: userId,
+    },
+  })
+
+  return formatCharacterProfile(profile)
+}
+
+async function updateCurrentUserCharacterProfile(userId, input) {
+  const existingProfile = await prisma.characterProfile.findUnique({
+    where: {
+      ownerUserId: userId,
+    },
+  })
+  const data = Object.assign({}, formatCharacterProfile(existingProfile), pickCharacterProfileFields(input))
+  const profile = await prisma.characterProfile.upsert({
+    where: {
+      ownerUserId: userId,
+    },
+    create: Object.assign({}, data, {
+      ownerUserId: userId,
+    }),
+    update: data,
+  })
+
+  return formatCharacterProfile(profile)
 }
 
 async function ensureUserCoreRecords(userId) {
@@ -168,6 +216,41 @@ function pickSettingFields(input) {
   return data
 }
 
+function pickCharacterProfileFields(input) {
+  const data = {}
+
+  for (const [key, maxLength, message] of characterProfileFields) {
+    if (!Object.prototype.hasOwnProperty.call(input, key)) {
+      continue
+    }
+
+    const value = assertMaxLength(input[key], maxLength, message)
+    if (key === 'referenceImageUrl') {
+      assertNotLocalTemporaryImageUrl(value)
+    }
+    data[key] = value === null || value === undefined ? '' : value
+  }
+
+  return data
+}
+
+function assertNotLocalTemporaryImageUrl(value) {
+  if (!value) {
+    return
+  }
+
+  if (/^wxfile:\/\//.test(value)
+    || /^https?:\/\/tmp\//.test(value)
+    || value.indexOf('/tmp/') === 0
+    || value.indexOf('tmp/') === 0
+    || value.indexOf('blob:') === 0) {
+    const error = new Error('参考图地址不能使用本地临时路径')
+    error.status = 400
+    error.code = 40001
+    throw error
+  }
+}
+
 function assertMaxLength(value, maxLength, message) {
   if (value !== null && value !== undefined && typeof value !== 'string') {
     const error = new Error('字段格式不正确')
@@ -230,9 +313,26 @@ function formatSettings(setting) {
   }
 }
 
+function formatCharacterProfile(profile) {
+  if (!profile) {
+    return Object.assign({}, defaultCharacterProfile)
+  }
+
+  return {
+    nickname: profile.nickname || '',
+    roleTitle: profile.roleTitle || defaultCharacterProfile.roleTitle,
+    description: profile.description || '',
+    personalityText: profile.personalityText || '',
+    appearanceText: profile.appearanceText || '',
+    referenceImageUrl: profile.referenceImageUrl || '',
+  }
+}
+
 module.exports = {
   getCurrentUserBundle,
   updateCurrentUserProfile,
   getCurrentUserSettings,
   updateCurrentUserSettings,
+  getCurrentUserCharacterProfile,
+  updateCurrentUserCharacterProfile,
 }
