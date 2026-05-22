@@ -1,14 +1,47 @@
 <view class="about-page">
-  <view class="about-card intro-card">
-    <view class="intro-kicker">关于产品</view>
-    <view class="intro-title">私人漫画日记本</view>
-    <view class="intro-desc">把每天的小事整理成只属于自己的 Q 版漫画章节。</view>
+  <view class="about-hero">
+    <view class="hero-orbit">
+      <view class="hero-dot dot-one"></view>
+      <view class="hero-dot dot-two"></view>
+      <view class="hero-book">漫</view>
+    </view>
+    <view class="about-kicker">关于产品</view>
+    <view class="about-tag">个人记录 · 私密保存 · 治愈风格</view>
+    <view class="about-title">私人漫画日记本</view>
+    <view class="about-subtitle">把每天的小事，变成只属于你的 Q 版漫画章节</view>
   </view>
 
-  <view class="about-card" wx:for="{{sections}}" wx:key="title">
-    <view class="section-title">{{item.title}}</view>
-    <view class="section-desc">{{item.desc}}</view>
+  <view class="about-card position-card">
+    <view class="card-title">它是什么？</view>
+    <view class="card-desc">
+      这是一款把日记变成漫画章节的小程序。你写下今天的心情和故事，系统会帮你整理成一本只属于自己的漫画日记本。
+    </view>
   </view>
 
-  <view class="about-note">更多能力正在逐步完善。</view>
+  <view class="feature-list">
+    <view class="feature-item">
+      <view class="feature-mark">写</view>
+      <view class="feature-title">写日记</view>
+      <view class="feature-desc">记录今天发生的小事</view>
+    </view>
+    <view class="feature-item">
+      <view class="feature-mark">画</view>
+      <view class="feature-title">生成漫画</view>
+      <view class="feature-desc">把文字变成 Q 版漫画章节</view>
+    </view>
+    <view class="feature-item">
+      <view class="feature-mark">书</view>
+      <view class="feature-title">存成书</view>
+      <view class="feature-desc">慢慢积累成自己的漫画书</view>
+    </view>
+  </view>
+
+  <view class="about-card version-card">
+    <view class="card-title">当前版本</view>
+    <view class="card-desc">
+      初版优先服务个人记录，不做公开社区、评论、点赞和关注。后续会逐步完善生成效果、角色档案和章节管理。
+    </view>
+  </view>
+
+  <view class="about-footer">愿每一天的小事，都能被温柔地保存下来。</view>
 </view>

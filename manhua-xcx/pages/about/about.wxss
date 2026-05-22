@@ -5,63 +5,187 @@ page {
 
 .about-page {
   min-height: 100vh;
-  padding: 32rpx 28rpx 72rpx;
+  padding: 36rpx 28rpx 76rpx;
   box-sizing: border-box;
   background:
-    radial-gradient(circle at 12% 4%, rgba(255, 226, 176, 0.34), transparent 220rpx),
+    radial-gradient(circle at 14% 6%, rgba(255, 227, 178, 0.46), transparent 230rpx),
+    radial-gradient(circle at 90% 18%, rgba(255, 218, 226, 0.38), transparent 250rpx),
     #fffaf5;
 }
 
-.about-card {
-  margin-top: 22rpx;
-  padding: 30rpx;
-  box-sizing: border-box;
-  border: 2rpx solid #ead6ca;
-  border-radius: 26rpx;
-  background: rgba(255, 254, 250, 0.96);
-  box-shadow: 0 10rpx 26rpx rgba(109, 74, 57, 0.06);
+.about-hero {
+  position: relative;
+  padding: 36rpx 30rpx 38rpx;
+  border: 2rpx solid #f1d8cb;
+  border-radius: 32rpx;
+  background: linear-gradient(180deg, rgba(255, 254, 250, 0.96) 0%, rgba(255, 246, 238, 0.94) 100%);
+  box-shadow: 0 14rpx 34rpx rgba(157, 95, 72, 0.1);
+  overflow: hidden;
 }
 
-.intro-card {
-  margin-top: 0;
-  border-color: #f1b9ad;
-  background: linear-gradient(180deg, #fffdf9 0%, #fff4ee 100%);
+.hero-orbit {
+  position: relative;
+  width: 132rpx;
+  height: 132rpx;
+  margin-bottom: 26rpx;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #ffe6b8 0%, #ffd5df 100%);
 }
 
-.intro-kicker {
+.hero-book {
+  position: absolute;
+  left: 28rpx;
+  top: 28rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 24rpx;
+  color: #fff;
+  font-size: 34rpx;
+  font-weight: 800;
+  background: #ef7f8f;
+  box-shadow: 0 10rpx 22rpx rgba(239, 127, 143, 0.22);
+}
+
+.hero-dot {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.dot-one {
+  right: 14rpx;
+  top: 20rpx;
+  width: 20rpx;
+  height: 20rpx;
+  background: #fffdf9;
+}
+
+.dot-two {
+  left: 18rpx;
+  bottom: 16rpx;
+  width: 16rpx;
+  height: 16rpx;
+  background: #f6b65b;
+}
+
+.about-kicker {
   color: #e46f82;
   font-size: 24rpx;
   font-weight: 700;
+  line-height: 1.4;
 }
 
-.intro-title {
+.about-tag {
+  display: inline-flex;
+  max-width: 100%;
   margin-top: 12rpx;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  color: #b56f65;
+  font-size: 23rpx;
+  line-height: 1.35;
+  background: #ffe8e1;
+}
+
+.about-title {
+  margin-top: 22rpx;
   color: #4d3029;
-  font-size: 38rpx;
+  font-size: 44rpx;
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.22;
 }
 
-.intro-desc,
-.section-desc {
-  margin-top: 14rpx;
-  color: #7d5d52;
-  font-size: 27rpx;
-  line-height: 1.7;
+.about-subtitle {
+  margin-top: 16rpx;
+  color: #77594f;
+  font-size: 28rpx;
+  line-height: 1.65;
 }
 
-.section-title {
+.about-card {
+  margin-top: 26rpx;
+  padding: 30rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #ead6ca;
+  border-radius: 28rpx;
+  background: rgba(255, 254, 250, 0.96);
+  box-shadow: 0 10rpx 28rpx rgba(109, 74, 57, 0.07);
+}
+
+.position-card {
+  margin-top: 30rpx;
+}
+
+.card-title {
   color: #4d3029;
-  font-size: 30rpx;
+  font-size: 32rpx;
   font-weight: 800;
   line-height: 1.35;
 }
 
-.about-note {
-  margin-top: 28rpx;
-  padding-bottom: env(safe-area-inset-bottom);
+.card-desc {
+  margin-top: 16rpx;
+  color: #76594f;
+  font-size: 27rpx;
+  line-height: 1.75;
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16rpx;
+  margin-top: 26rpx;
+}
+
+.feature-item {
+  min-width: 0;
+  padding: 24rpx 18rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #ead6ca;
+  border-radius: 26rpx;
+  background: rgba(255, 255, 252, 0.92);
+  text-align: center;
+}
+
+.feature-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58rpx;
+  height: 58rpx;
+  margin: 0 auto 18rpx;
+  border-radius: 22rpx;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 800;
+  background: linear-gradient(180deg, #ff9aa9 0%, #ef7185 100%);
+}
+
+.feature-title {
+  color: #4f362f;
+  font-size: 26rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.feature-desc {
+  margin-top: 10rpx;
+  color: #8b756b;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.version-card {
+  background: rgba(255, 249, 241, 0.96);
+}
+
+.about-footer {
+  margin-top: 30rpx;
+  padding: 0 24rpx env(safe-area-inset-bottom);
   color: #a48678;
-  font-size: 24rpx;
-  line-height: 1.6;
+  font-size: 25rpx;
+  line-height: 1.65;
   text-align: center;
 }
