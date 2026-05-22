@@ -3,6 +3,25 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
+test('home page does not render the in-page custom title bar', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'index.wxml'), 'utf8')
+  const wxss = fs.readFileSync(path.join(__dirname, 'index.wxss'), 'utf8')
+
+  assert.equal(wxml.includes('home-navbar'), false)
+  assert.equal(wxml.includes('home-nav-title'), false)
+  assert.equal(wxml.includes('navBarHeight'), false)
+  assert.equal(wxss.includes('.home-navbar'), false)
+  assert.equal(wxss.includes('.home-nav-title'), false)
+})
+
+test('home page keeps the core entry content', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'index.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('user.greetingTitle'), true)
+  assert.equal(wxml.includes('defaultComicBook.title'), true)
+  assert.equal(wxml.includes('goCreateChapter'), true)
+})
+
 function loadPage() {
   let pageConfig
   const navigateCalls = []

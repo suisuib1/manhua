@@ -1,8 +1,4 @@
-<view class="home-navbar" style="height: {{navBarHeight}}px;">
-  <view class="home-nav-title" style="top: {{navTitleTop}}px; height: {{navTitleHeight}}px;">我的漫画日记本</view>
-</view>
-
-<view class="home-page" style="padding-top: {{navBarHeight}}px;">
+<view class="home-page">
   <view class="greeting-card">
     <view class="greeting-copy">
       <view class="greeting-title">{{user.greetingTitle}}，</view>
