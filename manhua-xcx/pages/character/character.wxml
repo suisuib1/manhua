@@ -7,7 +7,7 @@
       <view class="cover-copy">
         <view class="cover-kicker">角色档案会帮助漫画保持人物一致</view>
         <view class="cover-title">{{nickname}}</view>
-        <view class="cover-desc">{{mock.relation}}</view>
+        <view class="cover-desc">{{roleTitle}}</view>
       </view>
       <view class="cover-star star-one"></view>
       <view class="cover-star star-two"></view>
@@ -28,7 +28,7 @@
         </view>
         <view class="field-block">
           <view class="field-label">身份关系</view>
-          <view class="field-static">{{mock.relation}}</view>
+          <view class="field-static">{{roleTitle}}</view>
         </view>
       </view>
 
