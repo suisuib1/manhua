@@ -48,11 +48,12 @@
         data-id="{{item.id}}"
         bindtap="goChapterDetail"
       >
-        <image class="chapter-cover-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFill" />
+        <image class="chapter-cover-image" src="{{item.coverImageUrl || '/subpackage/icon-home-mascot-star.png'}}" mode="aspectFill" />
         <view class="chapter-title">{{item.title}}</view>
         <view class="chapter-subtitle">{{item.subtitle}}</view>
         <view class="chapter-date">{{item.date}}</view>
         <view class="chapter-summary">{{item.summary}}</view>
+        <view wx:if="{{item.pageCountText || item.status}}" class="chapter-summary">{{item.pageCountText}}{{item.pageCountText && item.status ? ' · ' : ''}}{{item.status}}</view>
       </view>
     </scroll-view>
   </view>
