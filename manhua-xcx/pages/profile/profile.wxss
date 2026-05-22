@@ -152,6 +152,49 @@ button::after {
   box-shadow: 0 24rpx 58rpx rgba(179, 126, 112, 0.12);
 }
 
+.profile-form {
+  margin-top: 32rpx;
+  padding: 34rpx 36rpx;
+  border-radius: 30rpx;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24rpx 58rpx rgba(179, 126, 112, 0.12);
+}
+
+.form-field + .form-field {
+  margin-top: 28rpx;
+}
+
+.form-label {
+  margin-bottom: 14rpx;
+  color: #4b342f;
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.profile-input,
+.profile-bio-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1rpx solid #f2ded8;
+  border-radius: 22rpx;
+  background: #fffaf7;
+  color: #2d2421;
+  font-size: 30rpx;
+  line-height: 1.45;
+}
+
+.profile-input {
+  height: 82rpx;
+  padding: 0 24rpx;
+}
+
+.profile-bio-input {
+  min-height: 142rpx;
+  padding: 20rpx 24rpx;
+}
+
 .profile-row {
   display: grid;
   grid-template-columns: 56rpx 1fr auto 28rpx;

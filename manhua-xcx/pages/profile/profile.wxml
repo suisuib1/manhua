@@ -12,7 +12,19 @@
       <view class="profile-subtitle">{{profile.subtitle}}</view>
     </view>
 
-    <button class="edit-button" bindtap="handleEditTap" hover-class="edit-button-hover">编辑资料</button>
+    <button class="edit-button" bindtap="handleSaveProfile" hover-class="edit-button-hover">保存资料</button>
+  </view>
+
+  <view class="profile-form">
+    <view class="form-field">
+      <view class="form-label">昵称</view>
+      <input class="profile-input" value="{{profile.nickname}}" placeholder="请输入昵称" bindinput="onNicknameInput" />
+    </view>
+
+    <view class="form-field">
+      <view class="form-label">简介</view>
+      <textarea class="profile-bio-input" value="{{profile.bio}}" placeholder="写一句介绍自己的话" bindinput="onBioInput" />
+    </view>
   </view>
 
   <view class="profile-list">
