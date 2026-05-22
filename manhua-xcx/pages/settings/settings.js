@@ -52,6 +52,9 @@ function buildUserState(user) {
 }
 
 Page({
+  hasLoadedSettings: false,
+  settingsLoadingPromise: null,
+
   data: {
     versionText: 'v1.0.0',
     user: buildUserState(null),
@@ -59,14 +62,19 @@ Page({
   },
 
   onLoad() {
-    this.loadSettings()
+    return this.loadSettings()
   },
 
   onShow() {
     this.setData({
       user: buildUserState(getCurrentUser()),
     })
-    this.loadSettings()
+
+    if (!this.hasLoadedSettings) {
+      return
+    }
+
+    return this.loadSettings()
   },
 
   async loadSettings() {
@@ -75,9 +83,25 @@ Page({
     })
 
     if (!getAuthToken()) {
+      this.hasLoadedSettings = true
       return
     }
 
+    if (this.settingsLoadingPromise) {
+      return this.settingsLoadingPromise
+    }
+
+    this.settingsLoadingPromise = this.fetchBackendSettings()
+
+    try {
+      return await this.settingsLoadingPromise
+    } finally {
+      this.settingsLoadingPromise = null
+      this.hasLoadedSettings = true
+    }
+  },
+
+  async fetchBackendSettings() {
     try {
       const backendSettings = await request({
         url: '/api/users/me/settings',

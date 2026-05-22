@@ -3,11 +3,12 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
-function loadPage(storage = {}) {
+function loadPage(storage = {}, requestImpl = null) {
   let pageConfig
   const toastCalls = []
   const modalCalls = []
   const navigateCalls = []
+  const requestCalls = []
 
   global.Page = (config) => {
     pageConfig = config
@@ -38,13 +39,78 @@ function loadPage(storage = {}) {
     navigateTo(options) {
       navigateCalls.push(options)
     },
+    request(options) {
+      requestCalls.push(options)
+      if (requestImpl) {
+        requestImpl(options)
+        return
+      }
+
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {},
+        },
+      })
+    },
   }
 
+  delete require.cache[require.resolve('../../utils/api')]
+  delete require.cache[require.resolve('../../utils/auth')]
   delete require.cache[require.resolve('./settings')]
   require('./settings')
 
-  return { pageConfig, storage, toastCalls, modalCalls, navigateCalls }
+  return { pageConfig, storage, toastCalls, modalCalls, navigateCalls, requestCalls }
 }
+
+test('首次打开设置页只请求一次后端设置', async () => {
+  const storage = {
+    authToken: 'token-settings',
+    currentUser: { id: 'user-settings' },
+  }
+  const { pageConfig, requestCalls } = loadPage(storage)
+
+  const loadPromise = pageConfig.onLoad()
+  const showPromise = pageConfig.onShow()
+
+  await Promise.all([loadPromise, showPromise])
+
+  const settingsRequests = requestCalls.filter((options) => options.url.endsWith('/api/users/me/settings'))
+
+  assert.equal(settingsRequests.length, 1)
+})
+
+test('settings 正在加载时再次触发不会重复请求', async () => {
+  const storage = {
+    authToken: 'token-settings',
+    currentUser: { id: 'user-settings' },
+  }
+  let resolveRequest
+  const pendingRequest = new Promise((resolve) => {
+    resolveRequest = resolve
+  })
+  const { pageConfig, requestCalls } = loadPage(storage, async (options) => {
+    await pendingRequest
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {},
+      },
+    })
+  })
+
+  const firstLoad = pageConfig.loadSettings()
+  const secondLoad = pageConfig.loadSettings()
+
+  assert.equal(requestCalls.filter((options) => options.url.endsWith('/api/users/me/settings')).length, 1)
+
+  resolveRequest()
+  await Promise.all([firstLoad, secondLoad])
+})
 
 test('设置页 wxml 使用单表单结构，并保留偏好、隐私、提醒、关于和退出登录', () => {
   const wxml = fs.readFileSync(path.join(__dirname, 'settings.wxml'), 'utf8')
