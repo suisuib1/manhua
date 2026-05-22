@@ -1,1 +1,67 @@
-@import "../settings/settings.wxss";
+page {
+  min-height: 100%;
+  background: #fffaf5;
+}
+
+.about-page {
+  min-height: 100vh;
+  padding: 32rpx 28rpx 72rpx;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255, 226, 176, 0.34), transparent 220rpx),
+    #fffaf5;
+}
+
+.about-card {
+  margin-top: 22rpx;
+  padding: 30rpx;
+  box-sizing: border-box;
+  border: 2rpx solid #ead6ca;
+  border-radius: 26rpx;
+  background: rgba(255, 254, 250, 0.96);
+  box-shadow: 0 10rpx 26rpx rgba(109, 74, 57, 0.06);
+}
+
+.intro-card {
+  margin-top: 0;
+  border-color: #f1b9ad;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff4ee 100%);
+}
+
+.intro-kicker {
+  color: #e46f82;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.intro-title {
+  margin-top: 12rpx;
+  color: #4d3029;
+  font-size: 38rpx;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.intro-desc,
+.section-desc {
+  margin-top: 14rpx;
+  color: #7d5d52;
+  font-size: 27rpx;
+  line-height: 1.7;
+}
+
+.section-title {
+  color: #4d3029;
+  font-size: 30rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.about-note {
+  margin-top: 28rpx;
+  padding-bottom: env(safe-area-inset-bottom);
+  color: #a48678;
+  font-size: 24rpx;
+  line-height: 1.6;
+  text-align: center;
+}

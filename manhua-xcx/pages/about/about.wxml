@@ -1,19 +1,14 @@
-<view class="info-page">
-  <view class="info-hero">
-    <view class="hero-icon">漫</view>
-    <view class="hero-copy">
-      <view class="hero-title">关于产品</view>
-      <view class="hero-desc">这是一本把日常小事画成回忆的私人漫画日记本。</view>
-    </view>
+<view class="about-page">
+  <view class="about-card intro-card">
+    <view class="intro-kicker">关于产品</view>
+    <view class="intro-title">私人漫画日记本</view>
+    <view class="intro-desc">把每天的小事整理成只属于自己的 Q 版漫画章节。</view>
   </view>
 
-  <view class="info-card">
-    <view wx:for="{{sections}}" wx:key="title" class="info-row">
-      <view class="row-dot"></view>
-      <view class="row-copy">
-        <view class="row-title">{{item.title}}</view>
-        <view class="row-desc">{{item.desc}}</view>
-      </view>
-    </view>
+  <view class="about-card" wx:for="{{sections}}" wx:key="title">
+    <view class="section-title">{{item.title}}</view>
+    <view class="section-desc">{{item.desc}}</view>
   </view>
+
+  <view class="about-note">更多能力正在逐步完善。</view>
 </view>

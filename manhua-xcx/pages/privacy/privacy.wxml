@@ -1,19 +1,17 @@
-<view class="info-page">
-  <view class="info-hero">
-    <view class="hero-icon">私</view>
-    <view class="hero-copy">
-      <view class="hero-title">隐私说明</view>
-      <view class="hero-desc">安心把日记变成漫画，原文和未授权内容不对外公开。</view>
-    </view>
+<view class="privacy-page">
+  <view class="privacy-card intro-card">
+    <view class="intro-kicker">隐私说明</view>
+    <view class="intro-title">日记原文默认私密</view>
+    <view class="intro-desc">你的日记和未授权内容不会默认公开发布。</view>
   </view>
 
-  <view class="info-card">
-    <view wx:for="{{sections}}" wx:key="title" class="info-row">
-      <view class="row-dot"></view>
-      <view class="row-copy">
-        <view class="row-title">{{item.title}}</view>
-        <view class="row-desc">{{item.desc}}</view>
-      </view>
-    </view>
+  <view class="privacy-card" wx:for="{{sections}}" wx:key="title">
+    <view class="section-title">{{item.title}}</view>
+    <view class="section-desc">{{item.desc}}</view>
+  </view>
+
+  <view class="privacy-card">
+    <view class="section-title">用户数据用途说明</view>
+    <view class="section-desc">当前数据只用于登录识别、保存草稿、生成私人漫画章节和维持基础设置。</view>
   </view>
 </view>
