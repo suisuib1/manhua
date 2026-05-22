@@ -428,6 +428,51 @@ Header：`Authorization: Bearer <token>`
 }
 ```
 
+## ComicChapter recent API
+
+### GET /api/comic-chapters/recent
+
+说明：获取当前登录用户最近漫画章节的列表卡片数据。
+是否需要登录：是。Header：`Authorization: Bearer <token>`
+
+当前行为：
+- 这是最近章节卡片级接口，不是阅读器详情接口。
+- 基于现有 `DiaryEntry` 和 `GenerationTask` 聚合，不新增章节表。
+- 只返回当前登录用户、未软删除日记、且已有生成任务的章节。
+- 同一篇日记存在多个生成任务时，只取最新任务。
+- 当前不接真实 AI，不启动 worker/queue，不保证返回可供阅读器直接展示的漫画页图片。
+- `limit` 默认 5，最大 20。
+
+返回示例：
+```json
+{
+  "code": 0,
+  "message": "ok",
+  "data": {
+    "items": [
+      {
+        "id": "diary_entry_id",
+        "diaryEntryId": "diary_entry_id",
+        "generationTaskId": "generation_task_id",
+        "title": "章节标题",
+        "date": "2026-05-21T00:00:00.000Z",
+        "summary": "摘要",
+        "status": "completed",
+        "pageCount": 1,
+        "coverImageUrl": null,
+        "hasComicImages": false,
+        "createdAt": "2026-05-21T00:00:00.000Z"
+      }
+    ]
+  }
+}
+```
+
+注意：
+- 不返回 `ownerUserId`、日记全文、`promptSnapshot`、`inputJson`、原始 `resultJson` 等内部字段。
+- `coverImageUrl` 优先使用生成结果图片；没有生成图片时可回退到日记第一张照片；仍没有则为 `null`。
+- 生成结果 JSON 解析失败时按空对象处理，不影响接口响应。
+
 ### GET /api/generation-tasks/:id
 
 说明：读取当前登录用户自己的生成任务详情。
