@@ -139,25 +139,47 @@ function buildMockPrompt(diaryEntry) {
 
 function buildOpenAiPrompt(diaryEntry, characterProfile) {
   const selectedTags = parseJsonArray(diaryEntry.selectedTagsJson).join(', ') || 'daily, healing'
-  const characterLines = characterProfile ? [
-    characterProfile.nickname ? `主角昵称：${characterProfile.nickname}` : '',
-    characterProfile.roleTitle ? `角色身份：${characterProfile.roleTitle}` : '',
-    characterProfile.description ? `角色描述：${characterProfile.description}` : '',
-    characterProfile.personalityText ? `性格关键词：${characterProfile.personalityText}` : '',
-    characterProfile.appearanceText ? `外观特征：${characterProfile.appearanceText}` : '',
-  ].filter(Boolean) : []
+  const chapterTitle = limitText(diaryEntry.chapterTitle, 80) || '未命名章节'
+  const diaryDate = diaryEntry.diaryDate ? diaryEntry.diaryDate.toISOString().slice(0, 10) : '未填写'
+  const diarySummary = limitText(diaryEntry.diaryText, 240) || '今天的生活片段'
+  const characterLines = buildCharacterPromptLines(characterProfile)
 
   return [
-    '请生成一张 Q 版治愈风格的多格漫画图，适合作为私人日记漫画章节的第一页。',
-    '画面需要可爱、温暖、日常，保持同一个主角形象一致。',
-    `章节标题：${diaryEntry.chapterTitle || '未命名章节'}`,
-    `日记日期：${diaryEntry.diaryDate ? diaryEntry.diaryDate.toISOString().slice(0, 10) : '未填写'}`,
-    `日记内容：${diaryEntry.diaryText || '今天的生活片段'}`,
-    `情绪标签：${selectedTags}`,
-    `页数模式：${diaryEntry.pageMode || 'custom'}，用户期望页数：${diaryEntry.pageCount || 1}`,
+    '你是一名温暖治愈系 Q 版漫画插画师。',
+    '',
+    '【画面目标】',
+    '请生成一张单页漫画插图，本轮只生成第一页，不做多页连续漫画。',
+    '风格必须是 Q 版、chibi、温暖治愈、儿童绘本感、柔和线条、明亮干净配色。',
+    '画面包含 3-4 个清晰分镜，围绕主角今天的一个日常小故事展开。',
+    '主角在每个分镜中保持同一发型、服装、五官和整体形象一致。',
+    '',
+    '【主角设定】',
     ...characterLines,
-    '只生成单张图片，不要输出文字说明，不要包含真实隐私信息。',
+    '',
+    '【章节信息】',
+    `章节标题：${chapterTitle}`,
+    `日记日期：${diaryDate}`,
+    `情绪标签：${selectedTags}`,
+    '页数说明：本轮只生成第一页/单页插图。',
+    '',
+    '【日记摘要】',
+    diarySummary,
+    '',
+    '【禁止项】',
+    '不要真实照片风，不要水印，不要 logo，不要复杂文字，不要对话框，不要大段文字。',
+    '不要输出文字说明，不要包含真实隐私信息。',
   ].join('\n')
+}
+
+function buildCharacterPromptLines(characterProfile) {
+  const profile = characterProfile || {}
+  return [
+    `昵称：${limitText(profile.nickname, 30) || '日记主人公'}`,
+    `身份：${limitText(profile.roleTitle, 50) || '私人漫画书主角'}`,
+    `性格：${limitText(profile.personalityText, 120) || '温柔、好奇、安静可爱'}`,
+    `外观：${limitText(profile.appearanceText, 160) || 'Q 版大头小身比例，圆润五官，表情柔和'}`,
+    `补充：${limitText(profile.description, 120) || '保持角色形象统一'}`,
+  ]
 }
 
 function buildOpenAiResult(diaryEntry, image) {
@@ -185,6 +207,11 @@ function buildOpenAiResult(diaryEntry, image) {
 function summarizeText(value) {
   if (!value) return ''
   return String(value).slice(0, 80)
+}
+
+function limitText(value, maxLength) {
+  if (!value) return ''
+  return String(value).trim().slice(0, maxLength)
 }
 
 function formatTask(task) {

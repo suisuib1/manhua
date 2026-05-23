@@ -388,6 +388,7 @@ Header：`Authorization: Bearer <token>`
 当前行为：
 - 未配置 `OPENAI_API_KEY` 时仍创建本地 mock 任务。
 - 已配置 `OPENAI_API_KEY` 时，会调用 OpenAI 文生图生成单张第一页图，并保存为本地 `/uploads/generated/...` URL。
+- OpenAI prompt 会结合章节标题、情绪标签、截断后的日记摘要和角色档案生成画面，不传完整超长日记原文。
 - 当前是最小同步模式，不启动 worker、queue 或定时任务。
 - 本轮只生成单张第一页图，不做真实多页漫画拆分。
 - OpenAI 无 key、请求失败、返回异常、图片下载失败或本地保存失败时都会 fallback 到 mock completed，不阻塞用户。

@@ -49,9 +49,9 @@ async function login(server, code) {
   return body.data
 }
 
-async function createDiaryEntry(ownerUserId, suffix = 'one') {
+async function createDiaryEntry(ownerUserId, suffix = 'one', overrides = {}) {
   return prisma.diaryEntry.create({
-    data: {
+    data: Object.assign({
       ownerUserId,
       chapterTitle: `generation_task_${suffix}_chapter`,
       diaryDate: new Date('2026-05-21T00:00:00.000Z'),
@@ -60,7 +60,7 @@ async function createDiaryEntry(ownerUserId, suffix = 'one') {
       pageMode: 'custom',
       selectedTagsJson: JSON.stringify(['daily', 'cute']),
       status: 'draft',
-    },
+    }, overrides),
   })
 }
 
@@ -225,6 +225,15 @@ test('POST /api/generation-tasks returns first OpenAI image when configured', as
       assert.equal(call.body.prompt.includes('generation_task_openai_chapter'), true)
       assert.equal(call.body.prompt.includes('generation_task_openai_diary_text'), true)
       assert.equal(call.body.prompt.includes('小满_openai'), true)
+      assert.equal(call.body.prompt.includes('Q 版'), true)
+      assert.equal(call.body.prompt.includes('chibi'), true)
+      assert.equal(call.body.prompt.includes('温暖治愈'), true)
+      assert.equal(call.body.prompt.includes('单页漫画'), true)
+      assert.equal(call.body.prompt.includes('3-4 个清晰分镜'), true)
+      assert.equal(call.body.prompt.includes('不要水印'), true)
+      assert.equal(call.body.prompt.includes('不要真实照片风'), true)
+      assert.equal(call.body.prompt.includes('温柔 好奇_openai'), true)
+      assert.equal(call.body.prompt.includes('短发 发夹_openai'), true)
 
       res.statusCode = 200
       res.setHeader('content-type', 'application/json')
@@ -301,6 +310,54 @@ test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
     assert.equal(created.body.data.result.pages[0].mock, true)
     assert.equal(created.body.data.result.pages[0].imageUrl, null)
     assert.equal(JSON.stringify(created.body.data).includes('test-openai-key'), false)
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+    await openAiServer.close()
+    restoreEnv()
+  }
+})
+
+test('OpenAI prompt uses truncated diary summary and default character profile', async () => {
+  const longDiaryHead = '今天在公园散步，看见阳光落在长椅上，心情慢慢变亮。'
+  const longDiaryTail = 'TAIL_SHOULD_NOT_APPEAR_IN_OPENAI_PROMPT'
+  const longDiaryText = `${longDiaryHead}${'很温暖。'.repeat(80)}${longDiaryTail}`
+  const mockImage = Buffer.from('mock png bytes')
+  let capturedPrompt = ''
+  const openAiServer = await createOpenAiMockServer((req, res, call) => {
+    capturedPrompt = call.body.prompt
+    res.statusCode = 200
+    res.setHeader('content-type', 'application/json')
+    res.end(JSON.stringify({
+      data: [
+        {
+          b64_json: mockImage.toString('base64'),
+        },
+      ],
+    }))
+  })
+  const restoreEnv = setOpenAiEnv({
+    OPENAI_API_KEY: 'test-openai-key',
+    OPENAI_BASE_URL: openAiServer.baseUrl,
+  })
+  const server = await listen(app)
+
+  try {
+    const loginData = await login(server, 'generation_task_default_character')
+    const diaryEntry = await createDiaryEntry(loginData.user.id, 'default_character', {
+      diaryText: longDiaryText,
+    })
+
+    const created = await requestJson(server, 'POST', '/api/generation-tasks', {
+      diaryEntryId: diaryEntry.id,
+    }, loginData.token)
+
+    assert.equal(created.response.status, 200)
+    assert.equal(created.body.data.result.pages[0].imageUrl.startsWith('/uploads/generated/'), true)
+    assert.equal(capturedPrompt.includes(longDiaryHead), true)
+    assert.equal(capturedPrompt.includes(longDiaryTail), false)
+    assert.equal(capturedPrompt.includes('日记主人公'), true)
+    assert.equal(capturedPrompt.includes('私人漫画书主角'), true)
+    assert.equal(capturedPrompt.includes('Q 版大头小身比例'), true)
   } finally {
     await new Promise((resolve) => server.close(resolve))
     await openAiServer.close()
