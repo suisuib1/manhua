@@ -38,6 +38,7 @@ test('createGenerationTask posts diaryEntryId with auth', async () => {
   assert.equal(requestOptions.url, 'http://127.0.0.1:3000/api/generation-tasks')
   assert.equal(requestOptions.method, 'POST')
   assert.equal(requestOptions.header.Authorization, 'Bearer token-task')
+  assert.equal(requestOptions.timeout, 120000)
   assert.deepEqual(requestOptions.data, {
     diaryEntryId: 'entry-1',
   })

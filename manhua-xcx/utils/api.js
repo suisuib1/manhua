@@ -17,7 +17,7 @@ function buildError(message, code, statusCode) {
 }
 
 function request(options) {
-  const { url, method = 'GET', data, auth = false, header = {} } = options
+  const { url, method = 'GET', data, auth = false, header = {}, timeout } = options
   const requestHeader = Object.assign({}, header)
 
   if (auth) {
@@ -33,6 +33,7 @@ function request(options) {
       method,
       data,
       header: requestHeader,
+      timeout,
       success(res) {
         const body = res.data || {}
 

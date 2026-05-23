@@ -1,5 +1,7 @@
 const { request } = require('./api')
 
+const generationTaskRequestTimeout = 120000
+
 async function createGenerationTask(diaryEntryId) {
   if (!diaryEntryId) {
     throw new Error('diaryEntryId is required')
@@ -12,6 +14,7 @@ async function createGenerationTask(diaryEntryId) {
       diaryEntryId,
     },
     auth: true,
+    timeout: generationTaskRequestTimeout,
   })
 }
 
@@ -30,4 +33,5 @@ async function getGenerationTask(id) {
 module.exports = {
   createGenerationTask,
   getGenerationTask,
+  generationTaskRequestTimeout,
 }
