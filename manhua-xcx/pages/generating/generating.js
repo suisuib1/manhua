@@ -71,10 +71,36 @@ function buildGenerationTaskMetadata(task) {
   }
 }
 
+function getFirstGenerationImageUrl(task) {
+  const pages = task && task.result && Array.isArray(task.result.pages) ? task.result.pages : []
+  const firstPage = pages[0]
+
+  return firstPage && firstPage.imageUrl ? firstPage.imageUrl : ''
+}
+
+function injectFirstGeneratedImage(chapter, imageUrl) {
+  if (!imageUrl || !chapter) {
+    return chapter
+  }
+
+  const pages = Array.isArray(chapter.pages) ? chapter.pages.slice() : []
+  const firstPage = Object.assign({}, pages[0] || {})
+  firstPage.images = [imageUrl]
+  pages[0] = firstPage
+
+  return Object.assign({}, chapter, {
+    images: [imageUrl],
+    pages,
+  })
+}
+
 function finalizeGeneratedChapter(draft, task) {
-  const generatedChapter = Object.assign(
-    buildGeneratedChapter(draft),
-    buildGenerationTaskMetadata(task)
+  const generatedChapter = injectFirstGeneratedImage(
+    Object.assign(
+      buildGeneratedChapter(draft),
+      buildGenerationTaskMetadata(task)
+    ),
+    getFirstGenerationImageUrl(task)
   )
   const generatedChapters = [generatedChapter].concat(loadGeneratedChapters())
 
@@ -191,4 +217,6 @@ module.exports = {
   loadPendingDraft,
   getDefaultPanelImages,
   buildGenerationTaskMetadata,
+  getFirstGenerationImageUrl,
+  injectFirstGeneratedImage,
 }

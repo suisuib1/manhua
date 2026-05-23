@@ -184,6 +184,79 @@ test('generation task success adds backend metadata without changing reader page
   assert.equal(storage.generatedComicChapters[0].id, chapter.id)
 })
 
+test('generation task result imageUrl is injected into first local reader page', async () => {
+  const { moduleExports, storage } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-ai-image',
+          status: 'completed',
+          diaryEntryId: 'entry-ai-image',
+          result: {
+            pages: [
+              {
+                pageIndex: 0,
+                imageUrl: '/uploads/generated/ai-first-page.png',
+                mock: false,
+              },
+            ],
+          },
+        },
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-ai-image',
+    chapterTitle: 'ai image chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'show ai image in reader',
+    pageCount: 2,
+  })
+
+  assert.equal(chapter.pages[0].images[0], '/uploads/generated/ai-first-page.png')
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], '/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.generationResult.pages[0].imageUrl, '/uploads/generated/ai-first-page.png')
+})
+
+test('generation task without imageUrl keeps local reader fallback image', async () => {
+  const { moduleExports } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-no-image',
+          status: 'completed',
+          diaryEntryId: 'entry-no-image',
+          result: {
+            pages: [{ pageIndex: 0, mock: true }],
+          },
+        },
+      },
+    })
+  })
+
+  const chapter = await moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-no-image',
+    chapterTitle: 'fallback image chapter',
+    diaryDate: '2026-05-21',
+    diaryText: 'keep fallback image',
+    pageCount: 2,
+  })
+
+  assert.notEqual(chapter.pages[0].images[0], '/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.pages[0].images[0].startsWith('/subpackage/'), true)
+})
+
 test('missing serverDiaryEntryId syncs diary before creating generation task', async () => {
   const { moduleExports, requestCalls, storage } = loadPage({
     authToken: 'token-task',

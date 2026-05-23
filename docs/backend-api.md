@@ -373,7 +373,7 @@ Header：`Authorization: Bearer <token>`
 
 ### POST /api/generation-tasks
 
-说明：基于当前登录用户自己的日记草稿创建一个 mock 生成任务。
+说明：基于当前登录用户自己的日记草稿创建生成任务；配置 OpenAI 后会同步生成一张第一页漫画图。
 
 是否需要登录：是。
 Header：`Authorization: Bearer <token>`
@@ -386,11 +386,21 @@ Header：`Authorization: Bearer <token>`
 ```
 
 当前行为：
-- 只校验并创建本地 mock 任务，不接真实 AI。
-- 不启动 worker、queue 或定时任务。
+- 未配置 `OPENAI_API_KEY` 时仍创建本地 mock 任务。
+- 已配置 `OPENAI_API_KEY` 时，会调用 OpenAI 文生图生成单张第一页图，并保存为本地 `/uploads/generated/...` URL。
+- 当前是最小同步模式，不启动 worker、queue 或定时任务。
+- 本轮只生成单张第一页图，不做真实多页漫画拆分。
+- OpenAI 无 key、请求失败、返回异常、图片下载失败或本地保存失败时都会 fallback 到 mock completed，不阻塞用户。
 - 同步写入 `completed` 状态。
 - `diaryEntryId` 必填，且日记必须存在、未软删除、属于当前登录用户。
 - 日记不存在、已删除或不属于当前登录用户时返回 `404`。
+
+OpenAI 环境变量：
+- `OPENAI_API_KEY`：启用真实文生图。
+- `OPENAI_BASE_URL`：可选，默认使用官方接口地址。
+- `OPENAI_IMAGE_MODEL`：可选，默认 `gpt-image-1`。
+- `OPENAI_IMAGE_SIZE`：可选，默认 `1024x1024`。
+- `OPENAI_IMAGE_QUALITY`、`OPENAI_IMAGE_STYLE`、`OPENAI_TIMEOUT_MS`：可选。
 
 返回示例：
 ```json
@@ -440,7 +450,7 @@ Header：`Authorization: Bearer <token>`
 - 基于现有 `DiaryEntry` 和 `GenerationTask` 聚合，不新增章节表。
 - 只返回当前登录用户、未软删除日记、且已有生成任务的章节。
 - 同一篇日记存在多个生成任务时，只取最新任务。
-- 当前不接真实 AI，不启动 worker/queue，不保证返回可供阅读器直接展示的漫画页图片。
+- 不启动 worker/queue；这是列表卡片接口，不保证返回可供阅读器直接展示的完整漫画页详情。
 - `limit` 默认 5，最大 20。
 
 返回示例：
