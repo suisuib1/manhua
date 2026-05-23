@@ -8,6 +8,7 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   const navigateCalls = []
   const requestCalls = []
   const storage = Object.assign({}, storageSeed)
+  const intervals = []
 
   global.Page = (config) => {
     pageConfig = config
@@ -36,6 +37,21 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
     showToast() {},
   }
 
+  global.setInterval = (handler, delay) => {
+    const timer = {
+      handler,
+      delay,
+      cleared: false,
+    }
+    intervals.push(timer)
+    return timer
+  }
+  global.clearInterval = (timer) => {
+    if (timer) {
+      timer.cleared = true
+    }
+  }
+
   delete require.cache[require.resolve('../../utils/api')]
   delete require.cache[require.resolve('../../utils/auth')]
   delete require.cache[require.resolve('../../utils/diaryApi')]
@@ -45,12 +61,29 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   const moduleExports = require('./generating')
   pageConfig.moduleExports = moduleExports
 
-  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports }
+  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports, intervals }
 }
 
 async function flushAsyncWork() {
   await Promise.resolve()
   await Promise.resolve()
+}
+
+async function waitForInterval(intervals) {
+  for (let index = 0; index < 10; index += 1) {
+    if (intervals.length > 0) {
+      return intervals[intervals.length - 1]
+    }
+
+    await flushAsyncWork()
+  }
+
+  return intervals[intervals.length - 1]
+}
+
+async function runTimer(timer) {
+  timer.handler()
+  await flushAsyncWork()
 }
 
 test('生成中页仍显示模拟进度而不是空壳', () => {
@@ -222,6 +255,192 @@ test('generation task result imageUrl is injected into first local reader page',
   assert.equal(chapter.pages[0].images[0], '/uploads/generated/ai-first-page.png')
   assert.equal(storage.generatedComicChapters[0].pages[0].images[0], '/uploads/generated/ai-first-page.png')
   assert.equal(chapter.generationResult.pages[0].imageUrl, '/uploads/generated/ai-first-page.png')
+})
+
+test('pending generation task polls until completed and injects first image', async () => {
+  const { moduleExports, requestCalls, storage, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-pending',
+            status: 'pending',
+            diaryEntryId: 'entry-pending',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-pending',
+          status: 'completed',
+          diaryEntryId: 'entry-pending',
+          result: {
+            pages: [{
+              pageIndex: 0,
+              imageUrl: '/uploads/generated/polled-first-page.png',
+              mock: false,
+            }],
+          },
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-pending',
+    chapterTitle: 'pending chapter',
+    pageCount: 2,
+  })
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 1)
+  const pollTimer = await waitForInterval(intervals)
+  assert.equal(intervals.length, 1)
+  assert.equal(pollTimer.delay, 2500)
+
+  await runTimer(pollTimer)
+  const chapter = await pending
+
+  assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks/task-pending')
+  assert.equal(requestCalls[1].method, 'GET')
+  assert.equal(chapter.pages[0].images[0], '/uploads/generated/polled-first-page.png')
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], '/uploads/generated/polled-first-page.png')
+  assert.equal(pollTimer.cleared, true)
+})
+
+test('failed polled generation task writes local fallback', async () => {
+  const { moduleExports, storage, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-failed',
+            status: 'processing',
+            diaryEntryId: 'entry-failed',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-failed',
+          status: 'failed',
+          diaryEntryId: 'entry-failed',
+          result: {},
+          errorMessage: 'OpenAI failed',
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-failed',
+    chapterTitle: 'failed chapter',
+    pageCount: 2,
+  })
+  await flushAsyncWork()
+  await runTimer(await waitForInterval(intervals))
+  const chapter = await pending
+
+  assert.equal(chapter.generationTaskId, undefined)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].title, 'failed chapter')
+})
+
+test('polling get failure writes local fallback', async () => {
+  const { moduleExports, storage, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-get-fail',
+            status: 'pending',
+            diaryEntryId: 'entry-get-fail',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.fail(new Error('timeout'))
+  })
+
+  const pending = moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-get-fail',
+    chapterTitle: 'get fail chapter',
+    pageCount: 2,
+  })
+  await flushAsyncWork()
+  await runTimer(await waitForInterval(intervals))
+  const chapter = await pending
+
+  assert.equal(chapter.generationTaskId, undefined)
+  assert.equal(storage.generatedComicChapters[0].title, 'get fail chapter')
+})
+
+test('onUnload clears polling timer', async () => {
+  const { pageConfig, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-unload',
+          status: 'pending',
+          diaryEntryId: 'entry-unload',
+          result: {},
+        },
+      },
+    })
+  })
+
+  pageConfig.setData({
+    pendingDraft: {
+      serverDiaryEntryId: 'entry-unload',
+      chapterTitle: 'unload chapter',
+    },
+  })
+  pageConfig.moduleExports.finalizeGeneratedChapterWithBackendFallback(pageConfig.data.pendingDraft)
+    .catch(() => null)
+  await waitForInterval(intervals)
+
+  pageConfig.onUnload()
+
+  assert.equal(intervals.some((timer) => timer.cleared), true)
 })
 
 test('generation task without imageUrl keeps local reader fallback image', async () => {

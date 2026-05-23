@@ -7,26 +7,45 @@ const {
 async function createGenerationTask(ownerUserId, input) {
   const diaryEntryId = assertRequiredString(input.diaryEntryId, 'diaryEntryId is required')
   const diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
-  const characterProfile = await findCharacterProfile(ownerUserId)
-  const now = new Date()
   const taskInput = buildTaskInput(diaryEntry)
-  const generation = await buildGenerationResult(diaryEntry, characterProfile)
-  const result = generation.result
+
+  if (!hasOpenAiImageConfig()) {
+    const now = new Date()
+    const result = buildMockResult(diaryEntry)
+    const task = await prisma.generationTask.create({
+      data: {
+        ownerUserId,
+        diaryEntryId: diaryEntry.id,
+        taskType: 'diary_to_comic',
+        status: 'completed',
+        promptSnapshot: buildMockPrompt(diaryEntry),
+        inputJson: JSON.stringify(taskInput),
+        resultJson: JSON.stringify(result),
+        errorMessage: null,
+        startedAt: now,
+        finishedAt: now,
+      },
+    })
+
+    return formatTask(task)
+  }
 
   const task = await prisma.generationTask.create({
     data: {
       ownerUserId,
       diaryEntryId: diaryEntry.id,
       taskType: 'diary_to_comic',
-      status: 'completed',
-      promptSnapshot: generation.prompt,
+      status: 'pending',
+      promptSnapshot: null,
       inputJson: JSON.stringify(taskInput),
-      resultJson: JSON.stringify(result),
+      resultJson: null,
       errorMessage: null,
-      startedAt: now,
-      finishedAt: now,
+      startedAt: null,
+      finishedAt: null,
     },
   })
+
+  scheduleGenerationTask(task.id, ownerUserId, diaryEntry.id)
 
   return formatTask(task)
 }
@@ -75,27 +94,56 @@ async function findCharacterProfile(ownerUserId) {
   })
 }
 
-async function buildGenerationResult(diaryEntry, characterProfile) {
-  const fallback = {
-    prompt: buildMockPrompt(diaryEntry),
-    result: buildMockResult(diaryEntry),
-  }
+function scheduleGenerationTask(taskId, ownerUserId, diaryEntryId) {
+  setImmediate(() => {
+    runGenerationTask(taskId, ownerUserId, diaryEntryId).catch((err) => {
+      warnGenerationTaskUpdateFailure(err)
+    })
+  })
+}
 
-  if (!hasOpenAiImageConfig()) {
-    return fallback
-  }
-
+async function runGenerationTask(taskId, ownerUserId, diaryEntryId) {
+  const diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
+  const characterProfile = await findCharacterProfile(ownerUserId)
   const prompt = buildOpenAiPrompt(diaryEntry, characterProfile)
+  const startedAt = new Date()
+
+  await updateGenerationTaskSafely(taskId, {
+    status: 'processing',
+    promptSnapshot: prompt,
+    errorMessage: null,
+    startedAt,
+  })
 
   try {
     const image = await generateImageFromPrompt(prompt)
-    return {
-      prompt,
-      result: buildOpenAiResult(diaryEntry, image),
-    }
+    await updateGenerationTaskSafely(taskId, {
+      status: 'completed',
+      resultJson: JSON.stringify(buildOpenAiResult(diaryEntry, image)),
+      errorMessage: null,
+      finishedAt: new Date(),
+    })
   } catch (err) {
     warnOpenAiFallback(err)
-    return fallback
+    await updateGenerationTaskSafely(taskId, {
+      status: 'failed',
+      errorMessage: sanitizeGenerationError(err),
+      finishedAt: new Date(),
+    })
+  }
+}
+
+async function updateGenerationTaskSafely(taskId, data) {
+  try {
+    return await prisma.generationTask.update({
+      where: {
+        id: taskId,
+      },
+      data,
+    })
+  } catch (err) {
+    warnGenerationTaskUpdateFailure(err)
+    return null
   }
 }
 
@@ -213,6 +261,19 @@ function warnOpenAiFallback(err) {
     model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
     size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
   })
+}
+
+function warnGenerationTaskUpdateFailure(err) {
+  console.warn('[generation-task-update-failed]', {
+    name: err && err.name ? err.name : 'Error',
+    code: err && err.code ? err.code : undefined,
+    message: err && err.message ? err.message : 'Generation task update failed',
+  })
+}
+
+function sanitizeGenerationError(err) {
+  const message = err && err.message ? err.message : 'OpenAI image generation failed'
+  return String(message).slice(0, 200)
 }
 
 function summarizeText(value) {

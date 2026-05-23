@@ -373,7 +373,7 @@ Header：`Authorization: Bearer <token>`
 
 ### POST /api/generation-tasks
 
-说明：基于当前登录用户自己的日记草稿创建生成任务；配置 OpenAI 后会同步生成一张第一页漫画图。
+说明：基于当前登录用户自己的日记草稿创建生成任务；配置 OpenAI 后会异步生成一张第一页漫画图。
 
 是否需要登录：是。
 Header：`Authorization: Bearer <token>`
@@ -386,13 +386,14 @@ Header：`Authorization: Bearer <token>`
 ```
 
 当前行为：
-- 未配置 `OPENAI_API_KEY` 时仍创建本地 mock 任务。
-- 已配置 `OPENAI_API_KEY` 时，会调用 OpenAI 文生图生成单张第一页图，并保存为本地 `/uploads/generated/...` URL。
+- 未配置 `OPENAI_API_KEY` 时仍创建本地 mock completed 任务。
+- 已配置 `OPENAI_API_KEY` 时，POST 会立即返回 `pending` 任务，前端应使用 `GET /api/generation-tasks/:id` 轮询。
+- 后台会调用 OpenAI 文生图生成单张第一页图，并保存为本地 `/uploads/generated/...` URL。
 - OpenAI prompt 会结合章节标题、情绪标签、截断后的日记摘要和角色档案生成画面，不传完整超长日记原文。
-- 当前是最小同步模式，不启动 worker、queue 或定时任务。
+- 当前是同一 Node 进程内的最小异步模式，不引入正式 worker、queue 或定时任务。
 - 本轮只生成单张第一页图，不做真实多页漫画拆分。
-- OpenAI 无 key、请求失败、返回异常、图片下载失败或本地保存失败时都会 fallback 到 mock completed，不阻塞用户。
-- 同步写入 `completed` 状态。
+- 任务状态包括 `pending`、`processing`、`completed`、`failed`。
+- OpenAI 请求失败、返回异常、图片下载失败或本地保存失败时，任务会进入 `failed`，前端可本地 fallback，不阻塞用户。
 - `diaryEntryId` 必填，且日记必须存在、未软删除、属于当前登录用户。
 - 日记不存在、已删除或不属于当前登录用户时返回 `404`。
 
@@ -493,7 +494,8 @@ Header：`Authorization: Bearer <token>`
 
 当前行为：
 - 只读取任务，不推进任务状态。
-- 不调用外部 AI 服务。
+- 不直接调用外部 AI 服务；OpenAI 生成由 POST 创建后的后台任务推进。
 - 只能读取当前登录用户自己的任务。
+- 可用于轮询 `pending`、`processing`、`completed`、`failed` 状态。
 - 任务不存在或不属于当前登录用户时返回 `404`。
 - 返回体不会暴露 `ownerUserId`。

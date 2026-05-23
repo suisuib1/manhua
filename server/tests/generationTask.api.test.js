@@ -49,6 +49,26 @@ async function login(server, code) {
   return body.data
 }
 
+function waitForTick() {
+  return new Promise((resolve) => setImmediate(resolve))
+}
+
+async function waitForTaskStatus(server, taskId, token, expectedStatus, maxAttempts = 20) {
+  let detail
+
+  for (let index = 0; index < maxAttempts; index += 1) {
+    detail = await requestJson(server, 'GET', `/api/generation-tasks/${taskId}`, undefined, token)
+
+    if (detail.body.data && detail.body.data.status === expectedStatus) {
+      return detail
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  }
+
+  return detail
+}
+
 async function createDiaryEntry(ownerUserId, suffix = 'one', overrides = {}) {
   return prisma.diaryEntry.create({
     data: Object.assign({
@@ -224,7 +244,7 @@ test('logged in user can create and read a completed mock generation task', asyn
 
 test('POST /api/generation-tasks returns first OpenAI image when configured', async () => {
   const mockImage = Buffer.from('mock png bytes')
-  const openAiServer = await createOpenAiMockServer((req, res, call) => {
+  const openAiServer = await createOpenAiMockServer(async (req, res, call) => {
     if (req.url === '/v1/images/generations') {
       assert.equal(call.headers.authorization, 'Bearer test-openai-key')
       assert.equal(call.body.model, 'gpt-image-1')
@@ -242,6 +262,7 @@ test('POST /api/generation-tasks returns first OpenAI image when configured', as
       assert.equal(call.body.prompt.includes('温柔 好奇_openai'), true)
       assert.equal(call.body.prompt.includes('短发 发夹_openai'), true)
 
+      await new Promise((resolve) => setTimeout(resolve, 50))
       res.statusCode = 200
       res.setHeader('content-type', 'application/json')
       res.end(JSON.stringify({
@@ -275,13 +296,23 @@ test('POST /api/generation-tasks returns first OpenAI image when configured', as
 
     assert.equal(created.response.status, 200)
     assert.equal(created.body.code, 0)
-    assert.equal(created.body.data.status, 'completed')
-    assert.equal(created.body.data.result.chapter.source, 'openai')
-    assert.equal(created.body.data.result.pages[0].mock, false)
-    assert.equal(created.body.data.result.pages[0].imageUrl.startsWith('/uploads/generated/'), true)
-    assert.equal(created.body.data.result.pages[0].caption, '根据日记内容生成的第一页漫画')
+    assert.equal(created.body.data.status, 'pending')
+    assert.deepEqual(created.body.data.result, {})
+    assert.equal(created.body.data.startedAt, null)
+    assert.equal(created.body.data.finishedAt, null)
+    assert.equal(openAiServer.calls.length, 0)
+
+    const processing = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'processing')
+    assert.equal(processing.response.status, 200)
+
+    const detail = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'completed')
+    assert.equal(detail.response.status, 200)
+    assert.equal(detail.body.data.result.chapter.source, 'openai')
+    assert.equal(detail.body.data.result.pages[0].mock, false)
+    assert.equal(detail.body.data.result.pages[0].imageUrl.startsWith('/uploads/generated/'), true)
+    assert.equal(detail.body.data.result.pages[0].caption, '根据日记内容生成的第一页漫画')
     assert.equal(JSON.stringify(created.body.data).includes('test-openai-key'), false)
-    assert.equal(JSON.stringify(created.body.data).includes('b64_json'), false)
+    assert.equal(JSON.stringify(detail.body.data).includes('b64_json'), false)
     assert.equal(openAiServer.calls.length, 1)
   } finally {
     await new Promise((resolve) => server.close(resolve))
@@ -317,11 +348,16 @@ test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
 
     assert.equal(created.response.status, 200)
     assert.equal(created.body.code, 0)
-    assert.equal(created.body.data.status, 'completed')
-    assert.equal(created.body.data.result.chapter.source, 'mock')
-    assert.equal(created.body.data.result.pages[0].mock, true)
-    assert.equal(created.body.data.result.pages[0].imageUrl, null)
-    assert.equal(JSON.stringify(created.body.data).includes('test-openai-key'), false)
+    assert.equal(created.body.data.status, 'pending')
+
+    const detail = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'failed')
+    assert.equal(detail.response.status, 200)
+    assert.equal(detail.body.data.status, 'failed')
+    assert.equal(detail.body.data.result && Object.keys(detail.body.data.result).length, 0)
+    assert.equal(detail.body.data.errorMessage, 'OpenAI image generation failed with status 500')
+    assert.equal(JSON.stringify(detail.body.data).includes('test-openai-key'), false)
+    assert.equal(JSON.stringify(detail.body.data).includes('Authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_provider_failed_diary_text'), false)
     assert.equal(warnCalls.length, 1)
     assert.equal(warnCalls[0][0], '[generation-task-openai-fallback]')
     assert.equal(warnCalls[0][1].name, 'Error')
@@ -372,9 +408,10 @@ test('OpenAI prompt uses truncated diary summary and default character profile',
     const created = await requestJson(server, 'POST', '/api/generation-tasks', {
       diaryEntryId: diaryEntry.id,
     }, loginData.token)
+    const detail = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'completed')
 
     assert.equal(created.response.status, 200)
-    assert.equal(created.body.data.result.pages[0].imageUrl.startsWith('/uploads/generated/'), true)
+    assert.equal(detail.body.data.result.pages[0].imageUrl.startsWith('/uploads/generated/'), true)
     assert.equal(capturedPrompt.includes(longDiaryHead), true)
     assert.equal(capturedPrompt.includes(longDiaryTail), false)
     assert.equal(capturedPrompt.includes('日记主人公'), true)

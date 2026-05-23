@@ -1,7 +1,11 @@
 const { generatingMock, pageRoutes, storageKeys } = require('../../utils/mock')
 const { getAuthToken } = require('../../utils/auth')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
-const { createGenerationTask } = require('../../utils/generationTaskApi')
+const { createGenerationTask, getGenerationTask } = require('../../utils/generationTaskApi')
+
+const generationTaskPollIntervalMs = 2500
+const generationTaskMaxPollCount = 48
+let generationTaskPollTimer = null
 
 function getDefaultPanelImages() {
   return [
@@ -109,6 +113,61 @@ function finalizeGeneratedChapter(draft, task) {
   return generatedChapter
 }
 
+function clearGenerationTaskPollTimer() {
+  if (generationTaskPollTimer) {
+    clearInterval(generationTaskPollTimer)
+    generationTaskPollTimer = null
+  }
+}
+
+function waitForGenerationTaskResult(task) {
+  if (!task || !task.id) {
+    return Promise.resolve(task || null)
+  }
+
+  if (task.status === 'completed') {
+    return Promise.resolve(task)
+  }
+
+  if (task.status === 'failed') {
+    return Promise.resolve(null)
+  }
+
+  clearGenerationTaskPollTimer()
+
+  return new Promise((resolve) => {
+    let pollCount = 0
+
+    generationTaskPollTimer = setInterval(async () => {
+      pollCount += 1
+
+      if (pollCount > generationTaskMaxPollCount) {
+        clearGenerationTaskPollTimer()
+        resolve(null)
+        return
+      }
+
+      try {
+        const latestTask = await getGenerationTask(task.id)
+
+        if (latestTask.status === 'completed') {
+          clearGenerationTaskPollTimer()
+          resolve(latestTask)
+          return
+        }
+
+        if (latestTask.status === 'failed') {
+          clearGenerationTaskPollTimer()
+          resolve(null)
+        }
+      } catch (error) {
+        clearGenerationTaskPollTimer()
+        resolve(null)
+      }
+    }, generationTaskPollIntervalMs)
+  })
+}
+
 async function createBackendTaskForDraft(draft) {
   if (!getAuthToken()) {
     return null
@@ -131,7 +190,8 @@ async function createBackendTaskForDraft(draft) {
 async function finalizeGeneratedChapterWithBackendFallback(draft) {
   try {
     const task = await createBackendTaskForDraft(draft)
-    return finalizeGeneratedChapter(draft, task)
+    const readyTask = await waitForGenerationTaskResult(task)
+    return finalizeGeneratedChapter(draft, readyTask)
   } catch (error) {
     return finalizeGeneratedChapter(draft)
   }
@@ -158,6 +218,7 @@ Page({
 
   onUnload() {
     this.clearMockTimer()
+    clearGenerationTaskPollTimer()
   },
 
   startMockProgress() {
@@ -219,4 +280,8 @@ module.exports = {
   buildGenerationTaskMetadata,
   getFirstGenerationImageUrl,
   injectFirstGeneratedImage,
+  waitForGenerationTaskResult,
+  clearGenerationTaskPollTimer,
+  generationTaskPollIntervalMs,
+  generationTaskMaxPollCount,
 }
