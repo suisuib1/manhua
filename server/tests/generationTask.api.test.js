@@ -176,6 +176,11 @@ test('POST /api/generation-tasks requires login', async () => {
 
 test('logged in user can create and read a completed mock generation task', async () => {
   const server = await listen(app)
+  const originalWarn = console.warn
+  const warnCalls = []
+  console.warn = (...args) => {
+    warnCalls.push(args)
+  }
 
   try {
     const loginData = await login(server, 'generation_task_owner')
@@ -197,6 +202,7 @@ test('logged in user can create and read a completed mock generation task', asyn
     assert.equal(created.body.data.result.pages.length, 1)
     assert.equal(created.body.data.result.pages[0].mock, true)
     assert.equal(created.body.data.result.chapter.source, 'mock')
+    assert.equal(warnCalls.length, 0)
 
     const foundTask = await prisma.generationTask.findUnique({
       where: {
@@ -211,6 +217,7 @@ test('logged in user can create and read a completed mock generation task', asyn
     assert.equal(detail.response.status, 200)
     assert.deepEqual(detail.body.data, created.body.data)
   } finally {
+    console.warn = originalWarn
     await new Promise((resolve) => server.close(resolve))
   }
 })
@@ -284,6 +291,11 @@ test('POST /api/generation-tasks returns first OpenAI image when configured', as
 })
 
 test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
+  const originalWarn = console.warn
+  const warnCalls = []
+  console.warn = (...args) => {
+    warnCalls.push(args)
+  }
   const openAiServer = await createOpenAiMockServer((req, res) => {
     res.statusCode = 500
     res.setHeader('content-type', 'application/json')
@@ -310,7 +322,17 @@ test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
     assert.equal(created.body.data.result.pages[0].mock, true)
     assert.equal(created.body.data.result.pages[0].imageUrl, null)
     assert.equal(JSON.stringify(created.body.data).includes('test-openai-key'), false)
+    assert.equal(warnCalls.length, 1)
+    assert.equal(warnCalls[0][0], '[generation-task-openai-fallback]')
+    assert.equal(warnCalls[0][1].name, 'Error')
+    assert.equal(warnCalls[0][1].message, 'OpenAI image generation failed with status 500')
+    assert.equal(warnCalls[0][1].model, 'gpt-image-1')
+    assert.equal(warnCalls[0][1].size, '1024x1024')
+    assert.equal(JSON.stringify(warnCalls).includes('test-openai-key'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('Authorization'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('authorization'), false)
   } finally {
+    console.warn = originalWarn
     await new Promise((resolve) => server.close(resolve))
     await openAiServer.close()
     restoreEnv()

@@ -94,6 +94,7 @@ async function buildGenerationResult(diaryEntry, characterProfile) {
       result: buildOpenAiResult(diaryEntry, image),
     }
   } catch (err) {
+    warnOpenAiFallback(err)
     return fallback
   }
 }
@@ -202,6 +203,16 @@ function buildOpenAiResult(diaryEntry, image) {
       },
     ],
   }
+}
+
+function warnOpenAiFallback(err) {
+  console.warn('[generation-task-openai-fallback]', {
+    name: err && err.name ? err.name : 'Error',
+    code: err && err.code ? err.code : undefined,
+    message: err && err.message ? err.message : 'OpenAI image generation failed',
+    model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
+    size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
+  })
 }
 
 function summarizeText(value) {
