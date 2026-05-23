@@ -27,6 +27,8 @@ function normalizeRecentChapter(chapter) {
 }
 
 Page({
+  isLoadingRecent: false,
+
   data: {
     user: homeMock.user,
     defaultComicBook: homeMock.defaultComicBook,
@@ -35,10 +37,20 @@ Page({
     recentChapters: buildFallbackRecentChapters(),
   },
 
-  async onLoad() {
-    if (!getAuthToken()) {
+  onLoad() {
+    return null
+  },
+
+  onShow() {
+    return this.loadRecentChapters()
+  },
+
+  async loadRecentChapters() {
+    if (this.isLoadingRecent || !getAuthToken()) {
       return null
     }
+
+    this.isLoadingRecent = true
 
     try {
       const data = await getRecentComicChapters({ limit: 5 })
@@ -53,6 +65,8 @@ Page({
       return data
     } catch (error) {
       return null
+    } finally {
+      this.isLoadingRecent = false
     }
   },
 

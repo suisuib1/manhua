@@ -101,13 +101,37 @@ test('首页不展示更多章节占位提示卡片', () => {
 test('unauthenticated home does not request recent comic chapters', async () => {
   const { pageConfig, requestCalls } = loadPage()
 
-  await pageConfig.onLoad()
+  await pageConfig.onShow()
 
   assert.equal(requestCalls.length, 0)
   assert.equal(pageConfig.data.recentChapters[0].id, 'chapter-003')
 })
 
-test('authenticated home requests recent comic chapters', async () => {
+test('authenticated home requests recent comic chapters on show', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  assert.equal(requestCalls.length, 1)
+  assert.equal(requestCalls[0].url.endsWith('/api/comic-chapters/recent'), true)
+  assert.equal(requestCalls[0].method, 'GET')
+  assert.equal(requestCalls[0].header.Authorization, 'Bearer token-recent')
+})
+
+test('home does not duplicate recent request across load and show', async () => {
   const { pageConfig, requestCalls } = loadPage({
     authToken: 'token-recent',
   }, (options) => {
@@ -124,11 +148,37 @@ test('authenticated home requests recent comic chapters', async () => {
   })
 
   await pageConfig.onLoad()
+  await pageConfig.onShow()
 
   assert.equal(requestCalls.length, 1)
-  assert.equal(requestCalls[0].url.endsWith('/api/comic-chapters/recent'), true)
-  assert.equal(requestCalls[0].method, 'GET')
-  assert.equal(requestCalls[0].header.Authorization, 'Bearer token-recent')
+})
+
+test('home skips duplicate recent request while loading', async () => {
+  let finishRequest
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    finishRequest = () => options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [],
+        },
+      },
+    })
+  })
+
+  const firstLoad = pageConfig.onShow()
+  const secondLoad = pageConfig.onShow()
+
+  assert.equal(requestCalls.length, 1)
+
+  finishRequest()
+  await Promise.all([firstLoad, secondLoad])
+
+  assert.equal(requestCalls.length, 1)
 })
 
 test('home uses backend recent chapters when items are returned', async () => {
@@ -157,7 +207,7 @@ test('home uses backend recent chapters when items are returned', async () => {
     })
   })
 
-  await pageConfig.onLoad()
+  await pageConfig.onShow()
 
   assert.equal(pageConfig.data.recentChapters.length, 1)
   assert.equal(pageConfig.data.recentChapters[0].id, 'entry-1')
@@ -174,7 +224,7 @@ test('home falls back to mock recent chapters when backend fails', async () => {
     options.fail(new Error('network error'))
   })
 
-  await pageConfig.onLoad()
+  await pageConfig.onShow()
 
   assert.equal(pageConfig.data.recentChapters[0].id, 'chapter-003')
 })
