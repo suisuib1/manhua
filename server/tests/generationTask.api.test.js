@@ -257,6 +257,11 @@ test('logged in user can create and read a completed mock generation task', asyn
 })
 
 test('POST /api/generation-tasks returns first OpenAI image when configured', async () => {
+  const originalInfo = console.info
+  const infoCalls = []
+  console.info = (...args) => {
+    infoCalls.push(args)
+  }
   const mockImage = Buffer.from('mock png bytes')
   const openAiServer = await createOpenAiMockServer(async (req, res, call) => {
     if (req.url === '/v1/images/generations') {
@@ -328,7 +333,12 @@ test('POST /api/generation-tasks returns first OpenAI image when configured', as
     assert.equal(JSON.stringify(created.body.data).includes('test-openai-key'), false)
     assert.equal(JSON.stringify(detail.body.data).includes('b64_json'), false)
     assert.equal(openAiServer.calls.length, 1)
+    const imageReadyCall = infoCalls.find((call) => call[0] === '[generation-task]' && call[1].event === 'image-ready')
+    assert.notEqual(imageReadyCall, undefined)
+    assert.equal(imageReadyCall[1].taskId, created.body.data.id)
+    assert.equal(imageReadyCall[1].imageUrl, detail.body.data.result.pages[0].imageUrl)
   } finally {
+    console.info = originalInfo
     await new Promise((resolve) => server.close(resolve))
     await openAiServer.close()
     restoreEnv()

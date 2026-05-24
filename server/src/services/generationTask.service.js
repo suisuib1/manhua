@@ -133,6 +133,9 @@ async function runGenerationTaskCore(taskId, ownerUserId, diaryEntryId, state) {
     })
 
     const image = await generateImageFromPrompt(prompt)
+    logGenerationTaskEvent('image-ready', taskId, {
+      imageUrl: image.imageUrl,
+    })
     const completed = await markGenerationTaskCompleted(taskId, buildOpenAiResult(diaryEntry, image))
     if (completed) {
       logGenerationTaskEvent('completed', taskId)

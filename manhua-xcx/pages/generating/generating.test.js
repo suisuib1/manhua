@@ -9,6 +9,11 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   const requestCalls = []
   const storage = Object.assign({}, storageSeed)
   const intervals = []
+  const infoCalls = []
+
+  console.info = (...args) => {
+    infoCalls.push(args)
+  }
 
   global.Page = (config) => {
     pageConfig = config
@@ -61,7 +66,7 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   const moduleExports = require('./generating')
   pageConfig.moduleExports = moduleExports
 
-  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports, intervals }
+  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports, intervals, infoCalls }
 }
 
 async function flushAsyncWork() {
@@ -261,7 +266,7 @@ test('generation task result imageUrl is injected into first local reader page a
 })
 
 test('pending generation task polls until completed and injects first image', async () => {
-  const { moduleExports, requestCalls, storage, intervals } = loadPage({
+  const { pageConfig, moduleExports, requestCalls, storage, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
     if (options.method === 'POST') {
@@ -306,7 +311,7 @@ test('pending generation task polls until completed and injects first image', as
     serverDiaryEntryId: 'entry-pending',
     chapterTitle: 'pending chapter',
     pageCount: 2,
-  })
+  }, pageConfig)
   await flushAsyncWork()
 
   assert.equal(requestCalls.length, 1)
@@ -319,9 +324,184 @@ test('pending generation task polls until completed and injects first image', as
 
   assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks/task-pending')
   assert.equal(requestCalls[1].method, 'GET')
+  assert.equal(pageConfig.data.generationTaskId, 'task-pending')
+  assert.equal(pageConfig.data.generationTaskStatus, 'completed')
   assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
+  assert.equal(chapter.pages[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(storage.generatedComicChapters[0].pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
+  assert.equal(storage.generatedComicChapters[0].pages[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(pollTimer.cleared, true)
+})
+
+test('old draft generationTaskId cannot override newly created task id while polling', async () => {
+  const { pageConfig, moduleExports, requestCalls, intervals } = loadPage({
+    authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-new',
+      generationTaskId: 'task-old-draft',
+      generationTaskStatus: 'processing',
+      generationResult: {
+        pages: [{ imageUrl: '/uploads/generated/old-draft.png' }],
+      },
+    },
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-new',
+            status: 'processing',
+            diaryEntryId: 'entry-new',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-new',
+          status: 'completed',
+          diaryEntryId: 'entry-new',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/new-task.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-new',
+    generationTaskId: 'task-old-draft',
+    generationTaskStatus: 'processing',
+    generationResult: {
+      pages: [{ imageUrl: '/uploads/generated/old-draft.png' }],
+    },
+    chapterTitle: 'new task chapter',
+  }, pageConfig)
+  await flushAsyncWork()
+  await runTimer(await waitForInterval(intervals))
+  const chapter = await pending
+
+  assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks/task-new')
+  assert.equal(pageConfig.data.generationTaskId, 'task-new')
+  assert.equal(chapter.generationTaskId, 'task-new')
+  assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/new-task.png')
+})
+
+test('old generated chapters do not affect current generation polling id', async () => {
+  const { pageConfig, moduleExports, requestCalls, intervals } = loadPage({
+    authToken: 'token-task',
+    generatedComicChapters: [{
+      id: 'chapter-old',
+      generationTaskId: 'task-old-chapter',
+      generationResult: {
+        pages: [{ imageUrl: '/uploads/generated/old-chapter.png' }],
+      },
+    }],
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-new-from-post',
+            status: 'pending',
+            diaryEntryId: 'entry-current',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-new-from-post',
+          status: 'completed',
+          diaryEntryId: 'entry-current',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/current.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-current',
+    chapterTitle: 'current chapter',
+  }, pageConfig)
+  await flushAsyncWork()
+  await runTimer(await waitForInterval(intervals))
+  const chapter = await pending
+
+  assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks/task-new-from-post')
+  assert.equal(pageConfig.data.generationTaskId, 'task-new-from-post')
+  assert.equal(chapter.generationTaskId, 'task-new-from-post')
+  assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/current.png')
+})
+
+test('new backend generation clears stale page task state and old poll timer', async () => {
+  const { pageConfig, moduleExports, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: intervals.length === 0 ? 'task-first' : 'task-second',
+          status: 'pending',
+          diaryEntryId: 'entry-reset',
+          result: {},
+        },
+      },
+    })
+  })
+
+  pageConfig.setData({
+    generationTaskId: 'task-stale',
+    generationTaskStatus: 'processing',
+    generationResult: {
+      pages: [{ imageUrl: '/uploads/generated/stale.png' }],
+    },
+  })
+
+  moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-reset',
+    chapterTitle: 'first task',
+  }, pageConfig).catch(() => null)
+  await waitForInterval(intervals)
+  const firstTimer = intervals[0]
+
+  moduleExports.finalizeGeneratedChapterWithBackendFallback({
+    serverDiaryEntryId: 'entry-reset',
+    chapterTitle: 'second task',
+  }, pageConfig).catch(() => null)
+  await flushAsyncWork()
+  await flushAsyncWork()
+
+  assert.equal(firstTimer.cleared, true)
+  assert.equal(pageConfig.data.generationTaskId, 'task-second')
+  assert.equal(pageConfig.data.generationTaskStatus, 'pending')
+  assert.deepEqual(pageConfig.data.generationResult, {})
 })
 
 test('failed polled generation task writes local fallback', async () => {

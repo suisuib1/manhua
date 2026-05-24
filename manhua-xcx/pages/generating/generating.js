@@ -99,6 +99,7 @@ function injectFirstGeneratedImage(chapter, imageUrl) {
   const pages = Array.isArray(chapter.pages) ? chapter.pages.slice() : []
   const firstPage = Object.assign({}, pages[0] || {})
   firstPage.images = [imageUrl]
+  firstPage.imageUrl = imageUrl
   pages[0] = firstPage
 
   return Object.assign({}, chapter, {
@@ -106,6 +107,30 @@ function injectFirstGeneratedImage(chapter, imageUrl) {
     coverImageUrl: imageUrl,
     imageUrl,
     pages,
+  })
+}
+
+function resetGenerationTaskState(pageContext) {
+  clearGenerationTaskPollTimer()
+
+  if (pageContext && typeof pageContext.setData === 'function') {
+    pageContext.setData({
+      generationTaskId: '',
+      generationTaskStatus: '',
+      generationResult: {},
+    })
+  }
+}
+
+function updateGenerationTaskState(pageContext, task) {
+  if (!pageContext || typeof pageContext.setData !== 'function' || !task || !task.id) {
+    return
+  }
+
+  pageContext.setData({
+    generationTaskId: task.id,
+    generationTaskStatus: task.status,
+    generationResult: task.result || {},
   })
 }
 
@@ -131,10 +156,12 @@ function clearGenerationTaskPollTimer() {
   }
 }
 
-function waitForGenerationTaskResult(task) {
+function waitForGenerationTaskResult(task, pageContext) {
   if (!task || !task.id) {
     return Promise.resolve(task || null)
   }
+
+  updateGenerationTaskState(pageContext, task)
 
   if (task.status === 'completed') {
     return Promise.resolve(task)
@@ -159,9 +186,13 @@ function waitForGenerationTaskResult(task) {
       }
 
       try {
-        const latestTask = await getGenerationTask(task.id)
+        const taskId = task.id
+        console.info('[generation] polling taskId', taskId)
+        const latestTask = await getGenerationTask(taskId)
+        updateGenerationTaskState(pageContext, latestTask)
 
         if (latestTask.status === 'completed') {
+          console.info('[generation] completed taskId imageUrl', latestTask.id, getFirstGenerationImageUrl(latestTask))
           clearGenerationTaskPollTimer()
           resolve(latestTask)
           return
@@ -185,7 +216,9 @@ async function createBackendTaskForDraft(draft) {
   }
 
   if (draft && draft.serverDiaryEntryId) {
-    return createGenerationTask(draft.serverDiaryEntryId)
+    const task = await createGenerationTask(draft.serverDiaryEntryId)
+    console.info('[generation] created taskId', task.id)
+    return task
   }
 
   const syncedDraft = await saveDraftWithBackendFallback(draft || {})
@@ -195,13 +228,18 @@ async function createBackendTaskForDraft(draft) {
     return null
   }
 
-  return createGenerationTask(diaryEntryId)
+  const task = await createGenerationTask(diaryEntryId)
+  console.info('[generation] created taskId', task.id)
+  return task
 }
 
-async function finalizeGeneratedChapterWithBackendFallback(draft) {
+async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
+  resetGenerationTaskState(pageContext)
+
   try {
     const task = await createBackendTaskForDraft(draft)
-    const readyTask = await waitForGenerationTaskResult(task)
+    updateGenerationTaskState(pageContext, task)
+    const readyTask = await waitForGenerationTaskResult(task, pageContext)
     return finalizeGeneratedChapter(draft, readyTask)
   } catch (error) {
     return finalizeGeneratedChapter(draft)
@@ -218,6 +256,9 @@ Page({
     canViewChapter: false,
     pendingDraft: null,
     generatedChapterId: '',
+    generationTaskId: '',
+    generationTaskStatus: '',
+    generationResult: {},
   },
 
   onLoad() {
@@ -249,7 +290,7 @@ Page({
       })
 
       if (nextProgress >= 100) {
-        finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft).then((generatedChapter) => {
+        finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft, this).then((generatedChapter) => {
           this.setData({
             generatedChapterId: generatedChapter.id,
           })
