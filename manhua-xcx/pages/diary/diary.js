@@ -1,6 +1,8 @@
 const { diaryMock, pageRoutes } = require('../../utils/mock')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
 
+const localCharacterProfileKey = 'characterProfile'
+
 function decodeDraft(query) {
   if (!query) return null
 
@@ -9,6 +11,15 @@ function decodeDraft(query) {
   } catch (err) {
     return null
   }
+}
+
+function hasValidCharacterProfile(profile) {
+  return Boolean(
+    profile &&
+    String(profile.nickname || '').trim() &&
+    String(profile.personalityText || '').trim() &&
+    String(profile.appearanceText || '').trim()
+  )
 }
 
 function buildPendingDraft(baseDraft, diaryText, photoItem) {
@@ -79,6 +90,34 @@ Page({
   },
 
   goGenerating() {
+    const localProfile = wx.getStorageSync(localCharacterProfileKey)
+
+    if (hasValidCharacterProfile(localProfile)) {
+      this.continueGenerating()
+      return
+    }
+
+    wx.showModal({
+      title: '完善主角设定',
+      content: '设置主角昵称、性格和外观后，生成的漫画会更像你。',
+      confirmText: '去设置',
+      cancelText: '跳过，使用默认主角',
+      success: (res) => {
+        if (res && res.confirm) {
+          wx.navigateTo({
+            url: pageRoutes.character,
+          })
+          return
+        }
+
+        if (res && res.cancel) {
+          this.continueGenerating()
+        }
+      },
+    })
+  },
+
+  continueGenerating() {
     const draft = buildPendingDraft(this.data.createDraft, this.data.diaryText, this.data.photoItem)
     saveDraftWithBackendFallback(draft, {
       showFailToast: true,
@@ -92,4 +131,5 @@ Page({
 module.exports = {
   buildPendingDraft,
   decodeDraft,
+  hasValidCharacterProfile,
 }
