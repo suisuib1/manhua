@@ -90,6 +90,14 @@ Page({
   },
 
   goGenerating() {
+    if (!String(this.data.diaryText || '').trim()) {
+      wx.showToast({
+        title: '请先填写日记内容',
+        icon: 'none',
+      })
+      return
+    }
+
     const localProfile = wx.getStorageSync(localCharacterProfileKey)
 
     if (hasValidCharacterProfile(localProfile)) {
@@ -101,7 +109,7 @@ Page({
       title: '完善主角设定',
       content: '设置主角昵称、性格和外观后，生成的漫画会更像你。',
       confirmText: '去设置',
-      cancelText: '跳过，使用默认主角',
+      cancelText: '跳过',
       success: (res) => {
         if (res && res.confirm) {
           wx.navigateTo({
@@ -114,6 +122,12 @@ Page({
           this.continueGenerating()
         }
       },
+      fail: () => {
+        wx.showToast({
+          title: '请先登录',
+          icon: 'none',
+        })
+      },
     })
   },
 
@@ -124,6 +138,12 @@ Page({
     })
     wx.navigateTo({
       url: pageRoutes.generating,
+      fail: () => {
+        wx.showToast({
+          title: '生成页打开失败，请稍后重试',
+          icon: 'none',
+        })
+      },
     })
   },
 })
