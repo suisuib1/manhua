@@ -66,9 +66,14 @@ function buildSavePayload(data) {
 Page({
   data: Object.assign({
     mock: characterMock,
+    fromPage: '',
   }, buildPageData(null)),
 
-  async onLoad() {
+  async onLoad(options) {
+    this.setData({
+      fromPage: options && options.from ? options.from : '',
+    })
+
     const localProfile = getLocalCharacterProfile()
 
     if (localProfile) {
@@ -157,6 +162,11 @@ Page({
           title: '保存成功',
           icon: 'none',
         })
+        if (this.data.fromPage === 'diary') {
+          wx.navigateBack({
+            delta: 1,
+          })
+        }
         return nextProfile
       })
       .catch(() => {

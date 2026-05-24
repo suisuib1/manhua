@@ -1,4 +1,6 @@
 const { diaryMock, pageRoutes } = require('../../utils/mock')
+const { getAuthToken } = require('../../utils/auth')
+const { getCharacterProfile } = require('../../utils/characterProfileApi')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
 
 const localCharacterProfileKey = 'characterProfile'
@@ -14,12 +16,25 @@ function decodeDraft(query) {
 }
 
 function hasValidCharacterProfile(profile) {
-  return Boolean(
-    profile &&
-    String(profile.nickname || '').trim() &&
-    String(profile.personalityText || '').trim() &&
-    String(profile.appearanceText || '').trim()
-  )
+  if (!profile) {
+    return false
+  }
+
+  return [
+    profile.nickname,
+    profile.description,
+    profile.personalityText,
+    profile.appearanceText,
+    profile.referenceImageUrl,
+  ].some((value) => String(value || '').trim())
+}
+
+function getLocalCharacterProfile() {
+  return wx.getStorageSync(localCharacterProfileKey) || null
+}
+
+function setLocalCharacterProfile(profile) {
+  wx.setStorageSync(localCharacterProfileKey, profile)
 }
 
 function buildPendingDraft(baseDraft, diaryText, photoItem) {
@@ -42,6 +57,9 @@ Page({
     photoLimit: 1,
     photoItem: null,
     createDraft: null,
+    characterProfile: null,
+    hasCharacterProfile: false,
+    hasCharacterProfileLoaded: false,
   },
 
   onLoad(options) {
@@ -50,6 +68,50 @@ Page({
     this.setData({
       createDraft,
     })
+  },
+
+  onShow() {
+    return this.refreshCharacterProfile()
+  },
+
+  async refreshCharacterProfile() {
+    if (!getAuthToken()) {
+      const localProfile = getLocalCharacterProfile()
+      const hasCharacterProfile = hasValidCharacterProfile(localProfile)
+
+      this.setData({
+        characterProfile: hasCharacterProfile ? localProfile : null,
+        hasCharacterProfile,
+        hasCharacterProfileLoaded: true,
+      })
+      return hasCharacterProfile ? localProfile : null
+    }
+
+    try {
+      const profile = await getCharacterProfile()
+      const hasCharacterProfile = hasValidCharacterProfile(profile)
+
+      if (hasCharacterProfile) {
+        setLocalCharacterProfile(profile)
+      }
+
+      this.setData({
+        characterProfile: hasCharacterProfile ? profile : null,
+        hasCharacterProfile,
+        hasCharacterProfileLoaded: true,
+      })
+      return hasCharacterProfile ? profile : null
+    } catch (error) {
+      const localProfile = getLocalCharacterProfile()
+      const hasCharacterProfile = hasValidCharacterProfile(localProfile)
+
+      this.setData({
+        characterProfile: hasCharacterProfile ? localProfile : null,
+        hasCharacterProfile,
+        hasCharacterProfileLoaded: true,
+      })
+      return hasCharacterProfile ? localProfile : null
+    }
   },
 
   onDiaryInput(event) {
@@ -98,9 +160,10 @@ Page({
       return
     }
 
-    const localProfile = wx.getStorageSync(localCharacterProfileKey)
+    const localProfile = this.data.hasCharacterProfileLoaded ? null : getLocalCharacterProfile()
+    const currentProfile = this.data.hasCharacterProfile ? this.data.characterProfile : localProfile
 
-    if (hasValidCharacterProfile(localProfile)) {
+    if (hasValidCharacterProfile(currentProfile)) {
       this.continueGenerating()
       return
     }
@@ -113,7 +176,7 @@ Page({
       success: (res) => {
         if (res && res.confirm) {
           wx.navigateTo({
-            url: pageRoutes.character,
+            url: `${pageRoutes.character}?from=diary`,
           })
           return
         }

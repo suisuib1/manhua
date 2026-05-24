@@ -45,6 +45,7 @@ function loadPage(storage = {}, requestImpl = () => {}) {
 
   delete require.cache[require.resolve('../../utils/api')]
   delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('../../utils/characterProfileApi')]
   delete require.cache[require.resolve('../../utils/diaryApi')]
   delete require.cache[require.resolve('../../utils/diarySync')]
   delete require.cache[require.resolve('./diary')]
@@ -174,8 +175,123 @@ test('diary page character prompt can navigate to character page', () => {
   modalCalls[0].success({ confirm: true })
 
   assert.deepEqual(navigateCalls[0], {
-    url: '/pages/character/character',
+    url: '/pages/character/character?from=diary',
   })
+})
+
+test('diary page refreshes character profile on show', async () => {
+  const storage = {
+    authToken: 'token-character-refresh',
+  }
+  const { pageConfig, requestCalls, storage: nextStorage } = loadPage(storage, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          nickname: 'backend-profile',
+          roleTitle: '',
+          description: '',
+          personalityText: '',
+          appearanceText: '',
+          referenceImageUrl: '',
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  assert.equal(requestCalls[0].url.endsWith('/api/users/me/character-profile'), true)
+  assert.equal(requestCalls[0].method, 'GET')
+  assert.equal(requestCalls[0].header.Authorization, 'Bearer token-character-refresh')
+  assert.equal(pageConfig.data.hasCharacterProfile, true)
+  assert.equal(pageConfig.data.characterProfile.nickname, 'backend-profile')
+  assert.equal(nextStorage.characterProfile.nickname, 'backend-profile')
+})
+
+test('diary page keeps prompting when backend profile is still empty', async () => {
+  const storage = {
+    authToken: 'token-empty-profile',
+  }
+  const { pageConfig, modalCalls } = loadPage(storage, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          nickname: '',
+          roleTitle: 'default protagonist',
+          description: '',
+          personalityText: '',
+          appearanceText: '',
+          referenceImageUrl: '',
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  pageConfig.setData({
+    diaryText: 'write after empty profile refresh',
+  })
+  pageConfig.goGenerating()
+
+  assert.equal(pageConfig.data.hasCharacterProfile, false)
+  assert.equal(modalCalls.length, 1)
+})
+
+test('diary page does not repeat prompt after refreshed saved profile', async () => {
+  const storage = {
+    authToken: 'token-saved-profile',
+  }
+  const { pageConfig, navigateCalls, modalCalls, requestCalls } = loadPage(storage, (options) => {
+    if (options.method === 'GET') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            nickname: 'saved-profile',
+            roleTitle: '',
+            description: '',
+            personalityText: '',
+            appearanceText: '',
+            referenceImageUrl: '',
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'entry-after-profile',
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  pageConfig.setData({
+    createDraft: {
+      chapterTitle: 'after profile saved',
+    },
+    diaryText: 'continue after profile saved',
+  })
+  pageConfig.goGenerating()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls[0].method, 'GET')
+  assert.equal(modalCalls.length, 0)
+  assert.equal(navigateCalls[0].url, '/pages/generating/generating')
 })
 
 test('diary page skips character prompt when local profile is valid', async () => {

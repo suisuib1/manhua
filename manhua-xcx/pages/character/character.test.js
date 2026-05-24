@@ -12,6 +12,7 @@ function loadPage() {
   const chooseCalls = []
   const toastCalls = []
   const requestCalls = []
+  const navigateBackCalls = []
   const storage = arguments.length > 0 && arguments[0] ? arguments[0] : {}
   const requestImpl = arguments.length > 1 ? arguments[1] : null
 
@@ -40,6 +41,9 @@ function loadPage() {
     },
     showToast(options) {
       toastCalls.push(options)
+    },
+    navigateBack(options) {
+      navigateBackCalls.push(options)
     },
     request(options) {
       requestCalls.push(options)
@@ -75,7 +79,7 @@ function loadPage() {
   delete require.cache[require.resolve('./character')]
   const moduleExports = require('./character')
 
-  return { pageConfig, chooseCalls, toastCalls, requestCalls, storage, moduleExports }
+  return { pageConfig, chooseCalls, toastCalls, requestCalls, navigateBackCalls, storage, moduleExports }
 }
 
 test('角色档案页不再渲染顶部大标题区域', () => {
@@ -84,6 +88,70 @@ test('角色档案页不再渲染顶部大标题区域', () => {
   assert.equal(wxml.includes('polish-header'), false)
   assert.equal(wxml.includes('我的漫画主角'), false)
   assert.equal(wxml.includes('让每一章里的你都保持熟悉又可爱'), false)
+})
+
+test('from diary saves successfully then navigates back', async () => {
+  const { pageConfig, navigateBackCalls, storage } = loadPage({
+    authToken: 'token-character',
+  }, (options) => {
+    if (options.method === 'GET') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            nickname: '',
+            roleTitle: '',
+            description: '',
+            personalityText: '',
+            appearanceText: '',
+            referenceImageUrl: '',
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          nickname: options.data.nickname,
+          roleTitle: options.data.roleTitle,
+          description: options.data.description,
+          personalityText: options.data.personalityText,
+          appearanceText: options.data.appearanceText,
+          referenceImageUrl: options.data.referenceImageUrl,
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad({ from: 'diary' })
+  pageConfig.onNicknameInput({ detail: { value: 'diary-profile' } })
+  await pageConfig.saveCharacter()
+
+  assert.deepEqual(navigateBackCalls[0], {
+    delta: 1,
+  })
+  assert.equal(storage.characterProfile.nickname, 'diary-profile')
+})
+
+test('from diary save failure does not navigate back', async () => {
+  const { pageConfig, navigateBackCalls, toastCalls } = loadPage({
+    authToken: 'token-character',
+  }, (options) => {
+    options.fail(new Error('network error'))
+  })
+
+  await pageConfig.onLoad({ from: 'diary' })
+  await pageConfig.saveCharacter()
+
+  assert.equal(navigateBackCalls.length, 0)
+  assert.equal(toastCalls.length, 1)
 })
 
 test('性格关键词和外观特征使用统一输入区域', () => {
