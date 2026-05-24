@@ -22,10 +22,130 @@ test('home page keeps the core entry content', () => {
   assert.equal(wxml.includes('goCreateChapter'), true)
 })
 
+test('unauthenticated create entry opens login modal without switching tab', () => {
+  const { pageConfig, switchTabCalls } = loadPage()
+
+  pageConfig.goCreateChapter()
+
+  assert.equal(pageConfig.data.showLoginModal, true)
+  assert.equal(switchTabCalls.length, 0)
+})
+
+test('unauthenticated recent chapter opens login modal without opening reader', () => {
+  const { pageConfig, navigateCalls } = loadPage()
+
+  pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'chapter-002',
+      },
+    },
+  })
+
+  assert.equal(pageConfig.data.showLoginModal, true)
+  assert.equal(navigateCalls.length, 0)
+})
+
+test('unauthenticated quick entries open login modal without navigating', () => {
+  const { pageConfig, navigateCalls, switchTabCalls } = loadPage()
+
+  pageConfig.goCharacter()
+  pageConfig.closeLoginModal()
+  pageConfig.goMine()
+
+  assert.equal(pageConfig.data.showLoginModal, true)
+  assert.equal(navigateCalls.length, 0)
+  assert.equal(switchTabCalls.length, 0)
+})
+
+test('authenticated create entry keeps original switch tab behavior', () => {
+  const { pageConfig, switchTabCalls } = loadPage({
+    authToken: 'token-home',
+  })
+
+  pageConfig.goCreateChapter()
+
+  assert.deepEqual(switchTabCalls[0], {
+    url: '/pages/create/create',
+  })
+  assert.equal(pageConfig.data.showLoginModal, false)
+})
+
+test('authenticated character and mine entries keep original navigation behavior', () => {
+  const { pageConfig, navigateCalls, switchTabCalls } = loadPage({
+    authToken: 'token-home',
+  })
+
+  pageConfig.goCharacter()
+  pageConfig.goMine()
+
+  assert.deepEqual(navigateCalls[0], {
+    url: '/pages/character/character',
+  })
+  assert.deepEqual(switchTabCalls[0], {
+    url: '/pages/mine/mine',
+  })
+})
+
+test('closing login modal hides it', () => {
+  const { pageConfig } = loadPage()
+
+  pageConfig.goCharacter()
+  pageConfig.closeLoginModal()
+
+  assert.equal(pageConfig.data.showLoginModal, false)
+})
+
+test('confirming login uses existing auth flow and refreshes recent chapters', async () => {
+  const { pageConfig, requestCalls, storage } = loadPage({}, (options) => {
+    if (options.url.endsWith('/api/auth/wechat/login')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            token: 'token-home-login',
+            user: {
+              id: 'user-home-login',
+              nickname: '灏忔弧',
+              avatarUrl: '',
+            },
+          },
+        },
+      })
+      return
+    }
+
+    if (options.url.endsWith('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [],
+          },
+        },
+      })
+    }
+  })
+
+  pageConfig.goCreateChapter()
+  await pageConfig.confirmLogin()
+
+  assert.equal(storage.authToken, 'token-home-login')
+  assert.equal(pageConfig.data.showLoginModal, false)
+  assert.equal(requestCalls.some((options) => options.url.endsWith('/api/auth/wechat/login')), true)
+  assert.equal(requestCalls.some((options) => options.url.endsWith('/api/comic-chapters/recent')), true)
+})
+
 function loadPage(storageSeed = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
+  const switchTabCalls = []
   const requestCalls = []
+  const toastCalls = []
   const storage = Object.assign({}, storageSeed)
 
   global.Page = (config) => {
@@ -39,13 +159,24 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
     navigateTo(options) {
       navigateCalls.push(options)
     },
-    switchTab() {},
+    switchTab(options) {
+      switchTabCalls.push(options)
+    },
     getStorageSync(key) {
       return storage[key]
+    },
+    setStorageSync(key, value) {
+      storage[key] = value
+    },
+    login(options) {
+      options.success({ code: 'home_login_code' })
     },
     request(options) {
       requestCalls.push(options)
       requestImpl(options)
+    },
+    showToast(options) {
+      toastCalls.push(options)
     },
     getWindowInfo() {
       return { statusBarHeight: 20 }
@@ -64,11 +195,13 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   delete require.cache[require.resolve('./index')]
   const moduleExports = require('./index')
 
-  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports }
+  return { pageConfig, navigateCalls, switchTabCalls, requestCalls, toastCalls, storage, moduleExports }
 }
 
 test('首页最近章节进入漫画书阅读器而不是旧章节详情', () => {
-  const { pageConfig, navigateCalls } = loadPage()
+  const { pageConfig, navigateCalls } = loadPage({
+    authToken: 'token-home',
+  })
 
   pageConfig.goChapterDetail({
     currentTarget: {

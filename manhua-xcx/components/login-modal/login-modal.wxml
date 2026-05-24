@@ -1,0 +1,9 @@
+<view wx:if="{{visible}}" class="login-modal-root">
+  <view class="login-modal-mask" bindtap="handleClose"></view>
+  <view class="login-modal-panel" catchtap="stopPropagation">
+    <view class="login-modal-title">登录后继续使用</view>
+    <view class="login-modal-text">登录后可以生成漫画日记、保存角色档案和查看个人漫画书。</view>
+    <button class="login-modal-confirm" hover-class="login-modal-button-hover" bindtap="handleConfirm">立即登录</button>
+    <button class="login-modal-cancel" hover-class="login-modal-button-hover" bindtap="handleClose">稍后再说</button>
+  </view>
+</view>

@@ -1,5 +1,5 @@
 const { homeMock, pageRoutes, chapterStatuses } = require('../../utils/mock')
-const { getAuthToken } = require('../../utils/auth')
+const { getAuthToken, loginWithWechat } = require('../../utils/auth')
 const { getRecentComicChapters } = require('../../utils/comicChapterApi')
 
 const statusClassMap = {
@@ -67,6 +67,7 @@ Page({
     quotaHint: homeMock.quotaHint,
     recentChapters: buildFallbackRecentChapters(),
     isRecentChaptersEmpty: false,
+    showLoginModal: false,
   },
 
   onLoad() {
@@ -101,29 +102,72 @@ Page({
     }
   },
 
+  requireLogin(nextAction) {
+    if (getAuthToken()) {
+      if (typeof nextAction === 'function') {
+        nextAction()
+      }
+      return true
+    }
+
+    this.setData({
+      showLoginModal: true,
+    })
+    return false
+  },
+
+  closeLoginModal() {
+    this.setData({
+      showLoginModal: false,
+    })
+  },
+
+  async confirmLogin() {
+    try {
+      await loginWithWechat({})
+      this.setData({
+        showLoginModal: false,
+      })
+      await this.loadRecentChapters()
+    } catch (error) {
+      wx.showToast({
+        title: '鐧诲綍澶辫触锛岃绋嶅悗閲嶈瘯',
+        icon: 'none',
+      })
+    }
+  },
+
   goCreateChapter() {
-    wx.switchTab({
-      url: pageRoutes.create,
+    this.requireLogin(() => {
+      wx.switchTab({
+        url: pageRoutes.create,
+      })
     })
   },
 
   goChapterDetail(event) {
     const { id } = event.currentTarget.dataset
 
-    wx.navigateTo({
-      url: `${pageRoutes.continuousChapter}?chapterId=${id}`,
+    this.requireLogin(() => {
+      wx.navigateTo({
+        url: `${pageRoutes.continuousChapter}?chapterId=${id}`,
+      })
     })
   },
 
   goCharacter() {
-    wx.navigateTo({
-      url: pageRoutes.character,
+    this.requireLogin(() => {
+      wx.navigateTo({
+        url: pageRoutes.character,
+      })
     })
   },
 
   goMine() {
-    wx.switchTab({
-      url: pageRoutes.mine,
+    this.requireLogin(() => {
+      wx.switchTab({
+        url: pageRoutes.mine,
+      })
     })
   },
 

@@ -86,4 +86,10 @@
       <view class="quick-arrow">›</view>
     </view>
   </view>
+
+  <login-modal
+    visible="{{showLoginModal}}"
+    bind:close="closeLoginModal"
+    bind:confirm="confirmLogin"
+  />
 </view>

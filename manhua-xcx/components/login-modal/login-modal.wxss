@@ -1,0 +1,68 @@
+.login-modal-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.login-modal-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(58, 39, 31, 0.38);
+}
+
+.login-modal-panel {
+  position: absolute;
+  left: 52rpx;
+  right: 52rpx;
+  top: 50%;
+  padding: 44rpx 36rpx 34rpx;
+  border: 3rpx solid #f1c8bb;
+  border-radius: 32rpx;
+  background: #fffdf9;
+  box-shadow: 0 24rpx 60rpx rgba(95, 54, 42, 0.2);
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.login-modal-title {
+  color: #4d322b;
+  font-size: 34rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.login-modal-text {
+  margin-top: 18rpx;
+  color: #806055;
+  font-size: 26rpx;
+  line-height: 1.6;
+}
+
+.login-modal-confirm,
+.login-modal-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 84rpx;
+  margin-top: 28rpx;
+  border-radius: 999rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.login-modal-confirm {
+  color: #ffffff;
+  background: #f77186;
+  box-shadow: 0 14rpx 26rpx rgba(238, 98, 119, 0.2);
+}
+
+.login-modal-cancel {
+  margin-top: 18rpx;
+  color: #8b6c60;
+  background: #fff3ea;
+}
+
+.login-modal-button-hover {
+  opacity: 0.82;
+}
