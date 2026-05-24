@@ -66,6 +66,7 @@ Page({
     freeQuotaRemaining: homeMock.freeQuotaRemaining,
     quotaHint: homeMock.quotaHint,
     recentChapters: buildFallbackRecentChapters(),
+    isRecentChaptersEmpty: false,
   },
 
   onLoad() {
@@ -87,11 +88,10 @@ Page({
       const data = await getRecentComicChapters({ limit: 5 })
       const items = data && Array.isArray(data.items) ? data.items : []
 
-      if (items.length > 0) {
-        this.setData({
-          recentChapters: items.map(normalizeRecentChapter),
-        })
-      }
+      this.setData({
+        recentChapters: items.map(normalizeRecentChapter),
+        isRecentChaptersEmpty: items.length === 0,
+      })
 
       return data
     } catch (error) {

@@ -40,7 +40,13 @@
       </view>
     </view>
 
-    <scroll-view class="chapter-scroll" scroll-x="true" enable-flex="true">
+    <view wx:if="{{isRecentChaptersEmpty}}" class="recent-empty">
+      <view class="recent-empty-title">还没有漫画章节</view>
+      <view class="recent-empty-text">写一篇日记，生成你的第一章漫画吧</view>
+      <button class="recent-empty-button" hover-class="button-hover" bindtap="goCreateChapter">去写日记</button>
+    </view>
+
+    <scroll-view wx:else class="chapter-scroll" scroll-x="true" enable-flex="true">
       <view
         wx:for="{{recentChapters}}"
         wx:key="id"

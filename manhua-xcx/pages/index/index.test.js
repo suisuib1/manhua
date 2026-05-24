@@ -228,3 +228,31 @@ test('home falls back to mock recent chapters when backend fails', async () => {
 
   assert.equal(pageConfig.data.recentChapters[0].id, 'chapter-003')
 })
+
+test('home clears mock recent chapters when backend returns empty items', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  assert.deepEqual(pageConfig.data.recentChapters, [])
+})
+
+test('home recent chapters empty state copy exists', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'index.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('还没有漫画章节'), true)
+  assert.equal(wxml.includes('写一篇日记，生成你的第一章漫画吧'), true)
+})
