@@ -54,6 +54,109 @@ async function flushAsyncWork() {
   await Promise.resolve()
 }
 
+test('create page requests emotion tags on load', async () => {
+  const { pageConfig, requestCalls } = loadPage({}, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            { key: 'backend-warm', label: '后端温暖' },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/emotion-tags')
+  assert.equal(requestCalls[0].method, 'GET')
+})
+
+test('create page uses backend emotion tags without selecting them', async () => {
+  const { pageConfig } = loadPage({}, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            { key: 'backend-warm', label: '后端温暖' },
+            { key: 'backend-calm', label: '后端平静' },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+
+  assert.deepEqual(pageConfig.data.tagOptions, [
+    { value: 'backend-warm', label: '后端温暖', selected: false },
+    { value: 'backend-calm', label: '后端平静', selected: false },
+  ])
+  assert.deepEqual(pageConfig.data.selectedTags, [])
+})
+
+test('create draft keeps selected tag keys and labels from backend tags', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({}, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            { key: 'backend-warm', label: '后端温暖' },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+  pageConfig.toggleTag({
+    currentTarget: {
+      dataset: {
+        value: 'backend-warm',
+      },
+    },
+  })
+  pageConfig.onTitleInput({
+    detail: {
+      value: '后端标签草稿',
+    },
+  })
+  pageConfig.goNext()
+
+  const encodedDraft = navigateCalls[0].url.split('draft=')[1]
+  const draftFromUrl = JSON.parse(decodeURIComponent(encodedDraft))
+
+  assert.deepEqual(storage.draftComicChapter.selectedTags, ['backend-warm'])
+  assert.deepEqual(storage.draftComicChapter.selectedTagItems, [
+    { key: 'backend-warm', label: '后端温暖' },
+  ])
+  assert.deepEqual(draftFromUrl.selectedTagItems, [
+    { key: 'backend-warm', label: '后端温暖' },
+  ])
+})
+
+test('create page falls back to local emotion tags when request fails', async () => {
+  const { pageConfig } = loadPage({}, (options) => {
+    options.fail(new Error('network error'))
+  })
+
+  await pageConfig.onLoad()
+
+  assert.equal(pageConfig.data.tagOptions.length > 0, true)
+  assert.equal(pageConfig.data.tagOptions[0].value, 'warm')
+  assert.equal(pageConfig.data.tagOptions.some((item) => item.selected), false)
+})
+
 test('create page starts with empty title and no selected mood tags', () => {
   const { pageConfig } = loadPage()
 

@@ -1,5 +1,6 @@
 const { createChapterMock, pageRoutes } = require('../../utils/mock')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
+const { getEmotionTags } = require('../../utils/emotionTagApi')
 
 function formatLocalDate(date = new Date()) {
   return [
@@ -10,13 +11,35 @@ function formatLocalDate(date = new Date()) {
 }
 
 function buildCreateDraft(data) {
+  const selectedTags = Array.isArray(data.selectedTags) ? data.selectedTags : []
+  const tagOptions = Array.isArray(data.tagOptions) ? data.tagOptions : []
+
   return {
     chapterTitle: String(data.draftChapterTitle || '').trim(),
     diaryDate: data.diaryDateValue,
     pageCount: data.pageCount,
     pageMode: data.pageMode,
-    selectedTags: data.selectedTags,
+    selectedTags,
+    selectedTagItems: selectedTags.map((key) => {
+      const tagOption = tagOptions.find((item) => item.value === key) || {}
+      return {
+        key,
+        label: tagOption.label || key,
+      }
+    }),
   }
+}
+
+function normalizeTagOption(tag) {
+  return {
+    value: tag.key || tag.value,
+    label: tag.label || '',
+    selected: false,
+  }
+}
+
+function buildFallbackTagOptions() {
+  return createChapterMock.tagOptions.map((item) => normalizeTagOption(item))
 }
 
 function encodeDraft(draft) {
@@ -46,11 +69,33 @@ Page({
     pageCountInput: String(createChapterMock.pageCount),
     freeQuotaRemaining: createChapterMock.freeQuotaRemaining,
     quotaHint: createChapterMock.quotaHint,
-    tagOptions: createChapterMock.tagOptions.map((item) => Object.assign({}, item, {
-      selected: false,
-    })),
+    tagOptions: buildFallbackTagOptions(),
     selectedTags: [],
     note: createChapterMock.note,
+  },
+
+  onLoad() {
+    return this.loadEmotionTags()
+  },
+
+  async loadEmotionTags() {
+    try {
+      const data = await getEmotionTags()
+      const items = data && Array.isArray(data.items) ? data.items : []
+      const tagOptions = items.map(normalizeTagOption).filter((item) => item.value && item.label)
+
+      this.setData({
+        tagOptions: tagOptions.length > 0 ? tagOptions : buildFallbackTagOptions(),
+        selectedTags: [],
+      })
+      return data
+    } catch (error) {
+      this.setData({
+        tagOptions: buildFallbackTagOptions(),
+        selectedTags: [],
+      })
+      return null
+    }
   },
 
   onTitleInput(event) {
@@ -101,7 +146,7 @@ Page({
 
     this.setData({
       selectedTags,
-      tagOptions: createChapterMock.tagOptions.map((item) => Object.assign({}, item, {
+      tagOptions: this.data.tagOptions.map((item) => Object.assign({}, item, {
         selected: selectedTags.indexOf(item.value) !== -1,
       })),
     })
@@ -129,4 +174,6 @@ module.exports = {
   encodeDraft,
   decodeDraft,
   formatLocalDate,
+  normalizeTagOption,
+  buildFallbackTagOptions,
 }
