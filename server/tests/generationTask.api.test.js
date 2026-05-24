@@ -222,6 +222,7 @@ test('logged in user can create and read a completed mock generation task', asyn
     assert.equal(created.body.data.result.pages.length, 1)
     assert.equal(created.body.data.result.pages[0].mock, true)
     assert.equal(created.body.data.result.chapter.source, 'mock')
+    assert.equal(created.body.data.errorMessage, null)
     assert.equal(warnCalls.length, 0)
 
     const foundTask = await prisma.generationTask.findUnique({
@@ -231,6 +232,7 @@ test('logged in user can create and read a completed mock generation task', asyn
     })
     assert.equal(foundTask.ownerUserId, loginData.user.id)
     assert.equal(foundTask.status, 'completed')
+    assert.equal(foundTask.errorMessage, null)
 
     const detail = await requestJson(server, 'GET', `/api/generation-tasks/${created.body.data.id}`, undefined, loginData.token)
 
@@ -354,9 +356,14 @@ test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
     assert.equal(detail.response.status, 200)
     assert.equal(detail.body.data.status, 'failed')
     assert.equal(detail.body.data.result && Object.keys(detail.body.data.result).length, 0)
-    assert.equal(detail.body.data.errorMessage, 'OpenAI image generation failed with status 500')
-    assert.equal(JSON.stringify(detail.body.data).includes('test-openai-key'), false)
-    assert.equal(JSON.stringify(detail.body.data).includes('Authorization'), false)
+    assert.notEqual(detail.body.data.errorMessage, null)
+    assert.equal(detail.body.data.errorMessage.includes('name='), true)
+    assert.equal(detail.body.data.errorMessage.includes('message=OpenAI image generation failed with status 500'), true)
+    assert.equal(detail.body.data.errorMessage.includes('test-openai-key'), false)
+    assert.equal(detail.body.data.errorMessage.includes('Authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('prompt'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_provider_failed_chapter'), false)
     assert.equal(detail.body.data.errorMessage.includes('generation_task_provider_failed_diary_text'), false)
     assert.equal(warnCalls.length, 1)
     assert.equal(warnCalls[0][0], '[generation-task-openai-fallback]')
@@ -366,11 +373,60 @@ test('POST /api/generation-tasks falls back when OpenAI fails', async () => {
     assert.equal(warnCalls[0][1].size, '1024x1024')
     assert.equal(JSON.stringify(warnCalls).includes('test-openai-key'), false)
     assert.equal(JSON.stringify(warnCalls).includes('Authorization'), false)
-    assert.equal(JSON.stringify(warnCalls).includes('authorization'), false)
   } finally {
     console.warn = originalWarn
     await new Promise((resolve) => server.close(resolve))
     await openAiServer.close()
+    restoreEnv()
+  }
+})
+
+test('POST /api/generation-tasks stores safe fallback message when OpenAI error exposes sensitive text', async () => {
+  const originalWarn = console.warn
+  const warnCalls = []
+  console.warn = (...args) => {
+    warnCalls.push(args)
+  }
+  const restoreEnv = setOpenAiEnv({
+    OPENAI_API_KEY: 'test-openai-key',
+    OPENAI_BASE_URL: 'http://Authorization Bearer test-openai-key prompt',
+  })
+  const server = await listen(app)
+
+  try {
+    const loginData = await login(server, 'generation_task_openai_sensitive_error')
+    const diaryEntry = await createDiaryEntry(loginData.user.id, 'sensitive_error')
+
+    const created = await requestJson(server, 'POST', '/api/generation-tasks', {
+      diaryEntryId: diaryEntry.id,
+    }, loginData.token)
+
+    assert.equal(created.response.status, 200)
+    assert.equal(created.body.code, 0)
+    assert.equal(created.body.data.status, 'pending')
+
+    const detail = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'failed')
+
+    assert.equal(detail.response.status, 200)
+    assert.equal(detail.body.data.status, 'failed')
+    assert.notEqual(detail.body.data.errorMessage, null)
+    assert.equal(detail.body.data.errorMessage.includes('name='), true)
+    assert.equal(detail.body.data.errorMessage.includes('message='), true)
+    assert.equal(detail.body.data.errorMessage.includes('test-openai-key'), false)
+    assert.equal(detail.body.data.errorMessage.includes('Authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('prompt'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_sensitive_error_chapter'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_sensitive_error_diary_text'), false)
+    assert.equal(warnCalls[0][0], '[generation-task-openai-fallback]')
+    assert.equal(JSON.stringify(warnCalls).includes('test-openai-key'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('Authorization'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('prompt'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('generation_task_sensitive_error_chapter'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('generation_task_sensitive_error_diary_text'), false)
+  } finally {
+    console.warn = originalWarn
+    await new Promise((resolve) => server.close(resolve))
     restoreEnv()
   }
 })

@@ -103,19 +103,22 @@ function scheduleGenerationTask(taskId, ownerUserId, diaryEntryId) {
 }
 
 async function runGenerationTask(taskId, ownerUserId, diaryEntryId) {
-  const diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
-  const characterProfile = await findCharacterProfile(ownerUserId)
-  const prompt = buildOpenAiPrompt(diaryEntry, characterProfile)
   const startedAt = new Date()
-
-  await updateGenerationTaskSafely(taskId, {
-    status: 'processing',
-    promptSnapshot: prompt,
-    errorMessage: null,
-    startedAt,
-  })
+  let diaryEntry = null
+  let prompt = ''
 
   try {
+    diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
+    const characterProfile = await findCharacterProfile(ownerUserId)
+    prompt = buildOpenAiPrompt(diaryEntry, characterProfile)
+
+    await updateGenerationTaskSafely(taskId, {
+      status: 'processing',
+      promptSnapshot: prompt,
+      errorMessage: null,
+      startedAt,
+    })
+
     const image = await generateImageFromPrompt(prompt)
     await updateGenerationTaskSafely(taskId, {
       status: 'completed',
@@ -124,13 +127,21 @@ async function runGenerationTask(taskId, ownerUserId, diaryEntryId) {
       finishedAt: new Date(),
     })
   } catch (err) {
-    warnOpenAiFallback(err)
-    await updateGenerationTaskSafely(taskId, {
-      status: 'failed',
-      errorMessage: sanitizeGenerationError(err),
-      finishedAt: new Date(),
-    })
+    const sensitiveContext = {
+      prompt,
+      diaryText: diaryEntry ? diaryEntry.diaryText : '',
+    }
+    warnOpenAiFallback(err, sensitiveContext)
+    await markGenerationTaskFailed(taskId, err, sensitiveContext)
   }
+}
+
+async function markGenerationTaskFailed(taskId, err, sensitiveContext) {
+  return updateGenerationTaskSafely(taskId, {
+    status: 'failed',
+    errorMessage: sanitizeGenerationError(err, sensitiveContext),
+    finishedAt: new Date(),
+  })
 }
 
 async function updateGenerationTaskSafely(taskId, data) {
@@ -253,11 +264,12 @@ function buildOpenAiResult(diaryEntry, image) {
   }
 }
 
-function warnOpenAiFallback(err) {
+function warnOpenAiFallback(err, sensitiveContext = {}) {
+  const safeError = buildSafeGenerationError(err, sensitiveContext)
   console.warn('[generation-task-openai-fallback]', {
-    name: err && err.name ? err.name : 'Error',
-    code: err && err.code ? err.code : undefined,
-    message: err && err.message ? err.message : 'OpenAI image generation failed',
+    name: safeError.name,
+    code: safeError.code || undefined,
+    message: safeError.message,
     model: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
     size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
   })
@@ -271,9 +283,57 @@ function warnGenerationTaskUpdateFailure(err) {
   })
 }
 
-function sanitizeGenerationError(err) {
-  const message = err && err.message ? err.message : 'OpenAI image generation failed'
-  return String(message).slice(0, 200)
+function sanitizeGenerationError(err, sensitiveContext = {}) {
+  const safeError = buildSafeGenerationError(err, sensitiveContext)
+  const parts = [
+    `name=${safeError.name || 'Error'}`,
+  ]
+
+  if (safeError.code) {
+    parts.push(`code=${safeError.code}`)
+  }
+
+  parts.push(`message=${safeError.message || 'OpenAI image generation failed'}`)
+
+  return parts.join('; ').slice(0, 300)
+}
+
+function buildSafeGenerationError(err, sensitiveContext = {}) {
+  return {
+    name: sanitizeErrorField(err && err.name ? err.name : 'Error', sensitiveContext),
+    code: sanitizeErrorField(err && err.code ? err.code : '', sensitiveContext),
+    message: sanitizeErrorField(
+      err && err.message ? err.message : 'OpenAI image generation failed',
+      sensitiveContext,
+    ) || 'OpenAI image generation failed',
+  }
+}
+
+function sanitizeErrorField(value, sensitiveContext) {
+  let text = String(value || '')
+  const sensitiveValues = [
+    process.env.OPENAI_API_KEY,
+    sensitiveContext.prompt,
+    sensitiveContext.diaryText,
+  ].filter(Boolean)
+
+  for (const sensitiveValue of sensitiveValues) {
+    text = replaceAllText(text, String(sensitiveValue), '[redacted]')
+  }
+
+  return text
+    .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [redacted]')
+    .replace(/OPENAI_API_KEY/gi, '[redacted-env]')
+    .replace(/Authorization/gi, '[redacted-header]')
+    .replace(/prompt/gi, 'input')
+    .replace(/diaryText/gi, 'privateText')
+    .trim()
+    .slice(0, 240)
+}
+
+function replaceAllText(value, search, replacement) {
+  if (!search) return value
+  return value.split(search).join(replacement)
 }
 
 function summarizeText(value) {
