@@ -2,6 +2,7 @@ const { generatingMock, pageRoutes, storageKeys } = require('../../utils/mock')
 const { getAuthToken } = require('../../utils/auth')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
 const { createGenerationTask, getGenerationTask } = require('../../utils/generationTaskApi')
+const apiConfig = require('../../config/api.config')
 
 const generationTaskPollIntervalMs = 2500
 const generationTaskMaxPollCount = 48
@@ -79,7 +80,15 @@ function getFirstGenerationImageUrl(task) {
   const pages = task && task.result && Array.isArray(task.result.pages) ? task.result.pages : []
   const firstPage = pages[0]
 
-  return firstPage && firstPage.imageUrl ? firstPage.imageUrl : ''
+  return firstPage && firstPage.imageUrl ? normalizeGeneratedImageUrl(firstPage.imageUrl) : ''
+}
+
+function normalizeGeneratedImageUrl(imageUrl) {
+  if (!imageUrl || /^https?:\/\//.test(imageUrl) || /^wxfile:\/\//.test(imageUrl)) {
+    return imageUrl || ''
+  }
+
+  return `${apiConfig.baseUrl}${imageUrl.indexOf('/') === 0 ? imageUrl : `/${imageUrl}`}`
 }
 
 function injectFirstGeneratedImage(chapter, imageUrl) {
@@ -94,6 +103,8 @@ function injectFirstGeneratedImage(chapter, imageUrl) {
 
   return Object.assign({}, chapter, {
     images: [imageUrl],
+    coverImageUrl: imageUrl,
+    imageUrl,
     pages,
   })
 }
@@ -279,6 +290,7 @@ module.exports = {
   getDefaultPanelImages,
   buildGenerationTaskMetadata,
   getFirstGenerationImageUrl,
+  normalizeGeneratedImageUrl,
   injectFirstGeneratedImage,
   waitForGenerationTaskResult,
   clearGenerationTaskPollTimer,

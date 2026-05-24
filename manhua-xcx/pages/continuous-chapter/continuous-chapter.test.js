@@ -3,6 +3,30 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
+test('onLoad uses generatedComicChapters real image before mock fallback', () => {
+  const generatedImageUrl = 'http://127.0.0.1:3000/uploads/generated/ai-reader-page.png'
+  const { pageConfig, setDataCalls } = loadPage({
+    generatedComicChapters: [{
+      id: 'local-real-image',
+      title: 'AI generated chapter',
+      date: '2026-05-21',
+      images: [generatedImageUrl],
+      coverImageUrl: generatedImageUrl,
+      pages: [{
+        pageId: 'local-real-image-page-1',
+        pageIndex: 0,
+        images: [generatedImageUrl],
+        caption: 'real generated image',
+      }],
+    }],
+  })
+
+  pageConfig.onLoad({ chapterId: 'local-real-image' })
+
+  assert.equal(setDataCalls[0].currentPage.image, generatedImageUrl)
+  assert.equal(setDataCalls[0].hasComicImages, true)
+})
+
 function loadPage(initialStorage) {
   let pageConfig
   const backCalls = []

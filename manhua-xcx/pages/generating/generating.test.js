@@ -217,7 +217,7 @@ test('generation task success adds backend metadata without changing reader page
   assert.equal(storage.generatedComicChapters[0].id, chapter.id)
 })
 
-test('generation task result imageUrl is injected into first local reader page', async () => {
+test('generation task result imageUrl is injected into first local reader page as full resource url', async () => {
   const { moduleExports, storage } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -252,8 +252,11 @@ test('generation task result imageUrl is injected into first local reader page',
     pageCount: 2,
   })
 
-  assert.equal(chapter.pages[0].images[0], '/uploads/generated/ai-first-page.png')
-  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], '/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.images[0], 'http://127.0.0.1:3000/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.imageUrl, 'http://127.0.0.1:3000/uploads/generated/ai-first-page.png')
+  assert.equal(chapter.coverImageUrl, 'http://127.0.0.1:3000/uploads/generated/ai-first-page.png')
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/ai-first-page.png')
   assert.equal(chapter.generationResult.pages[0].imageUrl, '/uploads/generated/ai-first-page.png')
 })
 
@@ -316,8 +319,8 @@ test('pending generation task polls until completed and injects first image', as
 
   assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks/task-pending')
   assert.equal(requestCalls[1].method, 'GET')
-  assert.equal(chapter.pages[0].images[0], '/uploads/generated/polled-first-page.png')
-  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], '/uploads/generated/polled-first-page.png')
+  assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(pollTimer.cleared, true)
 })
 
