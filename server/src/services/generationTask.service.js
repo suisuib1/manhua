@@ -103,11 +103,24 @@ function scheduleGenerationTask(taskId, ownerUserId, diaryEntryId) {
 }
 
 async function runGenerationTask(taskId, ownerUserId, diaryEntryId) {
+  const state = {
+    ended: false,
+  }
+  return withGenerationTimeout(
+    runGenerationTaskCore(taskId, ownerUserId, diaryEntryId, state),
+    getGenerationTaskTimeoutMs(),
+    taskId,
+    state,
+  )
+}
+
+async function runGenerationTaskCore(taskId, ownerUserId, diaryEntryId, state) {
   const startedAt = new Date()
   let diaryEntry = null
   let prompt = ''
 
   try {
+    logGenerationTaskEvent('start', taskId)
     diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
     const characterProfile = await findCharacterProfile(ownerUserId)
     prompt = buildOpenAiPrompt(diaryEntry, characterProfile)
@@ -120,28 +133,103 @@ async function runGenerationTask(taskId, ownerUserId, diaryEntryId) {
     })
 
     const image = await generateImageFromPrompt(prompt)
-    await updateGenerationTaskSafely(taskId, {
-      status: 'completed',
-      resultJson: JSON.stringify(buildOpenAiResult(diaryEntry, image)),
-      errorMessage: null,
-      finishedAt: new Date(),
-    })
+    const completed = await markGenerationTaskCompleted(taskId, buildOpenAiResult(diaryEntry, image))
+    if (completed) {
+      logGenerationTaskEvent('completed', taskId)
+    }
   } catch (err) {
     const sensitiveContext = {
       prompt,
       diaryText: diaryEntry ? diaryEntry.diaryText : '',
     }
     warnOpenAiFallback(err, sensitiveContext)
-    await markGenerationTaskFailed(taskId, err, sensitiveContext)
+    const failed = await markGenerationTaskFailed(taskId, err, sensitiveContext)
+    if (failed) {
+      logGenerationTaskEvent('failed', taskId, {
+        error: sanitizeGenerationError(err, sensitiveContext),
+      })
+    }
+  } finally {
+    logGenerationTaskEndOnce(taskId, state)
   }
 }
 
+function withGenerationTimeout(promise, timeoutMs, taskId, state) {
+  let timer = null
+
+  const timeoutPromise = new Promise((resolve) => {
+    timer = setTimeout(async () => {
+      const error = new Error('Generation task timed out')
+      error.name = 'TimeoutError'
+      error.code = 'GENERATION_TASK_TIMEOUT'
+      const failed = await markGenerationTaskFailed(taskId, error, {})
+      if (failed) {
+        logGenerationTaskEvent('failed', taskId, {
+          error: sanitizeGenerationError(error, {}),
+        })
+      }
+      logGenerationTaskEndOnce(taskId, state)
+      resolve(null)
+    }, timeoutMs)
+  })
+
+  return Promise.race([
+    promise.finally(() => {
+      if (timer) {
+        clearTimeout(timer)
+      }
+    }),
+    timeoutPromise,
+  ])
+}
+
+async function markGenerationTaskCompleted(taskId, result) {
+  const updated = await updateGenerationTaskStateSafely(taskId, {
+    status: 'completed',
+    resultJson: JSON.stringify(result),
+    errorMessage: null,
+    finishedAt: new Date(),
+  }, {
+    status: {
+      not: 'failed',
+    },
+  })
+
+  return updated && updated.count > 0
+}
+
 async function markGenerationTaskFailed(taskId, err, sensitiveContext) {
-  return updateGenerationTaskSafely(taskId, {
+  const updated = await updateGenerationTaskStateSafely(taskId, {
     status: 'failed',
     errorMessage: sanitizeGenerationError(err, sensitiveContext),
     finishedAt: new Date(),
+  }, {
+    status: {
+      notIn: ['completed', 'failed'],
+    },
   })
+
+  return updated && updated.count > 0
+}
+
+function getGenerationTaskTimeoutMs() {
+  return toPositiveInteger(process.env.OPENAI_TIMEOUT_MS, 60000)
+}
+
+function logGenerationTaskEvent(event, taskId, extra = {}) {
+  console.info('[generation-task]', Object.assign({
+    event,
+    taskId,
+  }, extra))
+}
+
+function logGenerationTaskEndOnce(taskId, state) {
+  if (state.ended) {
+    return
+  }
+
+  state.ended = true
+  logGenerationTaskEvent('end', taskId)
 }
 
 async function updateGenerationTaskSafely(taskId, data) {
@@ -150,6 +238,20 @@ async function updateGenerationTaskSafely(taskId, data) {
       where: {
         id: taskId,
       },
+      data,
+    })
+  } catch (err) {
+    warnGenerationTaskUpdateFailure(err)
+    return null
+  }
+}
+
+async function updateGenerationTaskStateSafely(taskId, data, where = {}) {
+  try {
+    return await prisma.generationTask.updateMany({
+      where: Object.assign({
+        id: taskId,
+      }, where),
       data,
     })
   } catch (err) {
@@ -344,6 +446,11 @@ function summarizeText(value) {
 function limitText(value, maxLength) {
   if (!value) return ''
   return String(value).trim().slice(0, maxLength)
+}
+
+function toPositiveInteger(value, fallback) {
+  const numeric = Number(value)
+  return Number.isInteger(numeric) && numeric > 0 ? numeric : fallback
 }
 
 function formatTask(task) {

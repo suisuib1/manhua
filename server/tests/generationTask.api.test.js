@@ -102,6 +102,7 @@ function createOpenAiMockServer(handler) {
 
   return new Promise((resolve, reject) => {
     const calls = []
+    const sockets = new Set()
     const server = http.createServer(async (req, res) => {
       let body = ''
       req.on('data', (chunk) => {
@@ -132,7 +133,18 @@ function createOpenAiMockServer(handler) {
       resolve({
         baseUrl: `http://127.0.0.1:${port}/v1`,
         calls,
-        close: () => new Promise((done) => server.close(done)),
+        close: () => new Promise((done) => {
+          for (const socket of sockets) {
+            socket.destroy()
+          }
+          server.close(done)
+        }),
+      })
+    })
+    server.on('connection', (socket) => {
+      sockets.add(socket)
+      socket.on('close', () => {
+        sockets.delete(socket)
       })
     })
     server.on('error', reject)
@@ -427,6 +439,69 @@ test('POST /api/generation-tasks stores safe fallback message when OpenAI error 
   } finally {
     console.warn = originalWarn
     await new Promise((resolve) => server.close(resolve))
+    restoreEnv()
+  }
+})
+
+test('POST /api/generation-tasks fails safely when OpenAI response body hangs', async () => {
+  const originalWarn = console.warn
+  const originalInfo = console.info
+  const warnCalls = []
+  const infoCalls = []
+  console.warn = (...args) => {
+    warnCalls.push(args)
+  }
+  console.info = (...args) => {
+    infoCalls.push(args)
+  }
+  const openAiServer = await createOpenAiMockServer((req, res) => {
+    res.statusCode = 200
+    res.setHeader('content-type', 'application/json')
+    res.write('{"data":[')
+  })
+  const restoreEnv = setOpenAiEnv({
+    OPENAI_API_KEY: 'test-openai-key',
+    OPENAI_BASE_URL: openAiServer.baseUrl,
+    OPENAI_TIMEOUT_MS: '30',
+  })
+  const server = await listen(app)
+
+  try {
+    const loginData = await login(server, 'generation_task_openai_hang')
+    const diaryEntry = await createDiaryEntry(loginData.user.id, 'hanging_response')
+
+    const created = await requestJson(server, 'POST', '/api/generation-tasks', {
+      diaryEntryId: diaryEntry.id,
+    }, loginData.token)
+
+    assert.equal(created.response.status, 200)
+    assert.equal(created.body.code, 0)
+    assert.equal(created.body.data.status, 'pending')
+
+    const detail = await waitForTaskStatus(server, created.body.data.id, loginData.token, 'failed', 30)
+
+    assert.equal(detail.response.status, 200)
+    assert.equal(detail.body.data.status, 'failed')
+    assert.notEqual(detail.body.data.errorMessage, null)
+    assert.notEqual(detail.body.data.finishedAt, null)
+    assert.equal(detail.body.data.errorMessage.includes('name='), true)
+    assert.equal(detail.body.data.errorMessage.includes('message='), true)
+    assert.equal(detail.body.data.errorMessage.includes('test-openai-key'), false)
+    assert.equal(detail.body.data.errorMessage.includes('Authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('authorization'), false)
+    assert.equal(detail.body.data.errorMessage.includes('prompt'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_hanging_response_chapter'), false)
+    assert.equal(detail.body.data.errorMessage.includes('generation_task_hanging_response_diary_text'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('test-openai-key'), false)
+    assert.equal(JSON.stringify(warnCalls).includes('Authorization'), false)
+    assert.equal(JSON.stringify(infoCalls).includes('test-openai-key'), false)
+    assert.equal(JSON.stringify(infoCalls).includes('Authorization'), false)
+    assert.equal(JSON.stringify(infoCalls).includes('generation_task_hanging_response_diary_text'), false)
+  } finally {
+    console.warn = originalWarn
+    console.info = originalInfo
+    await new Promise((resolve) => server.close(resolve))
+    await openAiServer.close()
     restoreEnv()
   }
 })

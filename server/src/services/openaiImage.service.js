@@ -12,10 +12,13 @@ function hasOpenAiImageConfig() {
 
 async function generateImageFromPrompt(prompt) {
   const config = getOpenAiConfig()
+  logOpenAiEvent('request-start', config)
   const responseBody = await requestImageGeneration(prompt, config)
   const image = pickImageResult(responseBody)
+  logOpenAiEvent('download-start', config, { source: image.b64_json ? 'b64' : 'url' })
   const imageBuffer = await resolveImageBuffer(image, config)
   const saved = await saveGeneratedImage(imageBuffer)
+  logOpenAiEvent('image-save-success', config, { imageUrl: saved.imageUrl })
 
   return {
     imageUrl: saved.imageUrl,
@@ -59,20 +62,27 @@ async function requestImageGeneration(prompt, config) {
   if (config.quality) body.quality = config.quality
   if (config.style) body.style = config.style
 
-  const response = await fetchWithTimeout(`${config.baseUrl}/images/generations`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${config.apiKey}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  }, config.timeoutMs)
+  return withAbortTimeout(async (signal) => {
+    try {
+      const response = await fetch(`${config.baseUrl}/images/generations`, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${config.apiKey}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(body),
+        signal,
+      })
 
-  if (!response.ok) {
-    throw new Error(`OpenAI image generation failed with status ${response.status}`)
-  }
+      if (!response.ok) {
+        throw new Error(`OpenAI image generation failed with status ${response.status}`)
+      }
 
-  return response.json()
+      return response.json()
+    } finally {
+      logOpenAiEvent('request-end', config)
+    }
+  }, config.timeoutMs, 'OpenAI image generation timed out')
 }
 
 function pickImageResult(responseBody) {
@@ -90,15 +100,18 @@ async function resolveImageBuffer(image, config) {
     return Buffer.from(image.b64_json, 'base64')
   }
 
-  const response = await fetchWithTimeout(image.url, {
-    method: 'GET',
-  }, config.timeoutMs)
+  return withAbortTimeout(async (signal) => {
+    const response = await fetch(image.url, {
+      method: 'GET',
+      signal,
+    })
 
-  if (!response.ok) {
-    throw new Error(`OpenAI generated image download failed with status ${response.status}`)
-  }
+    if (!response.ok) {
+      throw new Error(`OpenAI generated image download failed with status ${response.status}`)
+    }
 
-  return Buffer.from(await response.arrayBuffer())
+    return Buffer.from(await response.arrayBuffer())
+  }, config.timeoutMs, 'OpenAI image download timed out')
 }
 
 async function saveGeneratedImage(imageBuffer) {
@@ -139,6 +152,34 @@ async function fetchWithTimeout(url, options, timeoutMs) {
   } finally {
     clearTimeout(timer)
   }
+}
+
+function withAbortTimeout(callback, timeoutMs, message) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+  return Promise.resolve()
+    .then(() => callback(controller.signal))
+    .catch((err) => {
+      if (controller.signal.aborted) {
+        const error = new Error(message)
+        error.name = 'TimeoutError'
+        error.code = 'OPENAI_TIMEOUT'
+        throw error
+      }
+      throw err
+    })
+    .finally(() => {
+      clearTimeout(timer)
+    })
+}
+
+function logOpenAiEvent(event, config, extra = {}) {
+  console.info('[openai-image]', Object.assign({
+    event,
+    model: config.model,
+    size: config.size,
+  }, extra))
 }
 
 function trimTrailingSlash(value) {
