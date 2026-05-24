@@ -1,9 +1,17 @@
 const { createChapterMock, pageRoutes } = require('../../utils/mock')
 const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
 
+function formatLocalDate(date = new Date()) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-')
+}
+
 function buildCreateDraft(data) {
   return {
-    chapterTitle: data.draftChapterTitle,
+    chapterTitle: String(data.draftChapterTitle || '').trim(),
     diaryDate: data.diaryDateValue,
     pageCount: data.pageCount,
     pageMode: data.pageMode,
@@ -29,9 +37,9 @@ Page({
   data: {
     title: createChapterMock.title,
     subtitle: createChapterMock.subtitle,
-    draftChapterTitle: createChapterMock.draftChapterTitle,
-    diaryDateValue: new Date().toISOString().slice(0, 10),
-    diaryDateLabel: new Date().toISOString().slice(0, 10),
+    draftChapterTitle: '',
+    diaryDateValue: formatLocalDate(),
+    diaryDateLabel: formatLocalDate(),
     dateHint: createChapterMock.dateHint,
     pageMode: createChapterMock.pageMode,
     pageCount: createChapterMock.pageCount,
@@ -39,9 +47,9 @@ Page({
     freeQuotaRemaining: createChapterMock.freeQuotaRemaining,
     quotaHint: createChapterMock.quotaHint,
     tagOptions: createChapterMock.tagOptions.map((item) => Object.assign({}, item, {
-      selected: createChapterMock.selectedTags.indexOf(item.value) !== -1,
+      selected: false,
     })),
-    selectedTags: createChapterMock.selectedTags,
+    selectedTags: [],
     note: createChapterMock.note,
   },
 
@@ -101,6 +109,14 @@ Page({
 
   goNext() {
     const draft = buildCreateDraft(this.data)
+    if (!draft.chapterTitle) {
+      wx.showToast({
+        title: '请先填写章节标题',
+        icon: 'none',
+      })
+      return
+    }
+
     saveDraftWithBackendFallback(draft)
     wx.navigateTo({
       url: `${pageRoutes.diary}?draft=${encodeDraft(draft)}`,
@@ -112,4 +128,5 @@ module.exports = {
   buildCreateDraft,
   encodeDraft,
   decodeDraft,
+  formatLocalDate,
 }

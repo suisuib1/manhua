@@ -5,6 +5,7 @@ function loadPage(storage = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
   const requestCalls = []
+  const toastCalls = []
 
   global.Page = (config) => {
     pageConfig = config
@@ -27,6 +28,9 @@ function loadPage(storage = {}, requestImpl = () => {}) {
     navigateTo(options) {
       navigateCalls.push(options)
     },
+    showToast(options) {
+      toastCalls.push(options)
+    },
   }
 
   delete require.cache[require.resolve('../../utils/api')]
@@ -40,6 +44,7 @@ function loadPage(storage = {}, requestImpl = () => {}) {
     pageConfig,
     navigateCalls,
     requestCalls,
+    toastCalls,
     storage,
   }
 }
@@ -49,9 +54,48 @@ async function flushAsyncWork() {
   await Promise.resolve()
 }
 
+test('create page starts with empty title and no selected mood tags', () => {
+  const { pageConfig } = loadPage()
+
+  assert.equal(pageConfig.data.draftChapterTitle, '')
+  assert.equal(pageConfig.data.draftChapterTitle.includes('和小猫一起的傍晚'), false)
+  assert.deepEqual(pageConfig.data.selectedTags, [])
+  assert.equal(pageConfig.data.tagOptions.some((item) => item.selected), false)
+})
+
+test('create page initial date uses runtime today instead of mock date', () => {
+  const { pageConfig } = loadPage()
+  const today = new Date()
+  const expected = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  assert.equal(pageConfig.data.diaryDateValue, expected)
+  assert.equal(pageConfig.data.diaryDateLabel, expected)
+  assert.notEqual(pageConfig.data.diaryDateValue, '2026-05-18')
+})
+
+test('empty title does not save draft with mock title or navigate', () => {
+  const { pageConfig, navigateCalls, requestCalls, toastCalls, storage } = loadPage()
+
+  pageConfig.goNext()
+
+  assert.equal(navigateCalls.length, 0)
+  assert.equal(requestCalls.length, 0)
+  assert.equal(storage.draftComicChapter, undefined)
+  assert.equal(toastCalls.length, 1)
+})
+
 test('创建页未登录时继续只保存本地草稿并跳转日记页', () => {
   const { pageConfig, navigateCalls, requestCalls, storage } = loadPage()
 
+  pageConfig.onTitleInput({
+    detail: {
+      value: '后端草稿标题',
+    },
+  })
   pageConfig.goNext()
 
   assert.equal(requestCalls.length, 0)
@@ -76,6 +120,11 @@ test('创建页已登录时保存草稿会尝试创建后端草稿', async () =>
     })
   })
 
+  pageConfig.onTitleInput({
+    detail: {
+      value: '后端草稿标题',
+    },
+  })
   pageConfig.goNext()
   await flushAsyncWork()
 
@@ -87,6 +136,11 @@ test('创建页已登录时保存草稿会尝试创建后端草稿', async () =>
 test('selected date is saved into local draft and diary page query', () => {
   const { pageConfig, navigateCalls, storage } = loadPage()
 
+  pageConfig.onTitleInput({
+    detail: {
+      value: '指定日期标题',
+    },
+  })
   pageConfig.onDateChange({
     detail: {
       value: '2026-05-21',
