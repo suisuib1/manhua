@@ -4,13 +4,41 @@ const { getRecentComicChapters } = require('../../utils/comicChapterApi')
 
 const statusClassMap = {
   [chapterStatuses.completed]: 'is-completed',
+  pending: 'is-generating',
+  processing: 'is-generating',
   [chapterStatuses.generating]: 'is-generating',
   [chapterStatuses.failed]: 'is-failed',
 }
 
+const statusTextMap = {
+  pending: '生成中',
+  processing: '生成中',
+  [chapterStatuses.generating]: '生成中',
+  [chapterStatuses.completed]: '已完成',
+  [chapterStatuses.failed]: '生成失败',
+}
+
+function formatRecentChapterDate(value) {
+  if (!value) {
+    return ''
+  }
+
+  const text = String(value)
+  const isoDate = text.match(/^(\d{4}-\d{2}-\d{2})/)
+
+  return isoDate ? isoDate[1] : text
+}
+
+function getRecentChapterStatusText(chapter) {
+  return statusTextMap[chapter.status] || chapter.statusText || ''
+}
+
 function buildFallbackRecentChapters() {
   return homeMock.recentChapters.map((chapter) => Object.assign({}, chapter, {
+    displayDate: formatRecentChapterDate(chapter.createdAt || chapter.date),
+    displaySubtitle: chapter.summary || chapter.subtitle || '',
     statusClass: statusClassMap[chapter.status] || '',
+    statusText: getRecentChapterStatusText(chapter),
   }))
 }
 
@@ -21,7 +49,10 @@ function normalizeRecentChapter(chapter) {
     id: chapter.id || chapter.diaryEntryId || chapter.generationTaskId,
     subtitle: chapter.subtitle || chapter.title || '',
     coverImageUrl: chapter.coverImageUrl || '',
+    displayDate: formatRecentChapterDate(chapter.createdAt || chapter.date),
+    displaySubtitle: chapter.summary || chapter.subtitle || '',
     statusClass: statusClassMap[chapter.status] || '',
+    statusText: getRecentChapterStatusText(chapter),
     pageCountText: pageCount > 0 ? `${pageCount} 页` : '',
   })
 }
@@ -100,5 +131,6 @@ Page({
 
 module.exports = {
   buildFallbackRecentChapters,
+  formatRecentChapterDate,
   normalizeRecentChapter,
 }
