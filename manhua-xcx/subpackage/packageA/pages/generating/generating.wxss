@@ -150,3 +150,15 @@ button::after {
   background: #eef6ff;
   border-color: #d9e9fb;
 }
+
+.generation-failed-card {
+  min-height: 560rpx;
+}
+
+.failure-message {
+  margin-top: 20rpx;
+  color: #7a5a51;
+  font-size: 28rpx;
+  line-height: 1.5;
+  text-align: center;
+}

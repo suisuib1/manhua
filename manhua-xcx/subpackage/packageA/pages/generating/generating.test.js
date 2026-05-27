@@ -91,6 +91,18 @@ async function runTimer(timer) {
   await flushAsyncWork()
 }
 
+async function runProgressToComplete(intervals) {
+  let timer = await waitForInterval(intervals)
+  for (let index = 0; index < 12; index += 1) {
+    if (!timer || timer.cleared) {
+      return
+    }
+
+    await runTimer(timer)
+    timer = intervals[intervals.length - 1]
+  }
+}
+
 test('生成中页仍显示模拟进度而不是空壳', () => {
   const wxml = fs.readFileSync(path.join(__dirname, 'generating.wxml'), 'utf8')
 
@@ -504,8 +516,8 @@ test('new backend generation clears stale page task state and old poll timer', a
   assert.deepEqual(pageConfig.data.generationResult, {})
 })
 
-test('failed polled generation task writes local fallback', async () => {
-  const { moduleExports, storage, intervals } = loadPage({
+test('failed polled generation task enters failed state without writing local success chapter', async () => {
+  const { pageConfig, moduleExports, storage, intervals, navigateCalls } = loadPage({
     authToken: 'token-task',
   }, (options) => {
     if (options.method === 'POST') {
@@ -545,19 +557,22 @@ test('failed polled generation task writes local fallback', async () => {
     serverDiaryEntryId: 'entry-failed',
     chapterTitle: 'failed chapter',
     pageCount: 2,
-  })
+  }, pageConfig)
   await flushAsyncWork()
   await runTimer(await waitForInterval(intervals))
   const chapter = await pending
 
-  assert.equal(chapter.generationTaskId, 'task-failed')
-  assert.equal(chapter.generationTaskStatus, 'failed')
-  assert.equal(storage.generatedComicChapters.length, 1)
-  assert.equal(storage.generatedComicChapters[0].title, 'failed chapter')
+  assert.equal(chapter, null)
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
+  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请稍后重新生成')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(navigateCalls.length, 0)
 })
 
-test('polling get failure writes local fallback', async () => {
-  const { moduleExports, storage, intervals } = loadPage({
+test('polling get failure enters failed state without writing local success chapter', async () => {
+  const { pageConfig, moduleExports, storage, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
     if (options.method === 'POST') {
@@ -584,14 +599,97 @@ test('polling get failure writes local fallback', async () => {
     serverDiaryEntryId: 'entry-get-fail',
     chapterTitle: 'get fail chapter',
     pageCount: 2,
-  })
+  }, pageConfig)
   await flushAsyncWork()
   await runTimer(await waitForInterval(intervals))
   const chapter = await pending
 
-  assert.equal(chapter.generationTaskId, 'task-get-fail')
-  assert.equal(chapter.generationTaskStatus, 'pending')
-  assert.equal(storage.generatedComicChapters[0].title, 'get fail chapter')
+  assert.equal(chapter, null)
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters, undefined)
+})
+
+test('retry generation creates a new backend task after failed state', async () => {
+  const { pageConfig, requestCalls, intervals, storage } = loadPage({
+    authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-retry',
+      chapterTitle: 'retry chapter',
+      pageCount: 2,
+    },
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: `task-retry-${requestCalls.length + 1}`,
+            status: 'failed',
+            diaryEntryId: 'entry-retry',
+            result: {},
+          },
+        },
+      })
+    }
+  })
+
+  pageConfig.onLoad()
+  await runProgressToComplete(intervals)
+  await flushAsyncWork()
+
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(requestCalls.length, 1)
+
+  pageConfig.retryGeneration()
+  await runProgressToComplete(intervals)
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 2)
+  assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks')
+  assert.equal(requestCalls[1].data.diaryEntryId, 'entry-retry')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(storage.generatedComicChapters, undefined)
+})
+
+test('polling max count resolves failed task state instead of local success fallback', async () => {
+  const { pageConfig, moduleExports, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-timeout',
+          status: 'processing',
+          diaryEntryId: 'entry-timeout',
+          result: {},
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.waitForGenerationTaskResult({
+    id: 'task-timeout',
+    status: 'processing',
+    diaryEntryId: 'entry-timeout',
+    result: {},
+  }, pageConfig)
+  const pollTimer = await waitForInterval(intervals)
+
+  for (let index = 0; index < moduleExports.generationTaskMaxPollCount + 1; index += 1) {
+    await runTimer(pollTimer)
+  }
+
+  const task = await pending
+
+  assert.equal(task.status, 'failed')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(pollTimer.cleared, true)
 })
 
 test('onUnload clears polling timer', async () => {
@@ -708,8 +806,8 @@ test('missing serverDiaryEntryId syncs diary before creating generation task', a
   assert.equal(chapter.generationTaskId, 'task-created')
 })
 
-test('generation task failure still writes local generated chapter', async () => {
-  const { moduleExports, requestCalls, storage } = loadPage({
+test('generation task create failure enters failed state without writing local success chapter', async () => {
+  const { pageConfig, moduleExports, requestCalls, storage } = loadPage({
     authToken: 'token-task',
   }, (options) => {
     options.success({
@@ -728,12 +826,13 @@ test('generation task failure still writes local generated chapter', async () =>
     diaryDate: '2026-05-21',
     diaryText: 'backend failed',
     pageCount: 2,
-  })
+  }, pageConfig)
 
   assert.equal(requestCalls.length, 1)
-  assert.equal(storage.generatedComicChapters.length, 1)
-  assert.equal(chapter.title, 'fallback chapter')
-  assert.equal(chapter.generationTaskId, undefined)
+  assert.equal(chapter, null)
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters, undefined)
 })
 
 test('generation task metadata does not change reader navigation', async () => {

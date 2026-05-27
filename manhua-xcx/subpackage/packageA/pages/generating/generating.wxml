@@ -1,5 +1,15 @@
 <view class="generating-page polish-page">
-  <view class="stage-card polish-card">
+  <view wx:if="{{generationStatus === 'failed'}}" class="stage-card polish-card generation-failed-card">
+    <view class="polish-card-content">
+      <view class="stage-illustration">
+        <image class="stage-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
+      </view>
+      <view class="stage-title">{{generationFailureTitle}}</view>
+      <view class="failure-message">{{generationFailureMessage}}</view>
+    </view>
+  </view>
+
+  <view wx:else class="stage-card polish-card">
     <view class="polish-card-content">
       <view class="stage-illustration">
         <image class="stage-image" src="/subpackage/icon-home-mascot-star.png" mode="aspectFit" />
@@ -11,7 +21,7 @@
     </view>
   </view>
 
-  <view class="progress-card polish-card">
+  <view wx:if="{{generationStatus !== 'failed'}}" class="progress-card polish-card">
     <view class="polish-card-content">
       <view class="step-track">
         <view wx:for="{{mock.steps}}" wx:key="id" class="track-item {{index <= activeStepIndex ? 'is-active' : ''}}">
@@ -27,7 +37,15 @@
   </view>
 
   <button
-    wx:if="{{canViewChapter}}"
+    wx:if="{{generationStatus === 'failed'}}"
+    class="polish-primary"
+    bindtap="retryGeneration"
+    hover-class="polish-button-hover"
+  >
+    重新生成
+  </button>
+  <button
+    wx:elif="{{canViewChapter}}"
     class="polish-primary"
     bindtap="goChapterDetail"
     hover-class="polish-button-hover"

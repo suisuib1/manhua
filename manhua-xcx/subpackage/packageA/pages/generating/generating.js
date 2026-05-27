@@ -6,6 +6,8 @@ const apiConfig = require('../../../../config/api.config')
 
 const generationTaskPollIntervalMs = 2500
 const generationTaskMaxPollCount = 48
+const generationFailureTitle = '生成失败'
+const generationFailureMessage = '漫画生成超时，请稍后重新生成'
 let generationTaskPollTimer = null
 
 function getDefaultPanelImages() {
@@ -118,6 +120,9 @@ function resetGenerationTaskState(pageContext) {
       generationTaskId: '',
       generationTaskStatus: '',
       generationResult: {},
+      generationStatus: 'generating',
+      generationFailureTitle: '',
+      generationFailureMessage: '',
     })
   }
 }
@@ -156,6 +161,32 @@ function clearGenerationTaskPollTimer() {
   }
 }
 
+function buildFailedGenerationTask(task) {
+  return Object.assign({}, task || {}, {
+    status: 'failed',
+  })
+}
+
+function enterGenerationFailedState(pageContext, task) {
+  clearGenerationTaskPollTimer()
+
+  if (pageContext && typeof pageContext.clearMockTimer === 'function') {
+    pageContext.clearMockTimer()
+  }
+
+  if (pageContext && typeof pageContext.setData === 'function') {
+    pageContext.setData({
+      generationStatus: 'failed',
+      generationFailureTitle,
+      generationFailureMessage,
+      generationTaskStatus: task && task.status ? task.status : 'failed',
+      generationResult: task && task.result ? task.result : {},
+      canViewChapter: false,
+      generatedChapterId: '',
+    })
+  }
+}
+
 function waitForGenerationTaskResult(task, pageContext) {
   if (!task || !task.id) {
     return Promise.resolve(task || null)
@@ -182,7 +213,9 @@ function waitForGenerationTaskResult(task, pageContext) {
 
       if (pollCount > generationTaskMaxPollCount) {
         clearGenerationTaskPollTimer()
-        resolve(latestKnownTask)
+        const failedTask = buildFailedGenerationTask(latestKnownTask)
+        updateGenerationTaskState(pageContext, failedTask)
+        resolve(failedTask)
         return
       }
 
@@ -206,7 +239,9 @@ function waitForGenerationTaskResult(task, pageContext) {
         }
       } catch (error) {
         clearGenerationTaskPollTimer()
-        resolve(latestKnownTask)
+        const failedTask = buildFailedGenerationTask(latestKnownTask)
+        updateGenerationTaskState(pageContext, failedTask)
+        resolve(failedTask)
       }
     }, generationTaskPollIntervalMs)
   })
@@ -240,11 +275,21 @@ async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
 
   try {
     const task = await createBackendTaskForDraft(draft)
+    if (!task) {
+      return finalizeGeneratedChapter(draft)
+    }
+
     updateGenerationTaskState(pageContext, task)
     const readyTask = await waitForGenerationTaskResult(task, pageContext)
+    if (readyTask && readyTask.status === 'failed') {
+      enterGenerationFailedState(pageContext, readyTask)
+      return null
+    }
+
     return finalizeGeneratedChapter(draft, readyTask)
   } catch (error) {
-    return finalizeGeneratedChapter(draft)
+    enterGenerationFailedState(pageContext)
+    return null
   }
 }
 
@@ -261,6 +306,9 @@ Page({
     generationTaskId: '',
     generationTaskStatus: '',
     generationResult: {},
+    generationStatus: 'generating',
+    generationFailureTitle: '',
+    generationFailureMessage: '',
   },
 
   onLoad() {
@@ -293,9 +341,11 @@ Page({
 
       if (nextProgress >= 100) {
         finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft, this).then((generatedChapter) => {
-          this.setData({
-            generatedChapterId: generatedChapter.id,
-          })
+          if (generatedChapter && generatedChapter.id) {
+            this.setData({
+              generatedChapterId: generatedChapter.id,
+            })
+          }
         })
         this.clearMockTimer()
       }
@@ -321,6 +371,24 @@ Page({
       icon: 'none',
     })
   },
+
+  retryGeneration() {
+    clearGenerationTaskPollTimer()
+    this.clearMockTimer()
+    this.setData({
+      progress: generatingMock.progressStart,
+      activeStepIndex: 0,
+      canViewChapter: false,
+      generatedChapterId: '',
+      generationTaskId: '',
+      generationTaskStatus: '',
+      generationResult: {},
+      generationStatus: 'generating',
+      generationFailureTitle: '',
+      generationFailureMessage: '',
+    })
+    this.startMockProgress()
+  },
 })
 
 module.exports = {
@@ -337,6 +405,9 @@ module.exports = {
   injectFirstGeneratedImage,
   waitForGenerationTaskResult,
   clearGenerationTaskPollTimer,
+  enterGenerationFailedState,
   generationTaskPollIntervalMs,
   generationTaskMaxPollCount,
+  generationFailureTitle,
+  generationFailureMessage,
 }
