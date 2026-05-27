@@ -71,6 +71,63 @@ function buildReaderChapterFromRecent(chapter) {
   })
 }
 
+function getChapterMergeKey(chapter) {
+  if (!chapter) {
+    return ''
+  }
+
+  if (chapter.generationTaskId) {
+    return `task:${chapter.generationTaskId}`
+  }
+
+  const diaryEntryId = chapter.diaryEntryId || chapter.serverDiaryEntryId
+  if (diaryEntryId) {
+    return `diary:${diaryEntryId}`
+  }
+
+  return chapter.id ? `id:${chapter.id}` : ''
+}
+
+function getLocalPendingRecentChapters() {
+  const chapters = wx.getStorageSync(storageKeys.generatedComicChapters) || []
+  return chapters.filter((chapter) => {
+    const status = chapter && (chapter.status || chapter.generationTaskStatus)
+    return isTaskInProgress(status) || status === chapterStatuses.failed
+  })
+}
+
+function mergeRecentChapters(primaryChapters, localPendingChapters) {
+  const merged = []
+
+  function mergeChapter(chapter, replaceExisting) {
+    const normalized = normalizeRecentChapter(chapter)
+    const key = getChapterMergeKey(normalized)
+    if (!key) {
+      return
+    }
+
+    const existingIndex = merged.findIndex((item) => getChapterMergeKey(item) === key)
+    if (existingIndex >= 0) {
+      if (replaceExisting) {
+        merged[existingIndex] = normalized
+      }
+      return
+    }
+
+    merged.push(normalized)
+  }
+
+  ;(localPendingChapters || []).forEach((chapter) => {
+    mergeChapter(chapter, false)
+  })
+
+  ;(primaryChapters || []).forEach((chapter) => {
+    mergeChapter(chapter, true)
+  })
+
+  return merged
+}
+
 function upsertReaderChapter(chapter) {
   if (!chapter || !chapter.id) {
     return
@@ -200,10 +257,11 @@ Page({
     try {
       const data = await getRecentComicChapters({ limit: 5 })
       const items = data && Array.isArray(data.items) ? data.items : []
+      const recentChapters = mergeRecentChapters(items, getLocalPendingRecentChapters())
 
       this.setData({
-        recentChapters: items.map(normalizeRecentChapter),
-        isRecentChaptersEmpty: items.length === 0,
+        recentChapters,
+        isRecentChaptersEmpty: recentChapters.length === 0,
       })
 
       return data
@@ -326,4 +384,7 @@ module.exports = {
   normalizeImageUrl,
   isTaskInProgress,
   getTaskImageUrl,
+  getChapterMergeKey,
+  getLocalPendingRecentChapters,
+  mergeRecentChapters,
 }

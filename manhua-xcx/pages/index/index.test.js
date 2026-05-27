@@ -364,6 +364,163 @@ test('home uses backend recent chapters when items are returned', async () => {
   assert.equal(pageConfig.data.recentChapters[0].pageCountText, '2 页')
 })
 
+test('home merges local pending chapter without overwriting completed recent titles', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-recent',
+    generatedComicChapters: [{
+      id: 'pending_task-third',
+      diaryEntryId: 'entry-third',
+      serverDiaryEntryId: 'entry-third',
+      generationTaskId: 'task-third',
+      title: '第三个漫画',
+      status: 'processing',
+      generationTaskStatus: 'processing',
+      pageCount: 1,
+      images: [],
+      pages: [],
+    }],
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'entry-first',
+              diaryEntryId: 'entry-first',
+              generationTaskId: 'task-first',
+              title: '第一个漫画',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/first.png',
+            },
+            {
+              id: 'entry-second',
+              diaryEntryId: 'entry-second',
+              generationTaskId: 'task-second',
+              title: '第二个漫画',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/second.png',
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  assert.equal(pageConfig.data.recentChapters.length, 3)
+  assert.equal(pageConfig.data.recentChapters[0].title, '第三个漫画')
+  assert.equal(pageConfig.data.recentChapters[0].generationTaskId, 'task-third')
+  assert.equal(pageConfig.data.recentChapters[1].title, '第一个漫画')
+  assert.equal(pageConfig.data.recentChapters[1].imageUrl, 'http://127.0.0.1:3000/uploads/generated/first.png')
+  assert.equal(pageConfig.data.recentChapters[2].title, '第二个漫画')
+  assert.equal(pageConfig.data.recentChapters[2].coverImageUrl, 'http://127.0.0.1:3000/uploads/generated/second.png')
+})
+
+test('home replaces local pending chapter when backend returns the same completed task', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-recent',
+    generatedComicChapters: [{
+      id: 'pending_task-done',
+      diaryEntryId: 'entry-done',
+      generationTaskId: 'task-done',
+      title: '生成中的标题',
+      status: 'processing',
+      generationTaskStatus: 'processing',
+    }],
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [{
+            id: 'entry-done',
+            diaryEntryId: 'entry-done',
+            generationTaskId: 'task-done',
+            title: '已完成标题',
+            status: 'completed',
+            pageCount: 1,
+            coverImageUrl: '/uploads/generated/done.png',
+          }],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  assert.equal(pageConfig.data.recentChapters.length, 1)
+  assert.equal(pageConfig.data.recentChapters[0].title, '已完成标题')
+  assert.equal(pageConfig.data.recentChapters[0].status, 'completed')
+  assert.equal(pageConfig.data.recentChapters[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/done.png')
+})
+
+test('clicking merged local pending chapter navigates to generation status page', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-recent',
+    generatedComicChapters: [{
+      id: 'pending_task-third',
+      diaryEntryId: 'entry-third',
+      serverDiaryEntryId: 'entry-third',
+      generationTaskId: 'task-third',
+      title: '第三个漫画',
+      status: 'processing',
+      generationTaskStatus: 'processing',
+      pageCount: 1,
+    }],
+  }, (options) => {
+    if (options.url.includes('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [],
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-third',
+          status: 'processing',
+          diaryEntryId: 'entry-third',
+          result: {},
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'pending_task-third',
+      },
+    },
+  })
+
+  assert.equal(storage.draftComicChapter.chapterTitle, '第三个漫画')
+  assert.equal(storage.draftComicChapter.generationTaskId, 'task-third')
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/generating/generating?taskId=task-third&taskStatus=processing',
+  })
+})
+
 test('home normalizes recent generated cover image into reader fields', async () => {
   const { pageConfig } = loadPage({
     authToken: 'token-recent',

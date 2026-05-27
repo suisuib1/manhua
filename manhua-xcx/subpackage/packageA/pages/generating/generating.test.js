@@ -150,6 +150,54 @@ test('later button does not write fake completed chapter', () => {
   assert.deepEqual(storage.generatedComicChapters, [])
 })
 
+test('later button saves pending chapter without overwriting existing completed chapters', () => {
+  const { pageConfig, storage } = loadPage({
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-third',
+      chapterTitle: '第三个漫画',
+      pageCount: 1,
+    },
+    generatedComicChapters: [
+      {
+        id: 'chapter-old-1',
+        title: '第一个漫画',
+        status: 'completed',
+        generationTaskId: 'task-old-1',
+        imageUrl: 'http://127.0.0.1:3000/uploads/generated/old-1.png',
+        coverImageUrl: 'http://127.0.0.1:3000/uploads/generated/old-1.png',
+      },
+      {
+        id: 'chapter-old-2',
+        title: '第二个漫画',
+        status: 'completed',
+        generationTaskId: 'task-old-2',
+        imageUrl: 'http://127.0.0.1:3000/uploads/generated/old-2.png',
+        coverImageUrl: 'http://127.0.0.1:3000/uploads/generated/old-2.png',
+      },
+    ],
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-third',
+    taskStatus: 'processing',
+  })
+  pageConfig.setData({
+    generationTaskId: 'task-third',
+    generationTaskStatus: 'processing',
+    generationResult: {},
+  })
+  pageConfig.goHome()
+
+  assert.equal(storage.generatedComicChapters.length, 3)
+  assert.equal(storage.generatedComicChapters[0].id, 'pending_task-third')
+  assert.equal(storage.generatedComicChapters[0].title, '第三个漫画')
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-third')
+  assert.equal(storage.generatedComicChapters[1].title, '第一个漫画')
+  assert.equal(storage.generatedComicChapters[1].imageUrl, 'http://127.0.0.1:3000/uploads/generated/old-1.png')
+  assert.equal(storage.generatedComicChapters[2].title, '第二个漫画')
+  assert.equal(storage.generatedComicChapters[2].coverImageUrl, 'http://127.0.0.1:3000/uploads/generated/old-2.png')
+})
+
 test('loading failed task status shows retry state instead of later button state', async () => {
   const { pageConfig, requestCalls } = loadPage({
     authToken: 'token-task',
@@ -298,7 +346,10 @@ test('processing progress is capped below complete before backend image is ready
   assert.equal(pageConfig.data.generationStatus, 'processing')
   assert.ok(pageConfig.data.progress <= 90)
   assert.notEqual(pageConfig.data.progress, 100)
-  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].title, 'processing progress')
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-processing-progress')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, undefined)
 })
 
 test('loading completed task overrides stale failed state and writes real image', async () => {
@@ -805,7 +856,10 @@ test('failed polled generation task enters failed state without writing local su
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
   assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
-  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-failed')
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, undefined)
   assert.equal(navigateCalls.length, 0)
 })
 
@@ -847,7 +901,10 @@ test('polling get failure enters failed state without writing local success chap
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
   assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
-  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-get-fail')
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, undefined)
 })
 
 test('retry generation creates a new backend task after failed state', async () => {
@@ -891,7 +948,10 @@ test('retry generation creates a new backend task after failed state', async () 
   assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks')
   assert.equal(requestCalls[1].data.diaryEntryId, 'entry-retry')
   assert.equal(pageConfig.data.generationStatus, 'failed')
-  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].diaryEntryId, 'entry-retry')
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-retry-3')
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'failed')
 })
 
 test('polling max count uses final completed task result before showing fallback state', async () => {

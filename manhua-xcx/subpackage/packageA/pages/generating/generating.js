@@ -105,6 +105,49 @@ function saveGeneratedChapters(chapters) {
   wx.setStorageSync(storageKeys.generatedComicChapters, chapters)
 }
 
+function getChapterDiaryEntryId(chapter) {
+  return chapter && (chapter.diaryEntryId || chapter.serverDiaryEntryId)
+}
+
+function isSameGeneratedChapter(left, right) {
+  if (!left || !right) {
+    return false
+  }
+
+  if (left.generationTaskId && right.generationTaskId) {
+    if (left.generationTaskId === right.generationTaskId) {
+      return true
+    }
+  }
+
+  const leftDiaryEntryId = getChapterDiaryEntryId(left)
+  const rightDiaryEntryId = getChapterDiaryEntryId(right)
+  if (leftDiaryEntryId && rightDiaryEntryId) {
+    return leftDiaryEntryId === rightDiaryEntryId
+  }
+
+  return Boolean(left.id && right.id && left.id === right.id)
+}
+
+function upsertGeneratedChapter(chapter) {
+  if (!chapter || !chapter.id) {
+    return loadGeneratedChapters()
+  }
+
+  const chapters = loadGeneratedChapters()
+  const existingIndex = chapters.findIndex((item) => isSameGeneratedChapter(item, chapter))
+  if (existingIndex < 0) {
+    const nextChapters = [chapter].concat(chapters)
+    saveGeneratedChapters(nextChapters)
+    return nextChapters
+  }
+
+  const nextChapters = chapters.slice()
+  nextChapters[existingIndex] = Object.assign({}, chapters[existingIndex], chapter)
+  saveGeneratedChapters(nextChapters)
+  return nextChapters
+}
+
 function loadPendingDraft() {
   return wx.getStorageSync(storageKeys.draftComicChapter) || null
 }
@@ -133,6 +176,42 @@ function buildGenerationTaskMetadata(task) {
     serverDiaryEntryId: task.diaryEntryId,
     generationResult: task.result || {},
   }
+}
+
+function buildPendingGeneratedChapter(draft, task) {
+  const taskId = (task && task.id) || (draft && draft.generationTaskId)
+  const diaryEntryId = (task && task.diaryEntryId) || (draft && (draft.serverDiaryEntryId || draft.diaryEntryId))
+
+  if (!taskId && !diaryEntryId) {
+    return null
+  }
+
+  return {
+    id: taskId ? `pending_${taskId}` : `pending_${diaryEntryId}`,
+    diaryEntryId,
+    serverDiaryEntryId: diaryEntryId,
+    generationTaskId: taskId,
+    generationTaskStatus: (task && task.status) || (draft && draft.generationTaskStatus) || 'processing',
+    generationResult: (task && task.result) || (draft && draft.generationResult) || {},
+    status: (task && task.status) || (draft && draft.generationTaskStatus) || 'processing',
+    title: (draft && (draft.chapterTitle || draft.title)) || generatingMock.chapterTitle,
+    date: draft && draft.diaryDate ? draft.diaryDate : '',
+    pageCount: Math.max(1, Number(draft && draft.pageCount ? draft.pageCount : 1)),
+    diaryText: draft && draft.diaryText ? draft.diaryText : '',
+    summary: draft && draft.diaryText ? draft.diaryText.slice(0, 24) : '',
+    images: [],
+    pages: [],
+  }
+}
+
+function savePendingGeneratedChapter(draft, task) {
+  const pendingChapter = buildPendingGeneratedChapter(draft, task)
+  if (!pendingChapter) {
+    return null
+  }
+
+  upsertGeneratedChapter(pendingChapter)
+  return pendingChapter
 }
 
 function getFirstGenerationImageUrl(task) {
@@ -216,6 +295,9 @@ function updateGenerationTaskState(pageContext, task) {
   pageContext.setData(patch)
 
   savePendingDraftWithTask(pageContext.data && pageContext.data.pendingDraft, task)
+  if (isGenerationTaskProcessing(task.status) || isGenerationTaskFailed(task.status)) {
+    savePendingGeneratedChapter(pageContext.data && pageContext.data.pendingDraft, task)
+  }
 }
 
 function finalizeGeneratedChapter(draft, task) {
@@ -226,9 +308,7 @@ function finalizeGeneratedChapter(draft, task) {
     ),
     getFirstGenerationImageUrl(task)
   )
-  const generatedChapters = [generatedChapter].concat(loadGeneratedChapters())
-
-  saveGeneratedChapters(generatedChapters)
+  upsertGeneratedChapter(generatedChapter)
 
   return generatedChapter
 }
@@ -287,6 +367,8 @@ function enterGenerationFailedState(pageContext, task) {
       generatedChapterId: '',
     })
   }
+
+  savePendingGeneratedChapter(pageContext && pageContext.data && pageContext.data.pendingDraft, task)
 }
 
 function waitForGenerationTaskResult(task, pageContext) {
@@ -522,6 +604,13 @@ Page({
   },
 
   goHome() {
+    savePendingGeneratedChapter(this.data.pendingDraft, {
+      id: this.data.generationTaskId,
+      status: this.data.generationTaskStatus || 'processing',
+      diaryEntryId: this.data.pendingDraft && (this.data.pendingDraft.serverDiaryEntryId || this.data.pendingDraft.diaryEntryId),
+      result: this.data.generationResult || {},
+    })
+
     wx.switchTab({
       url: pageRoutes.home,
     })
@@ -586,6 +675,10 @@ module.exports = {
   saveGeneratedChapters,
   loadPendingDraft,
   savePendingDraftWithTask,
+  buildPendingGeneratedChapter,
+  savePendingGeneratedChapter,
+  upsertGeneratedChapter,
+  isSameGeneratedChapter,
   getDefaultPanelImages,
   buildGenerationTaskMetadata,
   getFirstGenerationImageUrl,
