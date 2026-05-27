@@ -1,0 +1,225 @@
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const test = require('node:test')
+
+function loadPage(storage = {}, requestImpl = null) {
+  let pageConfig
+  const toastCalls = []
+  const modalCalls = []
+  const navigateCalls = []
+  const requestCalls = []
+
+  global.Page = (config) => {
+    pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
+  }
+
+  global.wx = {
+    getStorageSync(key) {
+      return storage[key]
+    },
+    setStorageSync(key, value) {
+      storage[key] = value
+    },
+    removeStorageSync(key) {
+      delete storage[key]
+    },
+    showToast(options) {
+      toastCalls.push(options)
+    },
+    showModal(options) {
+      modalCalls.push(options)
+      if (options.success) {
+        options.success({ confirm: true, cancel: false })
+      }
+    },
+    navigateTo(options) {
+      navigateCalls.push(options)
+    },
+    request(options) {
+      requestCalls.push(options)
+      if (requestImpl) {
+        requestImpl(options)
+        return
+      }
+
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {},
+        },
+      })
+    },
+  }
+
+  delete require.cache[require.resolve('../../../../utils/api')]
+  delete require.cache[require.resolve('../../../../utils/auth')]
+  delete require.cache[require.resolve('./settings')]
+  require('./settings')
+
+  return { pageConfig, storage, toastCalls, modalCalls, navigateCalls, requestCalls }
+}
+
+test('首次打开设置页只请求一次后端设置', async () => {
+  const storage = {
+    authToken: 'token-settings',
+    currentUser: { id: 'user-settings' },
+  }
+  const { pageConfig, requestCalls } = loadPage(storage)
+
+  const loadPromise = pageConfig.onLoad()
+  const showPromise = pageConfig.onShow()
+
+  await Promise.all([loadPromise, showPromise])
+
+  const settingsRequests = requestCalls.filter((options) => options.url.endsWith('/api/users/me/settings'))
+
+  assert.equal(settingsRequests.length, 1)
+})
+
+test('settings 正在加载时再次触发不会重复请求', async () => {
+  const storage = {
+    authToken: 'token-settings',
+    currentUser: { id: 'user-settings' },
+  }
+  let resolveRequest
+  const pendingRequest = new Promise((resolve) => {
+    resolveRequest = resolve
+  })
+  const { pageConfig, requestCalls } = loadPage(storage, async (options) => {
+    await pendingRequest
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {},
+      },
+    })
+  })
+
+  const firstLoad = pageConfig.loadSettings()
+  const secondLoad = pageConfig.loadSettings()
+
+  assert.equal(requestCalls.filter((options) => options.url.endsWith('/api/users/me/settings')).length, 1)
+
+  resolveRequest()
+  await Promise.all([firstLoad, secondLoad])
+})
+
+test('设置页 wxml 使用单表单结构，并保留偏好、隐私、提醒、关于和退出登录', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'settings.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('account-card'), false)
+  assert.equal(wxml.includes('settings-header'), false)
+  assert.equal(wxml.includes('settings-section'), false)
+  assert.equal(wxml.includes('settings-section-title'), false)
+  assert.equal(wxml.includes('section-dot'), false)
+  assert.equal(wxml.includes('settings-list'), false)
+  assert.equal(wxml.includes('settings-form'), true)
+  assert.equal(wxml.includes('setting-row'), true)
+  assert.equal(wxml.includes('settings-card'), false)
+  assert.equal(wxml.includes('polish-card'), false)
+  assert.equal(wxml.includes('draftComicChapter'), false)
+  assert.equal(wxml.includes('generatedComicChapters'), false)
+  assert.equal(wxml.includes('个人资料'), true)
+  assert.equal(wxml.includes('autoSaveDraft'), true)
+  assert.equal(wxml.includes('keepPhotoMood'), true)
+  assert.equal(wxml.includes('privateMode'), true)
+  assert.equal(wxml.includes('diaryReminder'), true)
+  assert.equal(wxml.includes('generationReminder'), true)
+  assert.equal(wxml.includes('logout-button'), true)
+})
+
+test('个人资料入口会进入个人资料页', () => {
+  const { pageConfig, navigateCalls } = loadPage()
+
+  pageConfig.openProfile()
+
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/profile/profile',
+  })
+})
+
+test('设置页默认从本地缓存读取默认值', () => {
+  const { pageConfig } = loadPage()
+
+  pageConfig.onLoad()
+
+  assert.deepEqual(pageConfig.data.settings, {
+    autoSaveDraft: true,
+    keepPhotoMood: true,
+    privateMode: true,
+    diaryReminder: false,
+    generationReminder: true,
+  })
+})
+
+test('切换设置会立即保存到 comicAppSettings', () => {
+  const { pageConfig, storage } = loadPage()
+
+  pageConfig.onLoad()
+  pageConfig.handleToggleChange({
+    currentTarget: { dataset: { key: 'autoSaveDraft' } },
+    detail: { value: false },
+  })
+
+  assert.equal(storage.comicAppSettings.autoSaveDraft, false)
+  assert.equal(storage.comicAppSettings.keepPhotoMood, true)
+})
+
+test('清理草稿和生成缓存只删除指定 storage key', () => {
+  const storage = {
+    draftComicChapter: { id: 'draft-1' },
+    generatedComicChapters: [{ id: 'chapter-1' }],
+    token: 'keep-me',
+  }
+  const { pageConfig } = loadPage(storage)
+
+  pageConfig.clearDraftCache()
+  assert.equal(storage.draftComicChapter, undefined)
+  assert.deepEqual(storage.generatedComicChapters, [{ id: 'chapter-1' }])
+  assert.equal(storage.token, 'keep-me')
+
+  pageConfig.clearGeneratedCache()
+  assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.token, 'keep-me')
+})
+
+test('帮助入口保留提示，退出登录只清理登录态', () => {
+  const storage = {
+    authToken: 'token-keep',
+    currentUser: { id: 'user-keep' },
+    draftComicChapter: { id: 'draft-1' },
+    generatedComicChapters: [{ id: 'chapter-1' }],
+    comicAppSettings: { privateMode: true },
+  }
+  const { pageConfig, toastCalls } = loadPage(storage)
+
+  pageConfig.handleHelpTap({ currentTarget: { dataset: { action: 'faq' } } })
+  pageConfig.handleHelpTap({ currentTarget: { dataset: { action: 'version' } } })
+  pageConfig.handleLogoutTap()
+
+  assert.deepEqual(toastCalls[0], {
+    title: '功能后续接入',
+    icon: 'none',
+  })
+  assert.deepEqual(toastCalls[1], {
+    title: '当前版本 v1.0.0',
+    icon: 'none',
+  })
+  assert.deepEqual(toastCalls[2], {
+    title: '已退出登录',
+    icon: 'none',
+  })
+  assert.equal(storage.authToken, undefined)
+  assert.equal(storage.currentUser, undefined)
+  assert.deepEqual(storage.draftComicChapter, { id: 'draft-1' })
+  assert.deepEqual(storage.generatedComicChapters, [{ id: 'chapter-1' }])
+  assert.deepEqual(storage.comicAppSettings, { privateMode: true })
+})

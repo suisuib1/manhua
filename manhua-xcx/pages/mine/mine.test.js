@@ -161,7 +161,7 @@ test('点击漫画书进入独立漫画书页面', () => {
   pageConfig.openComicBook()
 
   assert.deepEqual(navigateOptions, {
-    url: '/pages/comic-book/comic-book',
+    url: '/subpackage/packageA/pages/comic-book/comic-book',
   })
 })
 
@@ -308,8 +308,8 @@ test('点击说明和设置菜单进入对应页面', () => {
   pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'settings', title: '设置' } } })
 
   assert.deepEqual(navigateCalls, [
-    { url: '/pages/privacy/privacy' },
-    { url: '/pages/about/about' },
-    { url: '/pages/settings/settings' },
+    { url: '/subpackage/packageA/pages/privacy/privacy' },
+    { url: '/subpackage/packageA/pages/about/about' },
+    { url: '/subpackage/packageA/pages/settings/settings' },
   ])
 })

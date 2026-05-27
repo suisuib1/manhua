@@ -2,20 +2,27 @@
   "pages": [
     "pages/index/index",
     "pages/create/create",
-    "pages/diary/diary",
-    "pages/character/character",
-    "pages/generating/generating",
-    "pages/chapter-detail/chapter-detail",
-    "pages/comic-book/comic-book",
-    "pages/chapter-list/chapter-list",
-    "pages/continuous-chapter/continuous-chapter",
-    "pages/share/share",
-    "pages/mine/mine",
-    "pages/quota-empty/quota-empty",
-    "pages/privacy/privacy",
-    "pages/about/about",
-    "pages/profile/profile",
-    "pages/settings/settings"
+    "pages/mine/mine"
+  ],
+  "subpackages": [
+    {
+      "root": "subpackage/packageA",
+      "pages": [
+        "pages/diary/diary",
+        "pages/character/character",
+        "pages/generating/generating",
+        "pages/chapter-detail/chapter-detail",
+        "pages/comic-book/comic-book",
+        "pages/chapter-list/chapter-list",
+        "pages/continuous-chapter/continuous-chapter",
+        "pages/share/share",
+        "pages/quota-empty/quota-empty",
+        "pages/privacy/privacy",
+        "pages/about/about",
+        "pages/profile/profile",
+        "pages/settings/settings"
+      ]
+    }
   ],
   "window": {
     "navigationBarTextStyle": "black",

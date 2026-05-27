@@ -80,7 +80,7 @@ test('authenticated character and mine entries keep original navigation behavior
   pageConfig.goMine()
 
   assert.deepEqual(navigateCalls[0], {
-    url: '/pages/character/character',
+    url: '/subpackage/packageA/pages/character/character',
   })
   assert.deepEqual(switchTabCalls[0], {
     url: '/pages/mine/mine',
@@ -226,7 +226,7 @@ test('首页最近章节进入漫画书阅读器而不是旧章节详情', () =>
   })
 
   assert.deepEqual(navigateCalls[0], {
-    url: '/pages/continuous-chapter/continuous-chapter?chapterId=chapter-002',
+    url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=chapter-002',
   })
 })
 
@@ -449,7 +449,7 @@ test('clicking recent chapter caches reader chapter before navigating', async ()
   assert.deepEqual(cachedChapter.images, [imageUrl])
   assert.equal(cachedChapter.pages[0].images[0], imageUrl)
   assert.deepEqual(navigateCalls[0], {
-    url: '/pages/continuous-chapter/continuous-chapter?chapterId=cmpnhaac5000aqwkww3oozxlg',
+    url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=cmpnhaac5000aqwkww3oozxlg',
   })
 })
 

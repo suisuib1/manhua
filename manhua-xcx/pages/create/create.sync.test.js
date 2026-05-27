@@ -215,7 +215,7 @@ test('创建页未登录时继续只保存本地草稿并跳转日记页', () =>
 
   assert.equal(requestCalls.length, 0)
   assert.equal(storage.draftComicChapter.chapterTitle, pageConfig.data.draftChapterTitle)
-  assert.equal(navigateCalls[0].url.startsWith('/pages/diary/diary?draft='), true)
+  assert.equal(navigateCalls[0].url.startsWith('/subpackage/packageA/pages/diary/diary?draft='), true)
 })
 
 test('创建页已登录时保存草稿会尝试创建后端草稿', async () => {
@@ -272,7 +272,7 @@ test('selected date is saved into local draft and diary page query', () => {
   assert.equal(pageConfig.data.diaryDateLabel, '2026-05-21')
   assert.equal(storage.draftComicChapter.diaryDate, '2026-05-21')
   assert.equal(draftFromUrl.diaryDate, '2026-05-21')
-  assert.equal(navigateCalls[0].url.startsWith('/pages/diary/diary?draft='), true)
+  assert.equal(navigateCalls[0].url.startsWith('/subpackage/packageA/pages/diary/diary?draft='), true)
 })
 
 test('page count input saves manual values from 1 to 4', () => {
