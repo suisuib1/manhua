@@ -132,6 +132,70 @@ test('later button switches back to home tab', () => {
   })
 })
 
+test('loading failed task status shows retry state instead of later button state', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-failed-load',
+          status: 'failed',
+          diaryEntryId: 'entry-failed-load',
+          result: {},
+          errorMessage: 'OpenAI image generation timed out',
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-failed-load',
+    taskStatus: 'processing',
+  })
+  await flushAsyncWork()
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks/task-failed-load')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
+  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
+  assert.equal(pageConfig.data.canViewChapter, false)
+})
+
+test('loading processing task status keeps later button state', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-processing-load',
+          status: 'processing',
+          diaryEntryId: 'entry-processing-load',
+          result: {},
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-processing-load',
+    taskStatus: 'processing',
+  })
+  await flushAsyncWork()
+
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationTitle, '正在生成中')
+  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(pageConfig.data.canViewChapter, false)
+})
+
 test('有草稿时能构造生成章节', () => {
   const { moduleExports } = loadPage()
 
@@ -587,7 +651,7 @@ test('failed polled generation task enters failed state without writing local su
   assert.equal(chapter, null)
   assert.equal(pageConfig.data.generationStatus, 'failed')
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
-  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请稍后重新生成')
+  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters, undefined)
   assert.equal(navigateCalls.length, 0)
@@ -711,6 +775,9 @@ test('polling max count resolves failed task state instead of local success fall
 
   assert.equal(task.status, 'failed')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  moduleExports.enterGenerationFailedState(pageConfig, task)
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
   assert.equal(pollTimer.cleared, true)
 })
 

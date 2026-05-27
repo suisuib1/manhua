@@ -7,9 +7,17 @@ const apiConfig = require('../../../../config/api.config')
 const generationTaskPollIntervalMs = 2500
 const generationTaskMaxPollCount = 48
 const generationFailureTitle = '生成失败'
-const generationFailureMessage = '漫画生成超时，请稍后重新生成'
+const generationFailureMessage = '漫画生成超时，请重新生成'
 const generationProcessingTitle = '正在生成中'
 let generationTaskPollTimer = null
+
+function isGenerationTaskFailed(status) {
+  return status === 'failed'
+}
+
+function isGenerationTaskProcessing(status) {
+  return status === 'pending' || status === 'processing'
+}
 
 function getDefaultPanelImages() {
   return [
@@ -216,7 +224,7 @@ function waitForGenerationTaskResult(task, pageContext) {
     return Promise.resolve(task)
   }
 
-  if (task.status === 'failed') {
+  if (isGenerationTaskFailed(task.status)) {
     return Promise.resolve(task)
   }
 
@@ -251,7 +259,7 @@ function waitForGenerationTaskResult(task, pageContext) {
           return
         }
 
-        if (latestTask.status === 'failed') {
+        if (isGenerationTaskFailed(latestTask.status)) {
           clearGenerationTaskPollTimer()
           resolve(latestTask)
         }
@@ -342,12 +350,13 @@ Page({
       this.setData({
         generationTaskId: options.taskId,
         generationTaskStatus: taskStatus,
-        generationStatus: taskStatus === 'failed' ? 'failed' : 'processing',
+        generationStatus: isGenerationTaskFailed(taskStatus) ? 'failed' : 'processing',
         generationTitle: generationProcessingTitle,
-        generationFailureTitle: taskStatus === 'failed' ? generationFailureTitle : '',
-        generationFailureMessage: taskStatus === 'failed' ? generationFailureMessage : '',
+        generationFailureTitle: isGenerationTaskFailed(taskStatus) ? generationFailureTitle : '',
+        generationFailureMessage: isGenerationTaskFailed(taskStatus) ? generationFailureMessage : '',
         canViewChapter: false,
       })
+      this.syncLoadedGenerationTask(options.taskId)
       return
     }
 
@@ -409,6 +418,40 @@ Page({
     })
   },
 
+  async syncLoadedGenerationTask(taskId) {
+    try {
+      const task = await getGenerationTask(taskId)
+      updateGenerationTaskState(this, task)
+
+      if (task && isGenerationTaskFailed(task.status)) {
+        enterGenerationFailedState(this, task)
+        return
+      }
+
+      if (task && task.status === 'completed' && getFirstGenerationImageUrl(task)) {
+        const generatedChapter = finalizeGeneratedChapter(this.data.pendingDraft, task)
+        this.setData({
+          generatedChapterId: generatedChapter.id,
+          generationStatus: 'completed',
+          canViewChapter: true,
+        })
+        return
+      }
+
+      if (task && isGenerationTaskProcessing(task.status)) {
+        this.setData({
+          generationStatus: 'processing',
+          generationTitle: generationProcessingTitle,
+          generationFailureTitle: '',
+          generationFailureMessage: '',
+          canViewChapter: false,
+        })
+      }
+    } catch (error) {
+      return null
+    }
+  },
+
   retryGeneration() {
     clearGenerationTaskPollTimer()
     this.clearMockTimer()
@@ -450,4 +493,6 @@ module.exports = {
   generationFailureTitle,
   generationFailureMessage,
   generationProcessingTitle,
+  isGenerationTaskFailed,
+  isGenerationTaskProcessing,
 }
