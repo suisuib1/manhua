@@ -140,6 +140,20 @@ test('confirming login uses existing auth flow and refreshes recent chapters', a
   assert.equal(requestCalls.some((options) => options.url.endsWith('/api/comic-chapters/recent')), true)
 })
 
+test('confirming login shows simplified network error when request fails', async () => {
+  const { pageConfig, toastCalls, storage } = loadPage({}, (options) => {
+    options.fail({})
+  })
+
+  pageConfig.goCreateChapter()
+  await pageConfig.confirmLogin()
+
+  assert.equal(toastCalls[0].title, '网络连接失败，请检查服务是否已启动')
+  assert.equal(toastCalls[0].icon, 'none')
+  assert.equal(pageConfig.data.showLoginModal, true)
+  assert.equal(storage.authToken, undefined)
+})
+
 function loadPage(storageSeed = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []

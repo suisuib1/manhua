@@ -227,6 +227,48 @@ test('未登录点击顶部用户卡片会触发登录', async () => {
   assert.equal(navigateOptions, undefined)
 })
 
+test('登录接口请求失败时提示简体网络错误', async () => {
+  let pageConfig
+  const storage = {}
+  const toastCalls = []
+
+  global.Page = (config) => {
+    pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
+  }
+
+  global.wx = {
+    getStorageSync(key) {
+      return storage[key]
+    },
+    setStorageSync(key, value) {
+      storage[key] = value
+    },
+    login(options) {
+      options.success({ code: 'test_login_fail_code' })
+    },
+    request(options) {
+      options.fail({})
+    },
+    showToast(options) {
+      toastCalls.push(options)
+    },
+  }
+
+  delete require.cache[require.resolve('../../utils/api')]
+  delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('./mine')]
+  require('./mine')
+
+  await pageConfig.handleUserInfoTap()
+
+  assert.equal(toastCalls[0].title, '网络连接失败，请检查服务是否已启动')
+  assert.equal(toastCalls[0].icon, 'none')
+  assert.equal(storage.authToken, undefined)
+})
+
 test('个人中心不内嵌章节选择列表', () => {
   const wxml = fs.readFileSync(path.join(__dirname, 'mine.wxml'), 'utf8')
 

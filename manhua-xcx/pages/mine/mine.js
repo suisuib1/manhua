@@ -74,8 +74,12 @@ Page({
       const user = await loginWithWechat({})
       this.applyUser(user)
     } catch (error) {
+      const title = error && error.statusCode === 0 && error.message
+        ? error.message
+        : '登录失败，请稍后重试'
+
       wx.showToast({
-        title: '登录失败，请稍后重试',
+        title,
         icon: 'none',
       })
     }

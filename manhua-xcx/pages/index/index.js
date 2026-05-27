@@ -130,8 +130,12 @@ Page({
       })
       await this.loadRecentChapters()
     } catch (error) {
+      const title = error && error.statusCode === 0 && error.message
+        ? error.message
+        : '登录失败，请稍后重试'
+
       wx.showToast({
-        title: '鐧诲綍澶辫触锛岃绋嶅悗閲嶈瘯',
+        title,
         icon: 'none',
       })
     }

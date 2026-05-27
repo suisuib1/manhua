@@ -59,3 +59,18 @@ test('request rejects backend non-zero code', async () => {
     /bad request/
   )
 })
+
+test('request rejects network failure with simplified Chinese message', async () => {
+  const { request } = loadApi({}, (options) => {
+    options.fail({})
+  })
+
+  await assert.rejects(
+    request({
+      url: '/api/auth/wechat/login',
+      method: 'POST',
+      data: { code: 'login_code' },
+    }),
+    /网络连接失败，请检查服务是否已启动/
+  )
+})

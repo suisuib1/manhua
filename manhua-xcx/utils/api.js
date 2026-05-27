@@ -44,8 +44,8 @@ function request(options) {
 
         reject(buildError(body.message, body.code || res.statusCode, res.statusCode))
       },
-      fail(error) {
-        reject(buildError(error && error.errMsg ? error.errMsg : '网络请求失败', -1, 0))
+      fail() {
+        reject(buildError('网络连接失败，请检查服务是否已启动', -1, 0))
       },
     })
   })
