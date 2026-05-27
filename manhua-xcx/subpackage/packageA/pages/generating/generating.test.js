@@ -132,6 +132,24 @@ test('later button switches back to home tab', () => {
   })
 })
 
+test('later button does not write fake completed chapter', () => {
+  const { pageConfig, switchTabCalls, storage } = loadPage({
+    generatedComicChapters: [],
+  })
+
+  pageConfig.setData({
+    generationStatus: 'processing',
+    generationTaskStatus: 'processing',
+    canViewChapter: false,
+  })
+  pageConfig.goHome()
+
+  assert.deepEqual(switchTabCalls[0], {
+    url: '/pages/index/index',
+  })
+  assert.deepEqual(storage.generatedComicChapters, [])
+})
+
 test('loading failed task status shows retry state instead of later button state', async () => {
   const { pageConfig, requestCalls } = loadPage({
     authToken: 'token-task',
@@ -192,8 +210,95 @@ test('loading processing task status keeps later button state', async () => {
 
   assert.equal(pageConfig.data.generationStatus, 'processing')
   assert.equal(pageConfig.data.generationTitle, '正在生成中')
+  assert.ok(pageConfig.data.progress <= pageConfig.moduleExports.generationProcessingMaxProgress)
   assert.equal(pageConfig.data.generationFailureTitle, '')
   assert.equal(pageConfig.data.canViewChapter, false)
+})
+
+test('pending task keeps progress in submitted range without reaching complete', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-pending-load',
+          status: 'pending',
+          diaryEntryId: 'entry-pending-load',
+          result: {},
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-pending-load',
+    taskStatus: 'pending',
+  })
+  await flushAsyncWork()
+
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationTitle, '任务已提交')
+  assert.equal(pageConfig.data.progress, pageConfig.moduleExports.generationPendingProgress)
+  assert.notEqual(pageConfig.data.progress, 100)
+})
+
+test('processing progress is capped below complete before backend image is ready', async () => {
+  const { pageConfig, intervals, storage } = loadPage({
+    authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-processing-progress',
+      chapterTitle: 'processing progress',
+      pageCount: 2,
+    },
+  }, (options) => {
+    if (options.method === 'POST') {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'task-processing-progress',
+            status: 'processing',
+            diaryEntryId: 'entry-processing-progress',
+            result: {},
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-processing-progress',
+          status: 'processing',
+          diaryEntryId: 'entry-processing-progress',
+          result: {},
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad()
+  await flushAsyncWork()
+  const visualTimer = intervals.find((timer) => timer.delay === 800)
+
+  for (let index = 0; index < 40; index += 1) {
+    await runTimer(visualTimer)
+  }
+
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.ok(pageConfig.data.progress <= 90)
+  assert.notEqual(pageConfig.data.progress, 100)
+  assert.equal(storage.generatedComicChapters, undefined)
 })
 
 test('loading completed task overrides stale failed state and writes real image', async () => {
@@ -470,6 +575,7 @@ test('pending generation task polls until completed and injects first image', as
   assert.equal(requestCalls[1].method, 'GET')
   assert.equal(pageConfig.data.generationTaskId, 'task-pending')
   assert.equal(pageConfig.data.generationTaskStatus, 'completed')
+  assert.equal(pageConfig.data.progress, 100)
   assert.equal(chapter.pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(chapter.pages[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(storage.generatedComicChapters[0].pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
@@ -703,7 +809,7 @@ test('failed polled generation task enters failed state without writing local su
   assert.equal(navigateCalls.length, 0)
 })
 
-test('polling get failure keeps processing state without writing local success chapter', async () => {
+test('polling get failure enters failed state without writing local success chapter', async () => {
   const { pageConfig, moduleExports, storage, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -737,10 +843,10 @@ test('polling get failure keeps processing state without writing local success c
   const chapter = await pending
 
   assert.equal(chapter, null)
-  assert.equal(pageConfig.data.generationStatus, 'processing')
-  assert.equal(pageConfig.data.generationTitle, '正在生成中')
-  assert.equal(pageConfig.data.generationFailureTitle, '')
-  assert.equal(pageConfig.data.generationTaskStatus, 'pending')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
+  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters, undefined)
 })
 
@@ -831,7 +937,7 @@ test('polling max count uses final completed task result before showing fallback
   assert.equal(pollTimer.cleared, true)
 })
 
-test('polling max count keeps processing when final task is still processing', async () => {
+test('polling max count enters failed state when final task is still processing', async () => {
   const { pageConfig, moduleExports, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -864,15 +970,14 @@ test('polling max count keeps processing when final task is still processing', a
 
   const task = await pending
 
-  assert.equal(task.status, 'processing')
-  assert.equal(pageConfig.data.generationTaskStatus, 'processing')
-  assert.equal(pageConfig.data.generationStatus, 'processing')
-  assert.equal(pageConfig.data.generationTitle, '正在生成中')
-  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(task.status, 'failed')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
   assert.equal(pollTimer.cleared, true)
 })
 
-test('polling max count keeps processing when final task lookup fails', async () => {
+test('polling max count enters failed state when final task lookup fails', async () => {
   const { pageConfig, moduleExports, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -893,9 +998,9 @@ test('polling max count keeps processing when final task lookup fails', async ()
 
   const task = await pending
 
-  assert.equal(task.status, 'processing')
-  assert.equal(pageConfig.data.generationStatus, 'processing')
-  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(task.status, 'failed')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
   assert.equal(pollTimer.cleared, true)
 })
 
@@ -1016,7 +1121,7 @@ test('missing serverDiaryEntryId syncs diary before creating generation task', a
   assert.equal(chapter.generationTaskId, 'task-created')
 })
 
-test('generation task create failure keeps processing state without writing local success chapter', async () => {
+test('generation task create failure enters failed state without writing local success chapter', async () => {
   const { pageConfig, moduleExports, requestCalls, storage } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -1040,8 +1145,8 @@ test('generation task create failure keeps processing state without writing loca
 
   assert.equal(requestCalls.length, 1)
   assert.equal(chapter, null)
-  assert.equal(pageConfig.data.generationStatus, 'processing')
-  assert.equal(pageConfig.data.generationTaskStatus, 'processing')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters, undefined)
 })
 

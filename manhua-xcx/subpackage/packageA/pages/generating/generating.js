@@ -8,7 +8,11 @@ const generationTaskPollIntervalMs = 2500
 const generationTaskMaxPollCount = 48
 const generationFailureTitle = '生成失败'
 const generationFailureMessage = '漫画生成超时，请重新生成'
+const generationPendingTitle = '任务已提交'
 const generationProcessingTitle = '正在生成中'
+const generationPendingProgress = 15
+const generationProcessingMaxProgress = 88
+const generationProcessingProgressStep = 3
 let generationTaskPollTimer = null
 
 function isGenerationTaskFailed(status) {
@@ -21,6 +25,33 @@ function isGenerationTaskProcessing(status) {
 
 function isGenerationTaskCompletedWithImage(task) {
   return task && task.status === 'completed' && Boolean(getFirstGenerationImageUrl(task))
+}
+
+function getGenerationTitleByStatus(status) {
+  return status === 'pending' ? generationPendingTitle : generationProcessingTitle
+}
+
+function getGenerationProgressByTask(task, currentProgress) {
+  const status = task && task.status
+  const progress = Number(currentProgress)
+  const safeProgress = Number.isFinite(progress) ? progress : generationPendingProgress
+
+  if (isGenerationTaskCompletedWithImage(task)) {
+    return 100
+  }
+
+  if (status === 'pending') {
+    return generationPendingProgress
+  }
+
+  if (status === 'processing') {
+    return Math.min(
+      Math.max(safeProgress, generationPendingProgress) + generationProcessingProgressStep,
+      generationProcessingMaxProgress
+    )
+  }
+
+  return safeProgress
 }
 
 function getDefaultPanelImages() {
@@ -147,7 +178,8 @@ function resetGenerationTaskState(pageContext) {
       generationTaskStatus: '',
       generationResult: {},
       generationStatus: 'processing',
-      generationTitle: generationProcessingTitle,
+      generationTitle: generationPendingTitle,
+      progress: generationPendingProgress,
       generationFailureTitle: '',
       generationFailureMessage: '',
     })
@@ -159,11 +191,29 @@ function updateGenerationTaskState(pageContext, task) {
     return
   }
 
-  pageContext.setData({
+  const patch = {
     generationTaskId: task.id,
     generationTaskStatus: task.status,
     generationResult: task.result || {},
-  })
+  }
+
+  if (isGenerationTaskProcessing(task.status)) {
+    patch.generationStatus = 'processing'
+    patch.generationTitle = getGenerationTitleByStatus(task.status)
+    patch.progress = getGenerationProgressByTask(task, pageContext.data && pageContext.data.progress)
+    patch.generationFailureTitle = ''
+    patch.generationFailureMessage = ''
+    patch.canViewChapter = false
+  }
+
+  if (isGenerationTaskCompletedWithImage(task)) {
+    patch.generationStatus = 'completed'
+    patch.progress = 100
+    patch.generationFailureTitle = ''
+    patch.generationFailureMessage = ''
+  }
+
+  pageContext.setData(patch)
 
   savePendingDraftWithTask(pageContext.data && pageContext.data.pendingDraft, task)
 }
@@ -206,7 +256,8 @@ function enterGenerationProcessingState(pageContext, task) {
   if (pageContext && typeof pageContext.setData === 'function') {
     pageContext.setData({
       generationStatus: 'processing',
-      generationTitle: generationProcessingTitle,
+      generationTitle: getGenerationTitleByStatus(task && task.status),
+      progress: getGenerationProgressByTask(task, pageContext.data && pageContext.data.progress),
       generationFailureTitle: '',
       generationFailureMessage: '',
       generationTaskStatus: task && task.status ? task.status : 'processing',
@@ -229,6 +280,7 @@ function enterGenerationFailedState(pageContext, task) {
       generationTitle: generationProcessingTitle,
       generationFailureTitle,
       generationFailureMessage,
+      progress: getGenerationProgressByTask(task, pageContext.data && pageContext.data.progress),
       generationTaskStatus: task && task.status ? task.status : 'failed',
       generationResult: task && task.result ? task.result : {},
       canViewChapter: false,
@@ -267,10 +319,15 @@ function waitForGenerationTaskResult(task, pageContext) {
           const finalTask = await getGenerationTask(task.id)
           latestKnownTask = finalTask || latestKnownTask
           updateGenerationTaskState(pageContext, latestKnownTask)
+          if (!isGenerationTaskCompletedWithImage(latestKnownTask) && !isGenerationTaskFailed(latestKnownTask.status)) {
+            latestKnownTask = buildFailedGenerationTask(latestKnownTask)
+            enterGenerationFailedState(pageContext, latestKnownTask)
+          }
           resolve(latestKnownTask)
         } catch (error) {
-          enterGenerationProcessingState(pageContext, latestKnownTask)
-          resolve(latestKnownTask)
+          const failedTask = buildFailedGenerationTask(latestKnownTask)
+          enterGenerationFailedState(pageContext, failedTask)
+          resolve(failedTask)
         }
         return
       }
@@ -295,8 +352,9 @@ function waitForGenerationTaskResult(task, pageContext) {
         }
       } catch (error) {
         clearGenerationTaskPollTimer()
-        enterGenerationProcessingState(pageContext, latestKnownTask)
-        resolve(latestKnownTask)
+        const failedTask = buildFailedGenerationTask(latestKnownTask)
+        enterGenerationFailedState(pageContext, failedTask)
+        resolve(failedTask)
       }
     }, generationTaskPollIntervalMs)
   })
@@ -349,7 +407,7 @@ async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
     enterGenerationProcessingState(pageContext, readyTask)
     return null
   } catch (error) {
-    enterGenerationProcessingState(pageContext)
+    enterGenerationFailedState(pageContext)
     return null
   }
 }
@@ -359,7 +417,7 @@ Page({
 
   data: {
     mock: generatingMock,
-    progress: generatingMock.progressStart,
+    progress: generationPendingProgress,
     activeStepIndex: 0,
     canViewChapter: false,
     pendingDraft: null,
@@ -385,7 +443,8 @@ Page({
         generationTaskId: options.taskId,
         generationTaskStatus: taskStatus,
         generationStatus: isGenerationTaskFailed(taskStatus) ? 'failed' : 'processing',
-        generationTitle: generationProcessingTitle,
+        generationTitle: getGenerationTitleByStatus(taskStatus),
+        progress: taskStatus === 'pending' ? generationPendingProgress : this.data.progress,
         generationFailureTitle: isGenerationTaskFailed(taskStatus) ? generationFailureTitle : '',
         generationFailureMessage: isGenerationTaskFailed(taskStatus) ? generationFailureMessage : '',
         canViewChapter: false,
@@ -405,8 +464,25 @@ Page({
   startMockProgress() {
     this.clearMockTimer()
 
+    this.setData({
+      progress: generationPendingProgress,
+      activeStepIndex: 0,
+      canViewChapter: false,
+      generationStatus: 'processing',
+      generationTitle: generationPendingTitle,
+    })
+
     this.timer = setInterval(() => {
-      const nextProgress = Math.min(this.data.progress + 9, 100)
+      if (this.data.generationStatus !== 'processing') {
+        this.clearMockTimer()
+        return
+      }
+
+      if (this.data.generationTaskStatus !== 'processing') {
+        return
+      }
+
+      const nextProgress = Math.min(this.data.progress + generationProcessingProgressStep, generationProcessingMaxProgress)
       const activeStepIndex = Math.min(
         Math.floor((nextProgress / 100) * this.data.mock.steps.length),
         this.data.mock.steps.length - 1
@@ -417,20 +493,19 @@ Page({
         activeStepIndex,
         canViewChapter: false,
       })
+    }, 800)
 
-      if (nextProgress >= 100) {
-        finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft, this).then((generatedChapter) => {
-          if (generatedChapter && generatedChapter.id) {
-            this.setData({
-              generatedChapterId: generatedChapter.id,
-              generationStatus: 'completed',
-              canViewChapter: true,
-            })
-          }
+    finalizeGeneratedChapterWithBackendFallback(this.data.pendingDraft, this).then((generatedChapter) => {
+      if (generatedChapter && generatedChapter.id) {
+        this.setData({
+          generatedChapterId: generatedChapter.id,
+          generationStatus: 'completed',
+          progress: 100,
+          canViewChapter: true,
         })
         this.clearMockTimer()
       }
-    }, 800)
+    })
   },
 
   clearMockTimer() {
@@ -467,6 +542,7 @@ Page({
         this.setData({
           generatedChapterId: generatedChapter.id,
           generationStatus: 'completed',
+          progress: 100,
           generationFailureTitle: '',
           generationFailureMessage: '',
           canViewChapter: true,
@@ -475,13 +551,7 @@ Page({
       }
 
       if (task && isGenerationTaskProcessing(task.status)) {
-        this.setData({
-          generationStatus: 'processing',
-          generationTitle: generationProcessingTitle,
-          generationFailureTitle: '',
-          generationFailureMessage: '',
-          canViewChapter: false,
-        })
+        enterGenerationProcessingState(this, task)
       }
     } catch (error) {
       return null
@@ -492,7 +562,7 @@ Page({
     clearGenerationTaskPollTimer()
     this.clearMockTimer()
     this.setData({
-      progress: generatingMock.progressStart,
+      progress: generationPendingProgress,
       activeStepIndex: 0,
       canViewChapter: false,
       generatedChapterId: '',
@@ -529,7 +599,11 @@ module.exports = {
   generationTaskMaxPollCount,
   generationFailureTitle,
   generationFailureMessage,
+  generationPendingTitle,
   generationProcessingTitle,
+  generationPendingProgress,
+  generationProcessingMaxProgress,
+  getGenerationProgressByTask,
   isGenerationTaskFailed,
   isGenerationTaskProcessing,
   isGenerationTaskCompletedWithImage,
