@@ -1,9 +1,4 @@
 <view class="reader-page">
-  <view class="reader-topbar">
-    <button class="reader-back" bindtap="backToCover" hover-class="reader-back-hover">‹</button>
-    <view class="reader-title">{{currentPage.chapterTitle || '漫画阅读'}}</view>
-  </view>
-
   <view class="reader-canvas" bindtouchstart="handleTouchStart" bindtouchend="handleTouchEnd">
     <view wx:if="{{currentPage && currentPage.image}}" class="comic-page">
       <image class="comic-image" src="{{currentPage.image}}" mode="widthFix" />
