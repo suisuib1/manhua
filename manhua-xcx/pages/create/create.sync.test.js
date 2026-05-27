@@ -260,3 +260,84 @@ test('selected date is saved into local draft and diary page query', () => {
   assert.equal(draftFromUrl.diaryDate, '2026-05-21')
   assert.equal(navigateCalls[0].url.startsWith('/pages/diary/diary?draft='), true)
 })
+
+test('page count input saves manual values from 1 to 4', () => {
+  ;[1, 2, 3, 4].forEach((pageCount) => {
+    const { pageConfig, storage } = loadPage()
+
+    pageConfig.onTitleInput({
+      detail: {
+        value: `页数 ${pageCount}`,
+      },
+    })
+    pageConfig.onPageCountInput({
+      detail: {
+        value: String(pageCount),
+      },
+    })
+    pageConfig.goNext()
+
+    assert.equal(storage.draftComicChapter.pageCount, pageCount)
+  })
+})
+
+test('invalid page count input is clamped before saving draft', () => {
+  const cases = [
+    { value: '', expected: 1 },
+    { value: '0', expected: 1 },
+    { value: '-2', expected: 1 },
+    { value: '5', expected: 4 },
+    { value: 'abc', expected: 1 },
+  ]
+
+  cases.forEach((item) => {
+    const { pageConfig, storage } = loadPage()
+
+    pageConfig.onTitleInput({
+      detail: {
+        value: `异常页数 ${item.value || 'empty'}`,
+      },
+    })
+    pageConfig.onPageCountInput({
+      detail: {
+        value: item.value,
+      },
+    })
+    pageConfig.goNext()
+
+    assert.equal(storage.draftComicChapter.pageCount, item.expected)
+    assert.equal(pageConfig.data.pageCount, item.expected)
+    assert.equal(pageConfig.data.pageCountInput, String(item.expected))
+    assert.notEqual(storage.draftComicChapter.pageCount, '')
+    assert.equal(Number.isNaN(storage.draftComicChapter.pageCount), false)
+  })
+})
+
+test('random page mode only generates 1 to 4 pages', () => {
+  const originalRandom = Math.random
+
+  try {
+    ;[
+      { randomValue: 0, expected: 1 },
+      { randomValue: 0.25, expected: 2 },
+      { randomValue: 0.5, expected: 3 },
+      { randomValue: 0.999, expected: 4 },
+    ].forEach(({ randomValue, expected }) => {
+      Math.random = () => randomValue
+      const { pageConfig, storage } = loadPage()
+
+      pageConfig.selectRandomPageMode()
+      pageConfig.onTitleInput({
+        detail: {
+          value: `随机页数 ${randomValue}`,
+        },
+      })
+      pageConfig.goNext()
+
+      assert.equal(storage.draftComicChapter.pageCount, expected)
+      assert.equal(pageConfig.data.pageCountInput, String(storage.draftComicChapter.pageCount))
+    })
+  } finally {
+    Math.random = originalRandom
+  }
+})

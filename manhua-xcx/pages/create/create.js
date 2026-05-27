@@ -13,11 +13,12 @@ function formatLocalDate(date = new Date()) {
 function buildCreateDraft(data) {
   const selectedTags = Array.isArray(data.selectedTags) ? data.selectedTags : []
   const tagOptions = Array.isArray(data.tagOptions) ? data.tagOptions : []
+  const pageCount = normalizePageCount(data.pageCountInput || data.pageCount)
 
   return {
     chapterTitle: String(data.draftChapterTitle || '').trim(),
     diaryDate: data.diaryDateValue,
-    pageCount: data.pageCount,
+    pageCount,
     pageMode: data.pageMode,
     selectedTags,
     selectedTagItems: selectedTags.map((key) => {
@@ -36,6 +37,20 @@ function normalizeTagOption(tag) {
     label: tag.label || '',
     selected: false,
   }
+}
+
+function normalizePageCount(value) {
+  const pageCount = Number(value)
+
+  if (!Number.isFinite(pageCount)) {
+    return 1
+  }
+
+  return Math.min(4, Math.max(1, Math.trunc(pageCount)))
+}
+
+function getRandomPageCount() {
+  return Math.floor(Math.random() * 4) + 1
 }
 
 function buildFallbackTagOptions() {
@@ -115,20 +130,29 @@ Page({
   },
 
   selectRandomPageMode() {
-    this.setData({ pageMode: 'random' })
-  },
+    const pageCount = getRandomPageCount()
 
-  onPageCountInput(event) {
-    const pageCount = Number(String(event.detail.value || '').replace(/[^1-8]/g, '').slice(0, 1) || 1)
     this.setData({
-      pageMode: 'custom',
+      pageMode: 'random',
       pageCount,
       pageCountInput: String(pageCount),
     })
   },
 
+  onPageCountInput(event) {
+    const pageCountInput = String(event.detail.value || '').trim()
+    const pageCount = pageCountInput ? normalizePageCount(pageCountInput) : this.data.pageCount
+
+    this.setData({
+      pageMode: 'custom',
+      pageCount,
+      pageCountInput,
+    })
+  },
+
   onPageCountBlur() {
-    const pageCount = Number(String(this.data.pageCountInput || '1').replace(/[^1-8]/g, '').slice(0, 1) || 1)
+    const pageCount = normalizePageCount(this.data.pageCountInput || this.data.pageCount)
+
     this.setData({
       pageMode: 'custom',
       pageCount,
@@ -153,7 +177,18 @@ Page({
   },
 
   goNext() {
-    const draft = buildCreateDraft(this.data)
+    const pageCount = normalizePageCount(this.data.pageCountInput || this.data.pageCount)
+    const nextData = Object.assign({}, this.data, {
+      pageCount,
+      pageCountInput: String(pageCount),
+    })
+
+    this.setData({
+      pageCount,
+      pageCountInput: String(pageCount),
+    })
+
+    const draft = buildCreateDraft(nextData)
     if (!draft.chapterTitle) {
       wx.showToast({
         title: '请先填写章节标题',
@@ -176,4 +211,6 @@ module.exports = {
   formatLocalDate,
   normalizeTagOption,
   buildFallbackTagOptions,
+  normalizePageCount,
+  getRandomPageCount,
 }

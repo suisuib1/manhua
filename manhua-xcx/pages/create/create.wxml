@@ -44,7 +44,7 @@
           type="number"
           maxlength="1"
           value="{{pageCountInput}}"
-          placeholder="1-8页"
+          placeholder="1-4页"
           placeholder-class="input-placeholder"
           bindinput="onPageCountInput"
           bindblur="onPageCountBlur"
