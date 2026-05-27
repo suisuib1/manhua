@@ -185,22 +185,33 @@ function loadPage(initialStorage, requestImpl = () => {}) {
   return { pageConfig, backCalls, redirectCalls, toastCalls, setDataCalls, requestCalls, storage, moduleExports }
 }
 
-test('阅读器使用 swiper 翻页而不是章节列表', () => {
+test('阅读器使用漫画阅读模式且图片不变形', () => {
   const wxml = fs.readFileSync(path.join(__dirname, 'continuous-chapter.wxml'), 'utf8')
+  const wxss = fs.readFileSync(path.join(__dirname, 'continuous-chapter.wxss'), 'utf8')
 
   assert.equal(wxml.includes('<swiper'), false)
   assert.equal(wxml.includes('bindtouchstart="handleTouchStart"'), true)
   assert.equal(wxml.includes('bindtouchend="handleTouchEnd"'), true)
   assert.equal(wxml.includes('currentPage.image'), true)
   assert.equal(wxml.includes('comic-image'), true)
+  assert.equal(wxml.includes('mode="widthFix"'), true)
+  assert.equal(wxml.includes('mode="aspectFill"'), false)
   assert.equal(wxml.includes('暂无漫画图片'), true)
-  assert.equal(wxml.includes('comic-page-card'), true)
+  assert.equal(wxml.includes('/subpackage/icon-home-mascot-star.png'), true)
+  assert.equal(wxml.includes('comic-page-card'), false)
+  assert.equal(wxml.includes('page-meta'), false)
+  assert.equal(wxml.includes('reader-bottom'), false)
+  assert.equal(wxml.includes('左滑上一页'), false)
+  assert.equal(wxml.includes('右滑下一页'), false)
+  assert.equal(wxml.includes('bindtap="backToCover"'), true)
   assert.equal(wxml.includes('comic-grid'), false)
   assert.equal(wxml.includes('comic-panel'), false)
   assert.equal(wxml.includes('flow-card'), false)
   assert.equal(wxml.includes('readChapter'), false)
   assert.equal(wxml.includes('reader-progress-card'), false)
-  assert.equal(wxml.includes('back-button'), false)
+  assert.equal(wxss.includes('.comic-image'), true)
+  assert.equal(wxss.includes('height: auto;'), true)
+  assert.equal(wxss.includes('min-height: 760rpx'), false)
 })
 
 test('阅读器支持返回漫画书封面', () => {
