@@ -27,6 +27,33 @@ test('onLoad uses generatedComicChapters real image before mock fallback', () =>
   assert.equal(setDataCalls[0].hasComicImages, true)
 })
 
+test('onLoad displays cached recent chapter cover image instead of mascot fallback', () => {
+  const generatedImageUrl = 'http://127.0.0.1:3000/uploads/generated/openai-1779851239962-m89cn9tu.png'
+  const { pageConfig, setDataCalls } = loadPage({
+    generatedComicChapters: [{
+      id: 'cmpnhaac5000aqwkww3oozxlg',
+      diaryEntryId: 'cmpnhaac5000aqwkww3oozxlg',
+      generationTaskId: 'cmpnhbn7t000eqwkw3avjiwnl',
+      title: '今天过生日',
+      pageCount: 1,
+      coverImageUrl: generatedImageUrl,
+      imageUrl: generatedImageUrl,
+      images: [generatedImageUrl],
+      pages: [{
+        pageId: 'cmpnhaac5000aqwkww3oozxlg-page-1',
+        images: [generatedImageUrl],
+        imageUrl: generatedImageUrl,
+      }],
+    }],
+  })
+
+  pageConfig.onLoad({ chapterId: 'cmpnhaac5000aqwkww3oozxlg' })
+
+  assert.equal(setDataCalls[0].currentPage.image, generatedImageUrl)
+  assert.notEqual(setDataCalls[0].currentPage.image, '/subpackage/icon-home-mascot-star.png')
+  assert.equal(setDataCalls[0].hasComicImages, true)
+})
+
 test('onLoad heals placeholder chapter from completed generation task image', async () => {
   const { pageConfig, requestCalls, setDataCalls, storage } = loadPage({
     authToken: 'token-reader',

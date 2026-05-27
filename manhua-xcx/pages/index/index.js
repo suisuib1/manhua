@@ -1,6 +1,7 @@
-const { homeMock, pageRoutes, chapterStatuses } = require('../../utils/mock')
+const { homeMock, pageRoutes, chapterStatuses, storageKeys } = require('../../utils/mock')
 const { getAuthToken, loginWithWechat } = require('../../utils/auth')
 const { getRecentComicChapters } = require('../../utils/comicChapterApi')
+const apiConfig = require('../../config/api.config')
 
 const statusClassMap = {
   [chapterStatuses.completed]: 'is-completed',
@@ -33,6 +34,60 @@ function getRecentChapterStatusText(chapter) {
   return statusTextMap[chapter.status] || chapter.statusText || ''
 }
 
+function normalizeImageUrl(imageUrl) {
+  if (!imageUrl || /^https?:\/\//.test(imageUrl) || /^wxfile:\/\//.test(imageUrl)) {
+    return imageUrl || ''
+  }
+
+  return `${apiConfig.baseUrl}${imageUrl.indexOf('/') === 0 ? imageUrl : `/${imageUrl}`}`
+}
+
+function buildReaderChapterFromRecent(chapter) {
+  const coverImageUrl = normalizeImageUrl(chapter && chapter.coverImageUrl)
+  const id = chapter && (chapter.id || chapter.diaryEntryId || chapter.generationTaskId)
+  const pageCount = Math.max(1, Number(chapter && chapter.pageCount ? chapter.pageCount : 1))
+  const pages = coverImageUrl
+    ? [{
+      pageId: `${id || 'recent'}-page-1`,
+      pageIndex: 0,
+      images: [coverImageUrl],
+      imageUrl: coverImageUrl,
+      caption: chapter.summary || chapter.subtitle || '',
+    }]
+    : []
+
+  return Object.assign({}, chapter, {
+    id,
+    diaryEntryId: chapter && chapter.diaryEntryId,
+    generationTaskId: chapter && chapter.generationTaskId,
+    title: chapter && chapter.title,
+    date: (chapter && (chapter.date || chapter.createdAt || chapter.updatedAt)) || '',
+    pageCount,
+    coverImageUrl,
+    imageUrl: coverImageUrl,
+    images: coverImageUrl ? [coverImageUrl] : [],
+    pages,
+  })
+}
+
+function upsertReaderChapter(chapter) {
+  if (!chapter || !chapter.id) {
+    return
+  }
+
+  const chapters = wx.getStorageSync(storageKeys.generatedComicChapters) || []
+  const readerChapter = buildReaderChapterFromRecent(chapter)
+  if (!readerChapter.imageUrl) {
+    return
+  }
+
+  const nextChapters = [readerChapter].concat(chapters.filter((item) => {
+    return item.id !== readerChapter.id && item.diaryEntryId !== readerChapter.id
+  }))
+
+  wx.setStorageSync(storageKeys.generatedComicChapters, nextChapters)
+}
+
 function buildFallbackRecentChapters() {
   return homeMock.recentChapters.map((chapter) => Object.assign({}, chapter, {
     displayDate: formatRecentChapterDate(chapter.createdAt || chapter.date),
@@ -44,11 +99,18 @@ function buildFallbackRecentChapters() {
 
 function normalizeRecentChapter(chapter) {
   const pageCount = Number(chapter.pageCount || 0)
+  const coverImageUrl = normalizeImageUrl(chapter.coverImageUrl || '')
+  const readerChapter = buildReaderChapterFromRecent(Object.assign({}, chapter, {
+    coverImageUrl,
+  }))
 
   return Object.assign({}, chapter, {
     id: chapter.id || chapter.diaryEntryId || chapter.generationTaskId,
     subtitle: chapter.subtitle || chapter.title || '',
-    coverImageUrl: chapter.coverImageUrl || '',
+    coverImageUrl,
+    imageUrl: readerChapter.imageUrl,
+    images: readerChapter.images,
+    pages: readerChapter.pages,
     displayDate: formatRecentChapterDate(chapter.createdAt || chapter.date),
     displaySubtitle: chapter.summary || chapter.subtitle || '',
     statusClass: statusClassMap[chapter.status] || '',
@@ -153,6 +215,9 @@ Page({
     const { id } = event.currentTarget.dataset
 
     this.requireLogin(() => {
+      const chapter = this.data.recentChapters.find((item) => item.id === id || item.diaryEntryId === id)
+      upsertReaderChapter(chapter)
+
       wx.navigateTo({
         url: `${pageRoutes.continuousChapter}?chapterId=${id}`,
       })
@@ -181,4 +246,6 @@ module.exports = {
   buildFallbackRecentChapters,
   formatRecentChapterDate,
   normalizeRecentChapter,
+  buildReaderChapterFromRecent,
+  normalizeImageUrl,
 }

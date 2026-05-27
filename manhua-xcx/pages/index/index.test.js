@@ -360,8 +360,97 @@ test('home uses backend recent chapters when items are returned', async () => {
   assert.equal(pageConfig.data.recentChapters[0].id, 'entry-1')
   assert.equal(pageConfig.data.recentChapters[0].title, '后端章节')
   assert.equal(pageConfig.data.recentChapters[0].summary, '后端摘要')
-  assert.equal(pageConfig.data.recentChapters[0].coverImageUrl, '/uploads/images/cover.png')
+  assert.equal(pageConfig.data.recentChapters[0].coverImageUrl, 'http://127.0.0.1:3000/uploads/images/cover.png')
   assert.equal(pageConfig.data.recentChapters[0].pageCountText, '2 页')
+})
+
+test('home normalizes recent generated cover image into reader fields', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'cmpnhaac5000aqwkww3oozxlg',
+              diaryEntryId: 'cmpnhaac5000aqwkww3oozxlg',
+              generationTaskId: 'cmpnhbn7t000eqwkw3avjiwnl',
+              title: '今天过生日',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/openai-1779851239962-m89cn9tu.png',
+              hasComicImages: true,
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+
+  const chapter = pageConfig.data.recentChapters[0]
+  const imageUrl = 'http://127.0.0.1:3000/uploads/generated/openai-1779851239962-m89cn9tu.png'
+
+  assert.equal(chapter.coverImageUrl, imageUrl)
+  assert.equal(chapter.imageUrl, imageUrl)
+  assert.deepEqual(chapter.images, [imageUrl])
+  assert.equal(chapter.pages[0].images[0], imageUrl)
+})
+
+test('clicking recent chapter caches reader chapter before navigating', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'cmpnhaac5000aqwkww3oozxlg',
+              diaryEntryId: 'cmpnhaac5000aqwkww3oozxlg',
+              generationTaskId: 'cmpnhbn7t000eqwkw3avjiwnl',
+              title: '今天过生日',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/openai-1779851239962-m89cn9tu.png',
+              hasComicImages: true,
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'cmpnhaac5000aqwkww3oozxlg',
+      },
+    },
+  })
+
+  const imageUrl = 'http://127.0.0.1:3000/uploads/generated/openai-1779851239962-m89cn9tu.png'
+  const cachedChapter = storage.generatedComicChapters[0]
+
+  assert.equal(cachedChapter.id, 'cmpnhaac5000aqwkww3oozxlg')
+  assert.equal(cachedChapter.diaryEntryId, 'cmpnhaac5000aqwkww3oozxlg')
+  assert.equal(cachedChapter.generationTaskId, 'cmpnhbn7t000eqwkw3avjiwnl')
+  assert.equal(cachedChapter.coverImageUrl, imageUrl)
+  assert.equal(cachedChapter.imageUrl, imageUrl)
+  assert.deepEqual(cachedChapter.images, [imageUrl])
+  assert.equal(cachedChapter.pages[0].images[0], imageUrl)
+  assert.deepEqual(navigateCalls[0], {
+    url: '/pages/continuous-chapter/continuous-chapter?chapterId=cmpnhaac5000aqwkww3oozxlg',
+  })
 })
 
 test('home falls back to mock recent chapters when backend fails', async () => {
