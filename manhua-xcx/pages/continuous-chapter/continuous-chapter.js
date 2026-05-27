@@ -1,5 +1,7 @@
-const { continuousChapterMock, pageRoutes } = require('../../utils/mock')
+const { continuousChapterMock, pageRoutes, storageKeys } = require('../../utils/mock')
 const { buildReadableChapters, collectImageUrls, getChapterImages, normalizeChapter } = require('../../utils/chapterCatalog')
+const { getGenerationTask } = require('../../utils/generationTaskApi')
+const apiConfig = require('../../config/api.config')
 
 function getPageSortValue(page, fallbackIndex) {
   const value = [page && page.sortOrder, page && page.pageIndex, page && page.index]
@@ -142,6 +144,112 @@ function buildReaderChapters() {
   return buildReadableChapters()
 }
 
+function normalizeGeneratedImageUrl(imageUrl) {
+  if (!imageUrl || /^https?:\/\//.test(imageUrl) || /^wxfile:\/\//.test(imageUrl)) {
+    return imageUrl || ''
+  }
+
+  return `${apiConfig.baseUrl}${imageUrl.indexOf('/') === 0 ? imageUrl : `/${imageUrl}`}`
+}
+
+function getFirstGenerationImageUrl(task) {
+  const pages = task && task.result && Array.isArray(task.result.pages) ? task.result.pages : []
+  const firstPage = pages.find((page) => page && page.imageUrl)
+
+  return firstPage ? normalizeGeneratedImageUrl(firstPage.imageUrl) : ''
+}
+
+function isGeneratedImageUrl(imageUrl) {
+  return typeof imageUrl === 'string' && imageUrl.indexOf('/uploads/generated/') !== -1
+}
+
+function findGeneratedImageUrl(chapter) {
+  return getChapterImages(chapter).find(isGeneratedImageUrl) || ''
+}
+
+function injectGeneratedImage(chapter, imageUrl) {
+  if (!chapter || !imageUrl) {
+    return chapter
+  }
+
+  const pages = Array.isArray(chapter.pages) ? chapter.pages.slice() : []
+  const firstPage = Object.assign({}, pages[0] || {})
+  firstPage.images = [imageUrl]
+  firstPage.imageUrl = imageUrl
+  pages[0] = firstPage
+
+  return Object.assign({}, chapter, {
+    images: [imageUrl],
+    coverImageUrl: imageUrl,
+    imageUrl,
+    pages,
+  })
+}
+
+function replaceStoredGeneratedChapter(updatedChapter) {
+  const chapters = wx.getStorageSync(storageKeys.generatedComicChapters) || []
+  const nextChapters = chapters.map((chapter) => {
+    const sameChapter = chapter.id === updatedChapter.id || chapter.chapterId === updatedChapter.id
+
+    return sameChapter ? Object.assign({}, chapter, updatedChapter) : chapter
+  })
+
+  wx.setStorageSync(storageKeys.generatedComicChapters, nextChapters)
+}
+
+async function healGeneratedChapterImage(pageContext, chapter) {
+  if (!pageContext || !chapter) {
+    return
+  }
+
+  try {
+    const existingImageUrl = findGeneratedImageUrl(chapter)
+
+    if (existingImageUrl) {
+      const normalizedImageUrl = normalizeGeneratedImageUrl(existingImageUrl)
+
+      if (normalizedImageUrl !== existingImageUrl) {
+        const updatedChapter = injectGeneratedImage(chapter, normalizedImageUrl)
+        const pages = buildFlatPages([normalizeChapter(updatedChapter, chapter.sourceIndex || 0)])
+
+        replaceStoredGeneratedChapter(updatedChapter)
+        pageContext.setData(Object.assign({
+          flatPages: pages,
+          totalPages: pages.length,
+        }, buildReaderState(0, pages)))
+      }
+
+      return
+    }
+
+    if (!chapter.generationTaskId) {
+      return
+    }
+
+    const task = await getGenerationTask(chapter.generationTaskId)
+
+    if (!task || task.status !== 'completed') {
+      return
+    }
+
+    const imageUrl = getFirstGenerationImageUrl(task)
+
+    if (!imageUrl) {
+      return
+    }
+
+    const updatedChapter = injectGeneratedImage(chapter, imageUrl)
+    const pages = buildFlatPages([normalizeChapter(updatedChapter, chapter.sourceIndex || 0)])
+
+    replaceStoredGeneratedChapter(updatedChapter)
+    pageContext.setData(Object.assign({
+      flatPages: pages,
+      totalPages: pages.length,
+    }, buildReaderState(0, pages)))
+  } catch (error) {
+  }
+}
+
 const readerChapters = buildReaderChapters()
 const flatPages = buildPagesForReader(readerChapters)
 
@@ -162,12 +270,19 @@ Page({
 
   onLoad(options) {
     const chapters = buildReaderChapters()
-    const pages = buildPagesForReader(chapters, options && options.chapterId)
+    const chapterId = options && options.chapterId
+    const readableChapters = chapters.map((chapter, index) => {
+      return chapter.sortTime === undefined ? normalizeChapter(chapter, index) : chapter
+    })
+    const chapter = findChapterForReader(readableChapters, chapterId)
+    const pages = chapter ? buildFlatPages([chapter]) : []
 
     this.setData(Object.assign({
       flatPages: pages,
       totalPages: pages.length,
     }, buildReaderState(0, pages)))
+
+    healGeneratedChapterImage(this, chapter)
   },
 
   goBackToComicList() {
@@ -251,4 +366,7 @@ module.exports = {
   findInitialPageIndex,
   buildReaderChapters,
   sortChapterPages,
+  healGeneratedChapterImage,
+  injectGeneratedImage,
+  normalizeGeneratedImageUrl,
 }

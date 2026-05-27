@@ -27,12 +27,94 @@ test('onLoad uses generatedComicChapters real image before mock fallback', () =>
   assert.equal(setDataCalls[0].hasComicImages, true)
 })
 
-function loadPage(initialStorage) {
+test('onLoad heals placeholder chapter from completed generation task image', async () => {
+  const { pageConfig, requestCalls, setDataCalls, storage } = loadPage({
+    authToken: 'token-reader',
+    generatedComicChapters: [{
+      id: 'local-placeholder',
+      title: 'AI generated chapter',
+      date: '2026-05-21',
+      generationTaskId: 'task-reader-heal',
+      images: ['/subpackage/icon-home-mascot-star.png'],
+      coverImageUrl: '/subpackage/icon-home-mascot-star.png',
+      pages: [{
+        pageId: 'local-placeholder-page-1',
+        pageIndex: 0,
+        images: ['/subpackage/icon-home-mascot-star.png'],
+        caption: 'placeholder image',
+      }],
+    }],
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-reader-heal',
+          status: 'completed',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/healed-reader.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({ chapterId: 'local-placeholder' })
+  await flushAsyncWork()
+
+  const healedUrl = 'http://127.0.0.1:3000/uploads/generated/healed-reader.png'
+  const latestSetData = setDataCalls[setDataCalls.length - 1]
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks/task-reader-heal')
+  assert.equal(latestSetData.currentPage.image, healedUrl)
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], healedUrl)
+  assert.equal(storage.generatedComicChapters[0].images[0], healedUrl)
+  assert.equal(storage.generatedComicChapters[0].imageUrl, healedUrl)
+  assert.equal(storage.generatedComicChapters[0].coverImageUrl, healedUrl)
+})
+
+test('onLoad normalizes cached relative generated image url', async () => {
+  const { pageConfig, requestCalls, setDataCalls, storage } = loadPage({
+    generatedComicChapters: [{
+      id: 'local-relative-image',
+      title: 'AI generated chapter',
+      date: '2026-05-21',
+      imageUrl: '/uploads/generated/relative-reader.png',
+      pages: [{
+        pageId: 'local-relative-image-page-1',
+        images: ['/uploads/generated/relative-reader.png'],
+      }],
+    }],
+  })
+
+  pageConfig.onLoad({ chapterId: 'local-relative-image' })
+  await flushAsyncWork()
+
+  const fullUrl = 'http://127.0.0.1:3000/uploads/generated/relative-reader.png'
+  const latestSetData = setDataCalls[setDataCalls.length - 1]
+
+  assert.equal(requestCalls.length, 0)
+  assert.equal(latestSetData.currentPage.image, fullUrl)
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], fullUrl)
+  assert.equal(storage.generatedComicChapters[0].images[0], fullUrl)
+  assert.equal(storage.generatedComicChapters[0].imageUrl, fullUrl)
+  assert.equal(storage.generatedComicChapters[0].coverImageUrl, fullUrl)
+})
+
+async function flushAsyncWork() {
+  await Promise.resolve()
+  await Promise.resolve()
+}
+
+function loadPage(initialStorage, requestImpl = () => {}) {
   let pageConfig
   const backCalls = []
   const redirectCalls = []
   const toastCalls = []
   const setDataCalls = []
+  const requestCalls = []
   const storage = Object.assign({}, initialStorage)
 
   global.Page = (config) => {
@@ -59,15 +141,21 @@ function loadPage(initialStorage) {
     removeStorageSync(key) {
       delete storage[key]
     },
+    request(options) {
+      requestCalls.push(options)
+      requestImpl(options)
+    },
     showToast(options) {
       toastCalls.push(options)
     },
   }
 
+  delete require.cache[require.resolve('../../utils/api')]
+  delete require.cache[require.resolve('../../utils/generationTaskApi')]
   delete require.cache[require.resolve('./continuous-chapter')]
   const moduleExports = require('./continuous-chapter')
 
-  return { pageConfig, backCalls, redirectCalls, toastCalls, setDataCalls, moduleExports }
+  return { pageConfig, backCalls, redirectCalls, toastCalls, setDataCalls, requestCalls, storage, moduleExports }
 }
 
 test('阅读器使用 swiper 翻页而不是章节列表', () => {
@@ -131,9 +219,10 @@ test('chapter image extraction supports compatible fields', () => {
 
   assert.deepEqual(moduleExports.getChapterImages({
     imageUrl: 'single.jpg',
+    coverImageUrl: 'cover-url.jpg',
     coverImage: 'cover.jpg',
     generatedImage: 'generated.jpg',
-  }), ['single.jpg', 'cover.jpg', 'generated.jpg'])
+  }), ['single.jpg', 'cover-url.jpg', 'cover.jpg', 'generated.jpg'])
 })
 
 test('flat pages display one comic image per reader page', () => {

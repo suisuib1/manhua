@@ -74,3 +74,31 @@ test('createGenerationTask requires diaryEntryId', async () => {
     /diaryEntryId/
   )
 })
+
+test('getGenerationTask fetches task detail with auth', async () => {
+  let requestOptions
+  const { getGenerationTask } = loadApi({ authToken: 'token-task' }, (options) => {
+    requestOptions = options
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-1',
+          status: 'completed',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/a.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  const task = await getGenerationTask('task-1')
+
+  assert.equal(requestOptions.url, 'http://127.0.0.1:3000/api/generation-tasks/task-1')
+  assert.equal(requestOptions.method, 'GET')
+  assert.equal(requestOptions.header.Authorization, 'Bearer token-task')
+  assert.equal(task.result.pages[0].imageUrl, '/uploads/generated/a.png')
+})

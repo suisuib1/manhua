@@ -42,7 +42,7 @@ function getChapterImages(chapter) {
     })
   }
 
-  ;['imageUrl', 'coverImage', 'cover', 'generatedImage'].forEach((field) => {
+  ;['imageUrl', 'coverImageUrl', 'coverImage', 'cover', 'generatedImage'].forEach((field) => {
     const image = pickImageUrl(chapter[field])
     if (image) images.push(image)
   })

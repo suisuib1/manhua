@@ -168,20 +168,21 @@ function waitForGenerationTaskResult(task, pageContext) {
   }
 
   if (task.status === 'failed') {
-    return Promise.resolve(null)
+    return Promise.resolve(task)
   }
 
   clearGenerationTaskPollTimer()
 
   return new Promise((resolve) => {
     let pollCount = 0
+    let latestKnownTask = task
 
     generationTaskPollTimer = setInterval(async () => {
       pollCount += 1
 
       if (pollCount > generationTaskMaxPollCount) {
         clearGenerationTaskPollTimer()
-        resolve(null)
+        resolve(latestKnownTask)
         return
       }
 
@@ -189,6 +190,7 @@ function waitForGenerationTaskResult(task, pageContext) {
         const taskId = task.id
         console.info('[generation] polling taskId', taskId)
         const latestTask = await getGenerationTask(taskId)
+        latestKnownTask = latestTask || latestKnownTask
         updateGenerationTaskState(pageContext, latestTask)
 
         if (latestTask.status === 'completed') {
@@ -200,11 +202,11 @@ function waitForGenerationTaskResult(task, pageContext) {
 
         if (latestTask.status === 'failed') {
           clearGenerationTaskPollTimer()
-          resolve(null)
+          resolve(latestTask)
         }
       } catch (error) {
         clearGenerationTaskPollTimer()
-        resolve(null)
+        resolve(latestKnownTask)
       }
     }, generationTaskPollIntervalMs)
   })

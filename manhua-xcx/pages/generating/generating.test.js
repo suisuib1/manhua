@@ -550,7 +550,8 @@ test('failed polled generation task writes local fallback', async () => {
   await runTimer(await waitForInterval(intervals))
   const chapter = await pending
 
-  assert.equal(chapter.generationTaskId, undefined)
+  assert.equal(chapter.generationTaskId, 'task-failed')
+  assert.equal(chapter.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters.length, 1)
   assert.equal(storage.generatedComicChapters[0].title, 'failed chapter')
 })
@@ -588,7 +589,8 @@ test('polling get failure writes local fallback', async () => {
   await runTimer(await waitForInterval(intervals))
   const chapter = await pending
 
-  assert.equal(chapter.generationTaskId, undefined)
+  assert.equal(chapter.generationTaskId, 'task-get-fail')
+  assert.equal(chapter.generationTaskStatus, 'pending')
   assert.equal(storage.generatedComicChapters[0].title, 'get fail chapter')
 })
 
