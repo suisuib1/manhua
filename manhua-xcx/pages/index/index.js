@@ -1,6 +1,7 @@
 const { homeMock, pageRoutes, chapterStatuses, storageKeys } = require('../../utils/mock')
 const { getAuthToken, loginWithWechat } = require('../../utils/auth')
 const { getRecentComicChapters } = require('../../utils/comicChapterApi')
+const { getGenerationTask } = require('../../utils/generationTaskApi')
 const apiConfig = require('../../config/api.config')
 
 const statusClassMap = {
@@ -88,6 +89,53 @@ function upsertReaderChapter(chapter) {
   wx.setStorageSync(storageKeys.generatedComicChapters, nextChapters)
 }
 
+function saveRecentChapterAsPendingDraft(chapter, task) {
+  if (!chapter) {
+    return
+  }
+
+  wx.setStorageSync(storageKeys.draftComicChapter, Object.assign({}, chapter, {
+    chapterTitle: chapter.title,
+    serverDiaryEntryId: chapter.diaryEntryId || chapter.id,
+    generationTaskId: (task && task.id) || chapter.generationTaskId,
+    generationTaskStatus: (task && task.status) || chapter.status,
+    generationResult: (task && task.result) || chapter.generationResult || {},
+  }))
+}
+
+function navigateToGenerating(chapter, task) {
+  saveRecentChapterAsPendingDraft(chapter, task)
+
+  const taskId = (task && task.id) || chapter.generationTaskId
+  const taskStatus = (task && task.status) || chapter.status || ''
+
+  wx.navigateTo({
+    url: `${pageRoutes.generating}?taskId=${taskId || ''}&taskStatus=${taskStatus}`,
+  })
+}
+
+function isTaskInProgress(status) {
+  return status === 'pending' || status === 'processing' || status === chapterStatuses.generating
+}
+
+function getTaskImageUrl(task) {
+  const pages = task && task.result && Array.isArray(task.result.pages) ? task.result.pages : []
+  const firstPage = pages[0]
+  return normalizeImageUrl(firstPage && firstPage.imageUrl)
+}
+
+function mergeTaskImageIntoChapter(chapter, task) {
+  const imageUrl = getTaskImageUrl(task)
+  if (!imageUrl) {
+    return chapter
+  }
+
+  return buildReaderChapterFromRecent(Object.assign({}, chapter, {
+    status: task.status,
+    coverImageUrl: imageUrl,
+  }))
+}
+
 function buildFallbackRecentChapters() {
   return homeMock.recentChapters.map((chapter) => Object.assign({}, chapter, {
     displayDate: formatRecentChapterDate(chapter.createdAt || chapter.date),
@@ -167,7 +215,7 @@ Page({
   requireLogin(nextAction) {
     if (getAuthToken()) {
       if (typeof nextAction === 'function') {
-        nextAction()
+        return nextAction()
       }
       return true
     }
@@ -211,12 +259,38 @@ Page({
     })
   },
 
-  goChapterDetail(event) {
+  async goChapterDetail(event) {
     const { id } = event.currentTarget.dataset
 
-    this.requireLogin(() => {
+    return this.requireLogin(async () => {
       const chapter = this.data.recentChapters.find((item) => item.id === id || item.diaryEntryId === id)
-      upsertReaderChapter(chapter)
+      let readerChapter = chapter
+
+      if (chapter && chapter.generationTaskId) {
+        try {
+          const task = await getGenerationTask(chapter.generationTaskId)
+          if (isTaskInProgress(task && task.status)) {
+            navigateToGenerating(chapter, task)
+            return
+          }
+
+          if (task && task.status === chapterStatuses.failed) {
+            navigateToGenerating(chapter, task)
+            return
+          }
+
+          if (task && task.status === chapterStatuses.completed) {
+            readerChapter = mergeTaskImageIntoChapter(chapter, task)
+          }
+        } catch (error) {
+          if (isTaskInProgress(chapter.status) || chapter.status === chapterStatuses.failed) {
+            navigateToGenerating(chapter)
+            return
+          }
+        }
+      }
+
+      upsertReaderChapter(readerChapter)
 
       wx.navigateTo({
         url: `${pageRoutes.continuousChapter}?chapterId=${id}`,
@@ -248,4 +322,6 @@ module.exports = {
   normalizeRecentChapter,
   buildReaderChapterFromRecent,
   normalizeImageUrl,
+  isTaskInProgress,
+  getTaskImageUrl,
 }

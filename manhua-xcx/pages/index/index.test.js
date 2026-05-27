@@ -117,7 +117,7 @@ test('confirming login uses existing auth flow and refreshes recent chapters', a
       return
     }
 
-    if (options.url.endsWith('/api/comic-chapters/recent')) {
+    if (options.url.includes('/api/comic-chapters/recent')) {
       options.success({
         statusCode: 200,
         data: {
@@ -406,6 +406,25 @@ test('clicking recent chapter caches reader chapter before navigating', async ()
   const { pageConfig, navigateCalls, storage } = loadPage({
     authToken: 'token-recent',
   }, (options) => {
+    if (options.url.endsWith('/api/generation-tasks/cmpnhbn7t000eqwkw3avjiwnl')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            id: 'cmpnhbn7t000eqwkw3avjiwnl',
+            status: 'completed',
+            diaryEntryId: 'cmpnhaac5000aqwkww3oozxlg',
+            result: {
+              pages: [{ imageUrl: '/uploads/generated/openai-1779851239962-m89cn9tu.png' }],
+            },
+          },
+        },
+      })
+      return
+    }
+
     options.success({
       statusCode: 200,
       data: {
@@ -430,7 +449,7 @@ test('clicking recent chapter caches reader chapter before navigating', async ()
   })
 
   await pageConfig.onShow()
-  pageConfig.goChapterDetail({
+  await pageConfig.goChapterDetail({
     currentTarget: {
       dataset: {
         id: 'cmpnhaac5000aqwkww3oozxlg',
@@ -450,6 +469,177 @@ test('clicking recent chapter caches reader chapter before navigating', async ()
   assert.equal(cachedChapter.pages[0].images[0], imageUrl)
   assert.deepEqual(navigateCalls[0], {
     url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=cmpnhaac5000aqwkww3oozxlg',
+  })
+})
+
+test('clicking processing recent chapter navigates to generation status page', async () => {
+  const { pageConfig, navigateCalls, requestCalls, storage } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    if (options.url.includes('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [{
+              id: 'entry-processing',
+              diaryEntryId: 'entry-processing',
+              generationTaskId: 'task-processing',
+              title: 'processing chapter',
+              status: 'processing',
+              pageCount: 1,
+            }],
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-processing',
+          status: 'processing',
+          diaryEntryId: 'entry-processing',
+          result: {},
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'entry-processing',
+      },
+    },
+  })
+
+  assert.equal(requestCalls.some((options) => options.url.endsWith('/api/generation-tasks/task-processing')), true)
+  assert.equal(storage.draftComicChapter.generationTaskId, 'task-processing')
+  assert.equal(storage.draftComicChapter.generationTaskStatus, 'processing')
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/generating/generating?taskId=task-processing&taskStatus=processing',
+  })
+})
+
+test('clicking failed recent chapter navigates to generation failed status page', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    if (options.url.includes('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [{
+              id: 'entry-failed',
+              diaryEntryId: 'entry-failed',
+              generationTaskId: 'task-failed',
+              title: 'failed chapter',
+              status: 'failed',
+              pageCount: 1,
+            }],
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-failed',
+          status: 'failed',
+          diaryEntryId: 'entry-failed',
+          result: {},
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'entry-failed',
+      },
+    },
+  })
+
+  assert.equal(storage.draftComicChapter.generationTaskStatus, 'failed')
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/generating/generating?taskId=task-failed&taskStatus=failed',
+  })
+})
+
+test('clicking completed recent chapter with task image enters reader', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    if (options.url.includes('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [{
+              id: 'entry-completed',
+              diaryEntryId: 'entry-completed',
+              generationTaskId: 'task-completed',
+              title: 'completed chapter',
+              status: 'completed',
+              pageCount: 1,
+            }],
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-completed',
+          status: 'completed',
+          diaryEntryId: 'entry-completed',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/completed.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'entry-completed',
+      },
+    },
+  })
+
+  const imageUrl = 'http://127.0.0.1:3000/uploads/generated/completed.png'
+
+  assert.equal(storage.generatedComicChapters[0].imageUrl, imageUrl)
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=entry-completed',
   })
 })
 

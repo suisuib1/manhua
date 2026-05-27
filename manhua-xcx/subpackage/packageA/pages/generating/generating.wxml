@@ -16,7 +16,7 @@
         <view class="stage-star star-a"></view>
         <view class="stage-star star-b"></view>
       </view>
-      <view class="stage-title">正在为你整理今天的漫画页...</view>
+      <view class="stage-title">{{generationTitle}}</view>
       <view class="chapter-pill">当前章节：{{mock.chapterTitle}}</view>
     </view>
   </view>
@@ -45,7 +45,7 @@
     重新生成
   </button>
   <button
-    wx:elif="{{canViewChapter}}"
+    wx:elif="{{generationStatus === 'completed' && canViewChapter}}"
     class="polish-primary"
     bindtap="goChapterDetail"
     hover-class="polish-button-hover"
@@ -55,9 +55,9 @@
   <button
     wx:else
     class="polish-secondary"
-    bindtap="retryTask"
+    bindtap="goHome"
     hover-class="polish-button-hover"
   >
-    返回漫画书
+    稍后查看
   </button>
 </view>

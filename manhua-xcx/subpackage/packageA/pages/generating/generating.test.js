@@ -6,6 +6,7 @@ const test = require('node:test')
 function loadPage(storageSeed = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
+  const switchTabCalls = []
   const requestCalls = []
   const storage = Object.assign({}, storageSeed)
   const intervals = []
@@ -25,6 +26,9 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   global.wx = {
     navigateTo(options) {
       navigateCalls.push(options)
+    },
+    switchTab(options) {
+      switchTabCalls.push(options)
     },
     setStorageSync(key, value) {
       storage[key] = value
@@ -66,7 +70,7 @@ function loadPage(storageSeed = {}, requestImpl = () => {}) {
   const moduleExports = require('./generating')
   pageConfig.moduleExports = moduleExports
 
-  return { pageConfig, navigateCalls, requestCalls, storage, moduleExports, intervals, infoCalls }
+  return { pageConfig, navigateCalls, switchTabCalls, requestCalls, storage, moduleExports, intervals, infoCalls }
 }
 
 async function flushAsyncWork() {
@@ -108,6 +112,24 @@ test('生成中页仍显示模拟进度而不是空壳', () => {
 
   assert.equal(wxml.includes('stage-title'), true)
   assert.equal(wxml.includes('step-track'), true)
+})
+
+test('generation page shows processing title and later button before completion', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'generating.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('{{generationTitle}}'), true)
+  assert.equal(wxml.includes('稍后查看'), true)
+  assert.equal(wxml.includes("wx:elif=\"{{generationStatus === 'completed' && canViewChapter}}\""), true)
+})
+
+test('later button switches back to home tab', () => {
+  const { pageConfig, switchTabCalls } = loadPage()
+
+  pageConfig.goHome()
+
+  assert.deepEqual(switchTabCalls[0], {
+    url: '/pages/index/index',
+  })
 })
 
 test('有草稿时能构造生成章节', () => {

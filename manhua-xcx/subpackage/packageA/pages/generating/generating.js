@@ -8,6 +8,7 @@ const generationTaskPollIntervalMs = 2500
 const generationTaskMaxPollCount = 48
 const generationFailureTitle = '生成失败'
 const generationFailureMessage = '漫画生成超时，请稍后重新生成'
+const generationProcessingTitle = '正在生成中'
 let generationTaskPollTimer = null
 
 function getDefaultPanelImages() {
@@ -65,6 +66,19 @@ function loadPendingDraft() {
   return wx.getStorageSync(storageKeys.draftComicChapter) || null
 }
 
+function savePendingDraftWithTask(draft, task) {
+  if (!draft || !task || !task.id) {
+    return
+  }
+
+  wx.setStorageSync(storageKeys.draftComicChapter, Object.assign({}, draft, {
+    generationTaskId: task.id,
+    generationTaskStatus: task.status,
+    serverDiaryEntryId: task.diaryEntryId || draft.serverDiaryEntryId,
+    generationResult: task.result || {},
+  }))
+}
+
 function buildGenerationTaskMetadata(task) {
   if (!task || !task.id) {
     return {}
@@ -120,7 +134,8 @@ function resetGenerationTaskState(pageContext) {
       generationTaskId: '',
       generationTaskStatus: '',
       generationResult: {},
-      generationStatus: 'generating',
+      generationStatus: 'processing',
+      generationTitle: generationProcessingTitle,
       generationFailureTitle: '',
       generationFailureMessage: '',
     })
@@ -137,6 +152,8 @@ function updateGenerationTaskState(pageContext, task) {
     generationTaskStatus: task.status,
     generationResult: task.result || {},
   })
+
+  savePendingDraftWithTask(pageContext.data && pageContext.data.pendingDraft, task)
 }
 
 function finalizeGeneratedChapter(draft, task) {
@@ -177,6 +194,7 @@ function enterGenerationFailedState(pageContext, task) {
   if (pageContext && typeof pageContext.setData === 'function') {
     pageContext.setData({
       generationStatus: 'failed',
+      generationTitle: generationProcessingTitle,
       generationFailureTitle,
       generationFailureMessage,
       generationTaskStatus: task && task.status ? task.status : 'failed',
@@ -279,6 +297,7 @@ async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
       return finalizeGeneratedChapter(draft)
     }
 
+    savePendingDraftWithTask(draft, task)
     updateGenerationTaskState(pageContext, task)
     const readyTask = await waitForGenerationTaskResult(task, pageContext)
     if (readyTask && readyTask.status === 'failed') {
@@ -306,15 +325,32 @@ Page({
     generationTaskId: '',
     generationTaskStatus: '',
     generationResult: {},
-    generationStatus: 'generating',
+    generationStatus: 'processing',
+    generationTitle: generationProcessingTitle,
     generationFailureTitle: '',
     generationFailureMessage: '',
   },
 
-  onLoad() {
+  onLoad(options) {
+    const pendingDraft = loadPendingDraft()
     this.setData({
-      pendingDraft: loadPendingDraft(),
+      pendingDraft,
     })
+
+    if (options && options.taskId) {
+      const taskStatus = options.taskStatus || ''
+      this.setData({
+        generationTaskId: options.taskId,
+        generationTaskStatus: taskStatus,
+        generationStatus: taskStatus === 'failed' ? 'failed' : 'processing',
+        generationTitle: generationProcessingTitle,
+        generationFailureTitle: taskStatus === 'failed' ? generationFailureTitle : '',
+        generationFailureMessage: taskStatus === 'failed' ? generationFailureMessage : '',
+        canViewChapter: false,
+      })
+      return
+    }
+
     this.startMockProgress()
   },
 
@@ -336,7 +372,7 @@ Page({
       this.setData({
         progress: nextProgress,
         activeStepIndex,
-        canViewChapter: nextProgress >= 100,
+        canViewChapter: false,
       })
 
       if (nextProgress >= 100) {
@@ -344,6 +380,8 @@ Page({
           if (generatedChapter && generatedChapter.id) {
             this.setData({
               generatedChapterId: generatedChapter.id,
+              generationStatus: 'completed',
+              canViewChapter: true,
             })
           }
         })
@@ -365,10 +403,9 @@ Page({
     })
   },
 
-  retryTask() {
-    wx.showToast({
-      title: '当前为失败重试占位',
-      icon: 'none',
+  goHome() {
+    wx.switchTab({
+      url: pageRoutes.home,
     })
   },
 
@@ -383,7 +420,8 @@ Page({
       generationTaskId: '',
       generationTaskStatus: '',
       generationResult: {},
-      generationStatus: 'generating',
+      generationStatus: 'processing',
+      generationTitle: generationProcessingTitle,
       generationFailureTitle: '',
       generationFailureMessage: '',
     })
@@ -398,6 +436,7 @@ module.exports = {
   loadGeneratedChapters,
   saveGeneratedChapters,
   loadPendingDraft,
+  savePendingDraftWithTask,
   getDefaultPanelImages,
   buildGenerationTaskMetadata,
   getFirstGenerationImageUrl,
@@ -410,4 +449,5 @@ module.exports = {
   generationTaskMaxPollCount,
   generationFailureTitle,
   generationFailureMessage,
+  generationProcessingTitle,
 }
