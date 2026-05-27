@@ -1,5 +1,12 @@
 const { mineMock, pageRoutes } = require('../../utils/mock')
 const { clearAuthSession, getAuthToken, getCurrentUser, loginWithWechat, refreshCurrentUser } = require('../../utils/auth')
+const { getComicChapterStats } = require('../../utils/comicChapterApi')
+
+const emptyBookStats = {
+  chapterCount: 0,
+  completedCount: 0,
+  generatingCount: 0,
+}
 
 const loggedOutUser = {
   nickname: '未登录',
@@ -8,7 +15,7 @@ const loggedOutUser = {
 }
 
 function buildMockWithUser(user) {
-  return Object.assign({}, mineMock, {
+  return {
     user: user && user.id
       ? {
         nickname: user.nickname || '漫画日记用户',
@@ -16,12 +23,22 @@ function buildMockWithUser(user) {
         avatar: user.avatarUrl || '/subpackage/icon-home-mascot-star.png',
       }
       : loggedOutUser,
+  }
+}
+
+function buildBookStats(stats) {
+  return Object.assign({}, mineMock.bookStats, {
+    chapterCount: Number(stats && stats.totalChapters) || 0,
+    completedCount: Number(stats && stats.completedChapters) || 0,
+    generatingCount: Number(stats && stats.generatingChapters) || 0,
   })
 }
 
 Page({
   data: {
-    mock: buildMockWithUser(null),
+    mock: Object.assign({}, mineMock, buildMockWithUser(null), {
+      bookStats: buildBookStats(null),
+    }),
   },
 
   onShow() {
@@ -30,26 +47,54 @@ Page({
 
   applyUser(user) {
     this.setData({
-      mock: buildMockWithUser(user),
+      mock: Object.assign({}, this.data.mock, buildMockWithUser(user)),
+    })
+  },
+
+  applyBookStats(stats) {
+    this.setData({
+      mock: Object.assign({}, this.data.mock, {
+        bookStats: buildBookStats(stats),
+      }),
     })
   },
 
   async refreshUserProfile() {
     if (!getAuthToken()) {
       this.applyUser(null)
+      this.applyBookStats(null)
       return
     }
 
     this.applyUser(getCurrentUser())
+    this.refreshBookStats()
 
     try {
-      const { user } = await refreshCurrentUser()
+      const refreshed = await refreshCurrentUser()
+      const user = refreshed && refreshed.user ? refreshed.user : refreshed
       this.applyUser(user)
     } catch (error) {
       if (error && error.statusCode === 401) {
         clearAuthSession()
       }
       this.applyUser(null)
+      this.applyBookStats(null)
+    }
+  },
+
+  async refreshBookStats() {
+    if (!getAuthToken()) {
+      this.applyBookStats(null)
+      return null
+    }
+
+    try {
+      const stats = await getComicChapterStats()
+      this.applyBookStats(stats)
+      return stats
+    } catch (error) {
+      console.warn('[mine] comic chapter stats load failed', error && error.message)
+      return null
     }
   },
 
@@ -73,6 +118,7 @@ Page({
     try {
       const user = await loginWithWechat({})
       this.applyUser(user)
+      await this.refreshBookStats()
     } catch (error) {
       const title = error && error.statusCode === 0 && error.message
         ? error.message

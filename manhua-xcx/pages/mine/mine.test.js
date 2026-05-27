@@ -3,10 +3,64 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
+function loadPage(storage = {}, requestImpl = () => {}) {
+  let pageConfig
+  const requestCalls = []
+  const navigateCalls = []
+  const toastCalls = []
+  const warnCalls = []
+
+  console.warn = (...args) => {
+    warnCalls.push(args)
+  }
+
+  global.Page = (config) => {
+    pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
+  }
+
+  global.wx = {
+    getStorageSync(key) {
+      return storage[key]
+    },
+    setStorageSync(key, value) {
+      storage[key] = value
+    },
+    login(options) {
+      options.success({ code: 'mine_login_code' })
+    },
+    request(options) {
+      requestCalls.push(options)
+      requestImpl(options)
+    },
+    navigateTo(options) {
+      navigateCalls.push(options)
+    },
+    showToast(options) {
+      toastCalls.push(options)
+    },
+  }
+
+  delete require.cache[require.resolve('../../utils/api')]
+  delete require.cache[require.resolve('../../utils/auth')]
+  delete require.cache[require.resolve('../../utils/comicChapterApi')]
+  delete require.cache[require.resolve('./mine')]
+  require('./mine')
+
+  return { pageConfig, requestCalls, navigateCalls, toastCalls, warnCalls, storage }
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve()
+  await Promise.resolve()
+}
+
 test('点击用户信息区域会通过后端登录并保存 token', async () => {
   let pageConfig
   const storage = {}
-  let requestOptions
+  const requestCalls = []
 
   global.Page = (config) => {
     pageConfig = config
@@ -26,7 +80,23 @@ test('点击用户信息区域会通过后端登录并保存 token', async () =>
       options.success({ code: 'test_issue5_code' })
     },
     request(options) {
-      requestOptions = options
+      requestCalls.push(options)
+      if (options.url.endsWith('/api/comic-chapters/stats')) {
+        options.success({
+          statusCode: 200,
+          data: {
+            code: 0,
+            message: 'ok',
+            data: {
+              totalChapters: 0,
+              completedChapters: 0,
+              generatingChapters: 0,
+            },
+          },
+        })
+        return
+      }
+
       options.success({
         statusCode: 200,
         data: {
@@ -57,10 +127,107 @@ test('点击用户信息区域会通过后端登录并保存 token', async () =>
 
   await pageConfig.handleUserInfoTap()
 
-  assert.equal(requestOptions.url, 'http://127.0.0.1:3000/api/auth/wechat/login')
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/auth/wechat/login')
   assert.equal(storage.authToken, 'token-issue5')
   assert.equal(storage.currentUser.id, 'user-issue5')
   assert.equal(pageConfig.data.mock.user.nickname, '小满')
+})
+
+test('未登录我的页统计显示 0 且不请求 stats', async () => {
+  const { pageConfig, requestCalls } = loadPage()
+
+  await pageConfig.onShow()
+
+  assert.equal(pageConfig.data.mock.bookStats.chapterCount, 0)
+  assert.equal(pageConfig.data.mock.bookStats.completedCount, 0)
+  assert.equal(pageConfig.data.mock.bookStats.generatingCount, 0)
+  assert.equal(requestCalls.length, 0)
+})
+
+test('已登录我的页请求真实统计并渲染三个数字', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-stats',
+    currentUser: {
+      id: 'user-stats',
+      nickname: '统计用户',
+      avatarUrl: '',
+    },
+  }, (options) => {
+    if (options.url.endsWith('/api/comic-chapters/stats')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            totalChapters: 3,
+            completedChapters: 1,
+            generatingChapters: 1,
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'user-stats',
+          nickname: '统计用户',
+          avatarUrl: '',
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.some((options) => options.url.endsWith('/api/comic-chapters/stats')), true)
+  assert.equal(pageConfig.data.mock.bookStats.chapterCount, 3)
+  assert.equal(pageConfig.data.mock.bookStats.completedCount, 1)
+  assert.equal(pageConfig.data.mock.bookStats.generatingCount, 1)
+})
+
+test('stats 请求失败时不显示旧占位数字', async () => {
+  const { pageConfig, requestCalls, warnCalls } = loadPage({
+    authToken: 'token-stats-fail',
+    currentUser: {
+      id: 'user-stats-fail',
+      nickname: '统计失败用户',
+      avatarUrl: '',
+    },
+  }, (options) => {
+    if (options.url.endsWith('/api/comic-chapters/stats')) {
+      options.fail(new Error('network error'))
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'user-stats-fail',
+          nickname: '统计失败用户',
+          avatarUrl: '',
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.some((options) => options.url.endsWith('/api/comic-chapters/stats')), true)
+  assert.equal(pageConfig.data.mock.bookStats.chapterCount, 0)
+  assert.equal(pageConfig.data.mock.bookStats.completedCount, 0)
+  assert.equal(pageConfig.data.mock.bookStats.generatingCount, 0)
+  assert.equal(warnCalls.length > 0, true)
 })
 
 test('个人中心不展示今日免费次数卡片', () => {
@@ -168,7 +335,7 @@ test('点击漫画书进入独立漫画书页面', () => {
 test('未登录点击顶部用户卡片会触发登录', async () => {
   let pageConfig
   const storage = {}
-  let requestOptions
+  const requestCalls = []
   let navigateOptions
 
   global.Page = (config) => {
@@ -189,7 +356,23 @@ test('未登录点击顶部用户卡片会触发登录', async () => {
       options.success({ code: 'test_issue_login_from_card' })
     },
     request(options) {
-      requestOptions = options
+      requestCalls.push(options)
+      if (options.url.endsWith('/api/comic-chapters/stats')) {
+        options.success({
+          statusCode: 200,
+          data: {
+            code: 0,
+            message: 'ok',
+            data: {
+              totalChapters: 0,
+              completedChapters: 0,
+              generatingChapters: 0,
+            },
+          },
+        })
+        return
+      }
+
       options.success({
         statusCode: 200,
         data: {
@@ -220,7 +403,7 @@ test('未登录点击顶部用户卡片会触发登录', async () => {
 
   await pageConfig.openComicBook()
 
-  assert.equal(requestOptions.url, 'http://127.0.0.1:3000/api/auth/wechat/login')
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/auth/wechat/login')
   assert.equal(storage.authToken, 'token-from-card')
   assert.equal(storage.currentUser.id, 'user-from-card')
   assert.equal(pageConfig.data.mock.user.nickname, '小满')

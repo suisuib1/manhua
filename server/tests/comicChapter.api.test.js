@@ -128,6 +128,20 @@ test('GET /api/comic-chapters/recent requires login', async () => {
   }
 })
 
+test('GET /api/comic-chapters/stats requires login', async () => {
+  const server = await listen(app)
+
+  try {
+    const { response, body } = await requestJson(server, 'GET', '/api/comic-chapters/stats')
+
+    assert.equal(response.status, 401)
+    assert.equal(body.code, 401)
+    assert.equal(body.data, null)
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
 test('GET /api/comic-chapters/recent only returns current user chapters', async () => {
   const server = await listen(app)
 
@@ -321,6 +335,90 @@ test('GET /api/comic-chapters/recent does not expose internal or private fields'
     assert.equal(item.inputJson, undefined)
     assert.equal(item.resultJson, undefined)
     assert.equal(JSON.stringify(item).includes(fullText), false)
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test('GET /api/comic-chapters/stats counts only current user latest task per active diary', async () => {
+  const server = await listen(app)
+
+  try {
+    const userA = await login(server, 'stats_owner_a')
+    const userB = await login(server, 'stats_owner_b')
+
+    const completedEntry = await createDiaryEntry(userA.user.id, 'stats_completed')
+    await createGenerationTask(userA.user.id, completedEntry.id, 'stats_completed', {
+      second: 1,
+      status: 'completed',
+      imageUrl: '/uploads/generated/stats-completed.png',
+    })
+
+    const processingEntry = await createDiaryEntry(userA.user.id, 'stats_processing')
+    await createGenerationTask(userA.user.id, processingEntry.id, 'stats_processing', {
+      second: 2,
+      status: 'processing',
+      imageUrl: null,
+    })
+
+    const pendingEntry = await createDiaryEntry(userA.user.id, 'stats_pending')
+    await createGenerationTask(userA.user.id, pendingEntry.id, 'stats_pending', {
+      second: 3,
+      status: 'pending',
+      imageUrl: null,
+    })
+
+    const failedEntry = await createDiaryEntry(userA.user.id, 'stats_failed')
+    await createGenerationTask(userA.user.id, failedEntry.id, 'stats_failed', {
+      second: 4,
+      status: 'failed',
+      imageUrl: null,
+    })
+
+    const noImageEntry = await createDiaryEntry(userA.user.id, 'stats_no_image')
+    await createGenerationTask(userA.user.id, noImageEntry.id, 'stats_no_image', {
+      second: 5,
+      status: 'completed',
+      imageUrl: null,
+    })
+
+    const deletedEntry = await createDiaryEntry(userA.user.id, 'stats_deleted', {
+      deletedAt: new Date(),
+    })
+    await createGenerationTask(userA.user.id, deletedEntry.id, 'stats_deleted', {
+      second: 6,
+      status: 'completed',
+      imageUrl: '/uploads/generated/deleted.png',
+    })
+
+    const latestEntry = await createDiaryEntry(userA.user.id, 'stats_latest')
+    await createGenerationTask(userA.user.id, latestEntry.id, 'stats_latest_old', {
+      second: 7,
+      status: 'completed',
+      imageUrl: '/uploads/generated/old.png',
+    })
+    await createGenerationTask(userA.user.id, latestEntry.id, 'stats_latest_new', {
+      second: 8,
+      status: 'processing',
+      imageUrl: null,
+    })
+
+    const otherEntry = await createDiaryEntry(userB.user.id, 'stats_other')
+    await createGenerationTask(userB.user.id, otherEntry.id, 'stats_other', {
+      second: 9,
+      status: 'completed',
+      imageUrl: '/uploads/generated/other.png',
+    })
+
+    const { response, body } = await requestJson(server, 'GET', '/api/comic-chapters/stats', undefined, userA.token)
+
+    assert.equal(response.status, 200)
+    assert.equal(body.code, 0)
+    assert.deepEqual(body.data, {
+      totalChapters: 6,
+      completedChapters: 1,
+      generatingChapters: 3,
+    })
   } finally {
     await new Promise((resolve) => server.close(resolve))
   }

@@ -11,6 +11,15 @@ function getRecentComicChapters(options = {}) {
   })
 }
 
+function getComicChapterStats() {
+  return request({
+    url: '/api/comic-chapters/stats',
+    method: 'GET',
+    auth: true,
+  })
+}
+
 module.exports = {
   getRecentComicChapters,
+  getComicChapterStats,
 }

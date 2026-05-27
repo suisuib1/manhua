@@ -1,6 +1,7 @@
 const { success } = require('../utils/response')
 const {
   listRecentChapters,
+  getComicChapterStats,
 } = require('../services/comicChapter.service')
 
 async function listRecentComicChapters(req, res, next) {
@@ -12,6 +13,16 @@ async function listRecentComicChapters(req, res, next) {
   }
 }
 
+async function getComicChapterStatsController(req, res, next) {
+  try {
+    const data = await getComicChapterStats(req.user.id)
+    return success(res, data)
+  } catch (err) {
+    return next(err)
+  }
+}
+
 module.exports = {
   listRecentComicChapters,
+  getComicChapterStats: getComicChapterStatsController,
 }

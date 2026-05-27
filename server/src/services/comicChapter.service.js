@@ -61,6 +61,61 @@ async function listRecentChapters(ownerUserId, query) {
   }
 }
 
+async function getComicChapterStats(ownerUserId) {
+  const tasks = await prisma.generationTask.findMany({
+    where: {
+      ownerUserId,
+      deletedAt: null,
+      diaryEntryId: {
+        not: null,
+      },
+      diaryEntry: {
+        ownerUserId,
+        deletedAt: null,
+      },
+    },
+    orderBy: [
+      {
+        createdAt: 'desc',
+      },
+    ],
+    include: {
+      diaryEntry: true,
+    },
+  })
+
+  const latestTasks = []
+  const seenDiaryEntryIds = new Set()
+
+  for (const task of tasks) {
+    if (!task.diaryEntry || seenDiaryEntryIds.has(task.diaryEntry.id)) {
+      continue
+    }
+
+    seenDiaryEntryIds.add(task.diaryEntry.id)
+    latestTasks.push(task)
+  }
+
+  let completedChapters = 0
+  let generatingChapters = 0
+
+  for (const task of latestTasks) {
+    if (task.status === 'completed' && hasComicImage(task)) {
+      completedChapters += 1
+    }
+
+    if (task.status === 'pending' || task.status === 'processing') {
+      generatingChapters += 1
+    }
+  }
+
+  return {
+    totalChapters: latestTasks.length,
+    completedChapters,
+    generatingChapters,
+  }
+}
+
 function normalizeLimit(value) {
   const numberValue = Number(value)
 
@@ -107,6 +162,12 @@ function findFirstComicImageUrl(pages) {
   return ''
 }
 
+function hasComicImage(task) {
+  const result = parseJsonObject(task && task.resultJson)
+  const pages = Array.isArray(result.pages) ? result.pages : []
+  return Boolean(findFirstComicImageUrl(pages))
+}
+
 function summarizeDiaryText(value) {
   if (!value) return ''
   return String(value).slice(0, 24)
@@ -130,4 +191,5 @@ function parseJsonObject(value) {
 
 module.exports = {
   listRecentChapters,
+  getComicChapterStats,
 }

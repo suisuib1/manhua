@@ -67,3 +67,33 @@ test('getRecentComicChapters passes limit as query data', async () => {
     limit: 3,
   })
 })
+
+test('getComicChapterStats calls stats endpoint with auth', async () => {
+  let requestOptions
+  const { getComicChapterStats } = loadApi({ authToken: 'token-stats' }, (options) => {
+    requestOptions = options
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          totalChapters: 3,
+          completedChapters: 1,
+          generatingChapters: 1,
+        },
+      },
+    })
+  })
+
+  const data = await getComicChapterStats()
+
+  assert.equal(requestOptions.url, 'http://127.0.0.1:3000/api/comic-chapters/stats')
+  assert.equal(requestOptions.method, 'GET')
+  assert.equal(requestOptions.header.Authorization, 'Bearer token-stats')
+  assert.deepEqual(data, {
+    totalChapters: 3,
+    completedChapters: 1,
+    generatingChapters: 1,
+  })
+})
