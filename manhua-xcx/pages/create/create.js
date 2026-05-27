@@ -40,10 +40,14 @@ function normalizeTagOption(tag) {
 }
 
 function normalizePageCount(value) {
+  if (value === '') {
+    return null
+  }
+
   const pageCount = Number(value)
 
   if (!Number.isFinite(pageCount)) {
-    return 1
+    return null
   }
 
   return Math.min(4, Math.max(1, Math.trunc(pageCount)))
@@ -80,8 +84,8 @@ Page({
     diaryDateLabel: formatLocalDate(),
     dateHint: createChapterMock.dateHint,
     pageMode: createChapterMock.pageMode,
-    pageCount: createChapterMock.pageCount,
-    pageCountInput: String(createChapterMock.pageCount),
+    pageCount: '',
+    pageCountInput: '',
     freeQuotaRemaining: createChapterMock.freeQuotaRemaining,
     quotaHint: createChapterMock.quotaHint,
     tagOptions: buildFallbackTagOptions(),
@@ -140,18 +144,25 @@ Page({
   },
 
   onPageCountInput(event) {
-    const pageCountInput = String(event.detail.value || '').trim()
-    const pageCount = pageCountInput ? normalizePageCount(pageCountInput) : this.data.pageCount
+    const pageCountInput = String(event.detail.value || '').replace(/\D/g, '').slice(0, 1)
 
     this.setData({
       pageMode: 'custom',
-      pageCount,
       pageCountInput,
     })
   },
 
   onPageCountBlur() {
-    const pageCount = normalizePageCount(this.data.pageCountInput || this.data.pageCount)
+    const pageCount = normalizePageCount(this.data.pageCountInput)
+
+    if (pageCount === null) {
+      this.setData({
+        pageMode: 'custom',
+        pageCount: '',
+        pageCountInput: '',
+      })
+      return
+    }
 
     this.setData({
       pageMode: 'custom',
@@ -177,7 +188,24 @@ Page({
   },
 
   goNext() {
-    const pageCount = normalizePageCount(this.data.pageCountInput || this.data.pageCount)
+    const chapterTitle = String(this.data.draftChapterTitle || '').trim()
+    if (!chapterTitle) {
+      wx.showToast({
+        title: '请先填写章节标题',
+        icon: 'none',
+      })
+      return
+    }
+
+    const pageCount = normalizePageCount(this.data.pageCountInput)
+    if (pageCount === null) {
+      wx.showToast({
+        title: '请填写漫画页数',
+        icon: 'none',
+      })
+      return
+    }
+
     const nextData = Object.assign({}, this.data, {
       pageCount,
       pageCountInput: String(pageCount),
@@ -189,13 +217,6 @@ Page({
     })
 
     const draft = buildCreateDraft(nextData)
-    if (!draft.chapterTitle) {
-      wx.showToast({
-        title: '请先填写章节标题',
-        icon: 'none',
-      })
-      return
-    }
 
     saveDraftWithBackendFallback(draft)
     wx.navigateTo({

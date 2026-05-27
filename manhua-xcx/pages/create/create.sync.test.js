@@ -54,6 +54,14 @@ async function flushAsyncWork() {
   await Promise.resolve()
 }
 
+function inputPageCount(pageConfig, value = '2') {
+  pageConfig.onPageCountInput({
+    detail: {
+      value,
+    },
+  })
+}
+
 test('create page requests emotion tags on load', async () => {
   const { pageConfig, requestCalls } = loadPage({}, (options) => {
     options.success({
@@ -131,6 +139,7 @@ test('create draft keeps selected tag keys and labels from backend tags', async 
       value: '后端标签草稿',
     },
   })
+  inputPageCount(pageConfig)
   pageConfig.goNext()
 
   const encodedDraft = navigateCalls[0].url.split('draft=')[1]
@@ -161,6 +170,8 @@ test('create page starts with empty title and no selected mood tags', () => {
   const { pageConfig } = loadPage()
 
   assert.equal(pageConfig.data.draftChapterTitle, '')
+  assert.equal(pageConfig.data.pageCount, '')
+  assert.equal(pageConfig.data.pageCountInput, '')
   assert.equal(pageConfig.data.draftChapterTitle.includes('和小猫一起的傍晚'), false)
   assert.deepEqual(pageConfig.data.selectedTags, [])
   assert.equal(pageConfig.data.tagOptions.some((item) => item.selected), false)
@@ -199,6 +210,7 @@ test('创建页未登录时继续只保存本地草稿并跳转日记页', () =>
       value: '后端草稿标题',
     },
   })
+  inputPageCount(pageConfig)
   pageConfig.goNext()
 
   assert.equal(requestCalls.length, 0)
@@ -228,6 +240,7 @@ test('创建页已登录时保存草稿会尝试创建后端草稿', async () =>
       value: '后端草稿标题',
     },
   })
+  inputPageCount(pageConfig)
   pageConfig.goNext()
   await flushAsyncWork()
 
@@ -244,6 +257,7 @@ test('selected date is saved into local draft and diary page query', () => {
       value: '指定日期标题',
     },
   })
+  inputPageCount(pageConfig)
   pageConfig.onDateChange({
     detail: {
       value: '2026-05-21',
@@ -281,13 +295,30 @@ test('page count input saves manual values from 1 to 4', () => {
   })
 })
 
-test('invalid page count input is clamped before saving draft', () => {
+test('page count input can be cleared while editing', () => {
+  const { pageConfig } = loadPage()
+
+  pageConfig.onPageCountInput({
+    detail: {
+      value: '2',
+    },
+  })
+  assert.equal(pageConfig.data.pageCountInput, '2')
+
+  pageConfig.onPageCountInput({
+    detail: {
+      value: '',
+    },
+  })
+
+  assert.equal(pageConfig.data.pageCountInput, '')
+  assert.equal(pageConfig.data.pageCount, '')
+})
+
+test('invalid page count input is clamped or blocked before saving draft', () => {
   const cases = [
-    { value: '', expected: 1 },
     { value: '0', expected: 1 },
-    { value: '-2', expected: 1 },
     { value: '5', expected: 4 },
-    { value: 'abc', expected: 1 },
   ]
 
   cases.forEach((item) => {
@@ -310,6 +341,28 @@ test('invalid page count input is clamped before saving draft', () => {
     assert.equal(pageConfig.data.pageCountInput, String(item.expected))
     assert.notEqual(storage.draftComicChapter.pageCount, '')
     assert.equal(Number.isNaN(storage.draftComicChapter.pageCount), false)
+  })
+})
+
+test('empty or non-numeric page count blocks draft save', () => {
+  ;['', 'abc'].forEach((value) => {
+    const { pageConfig, navigateCalls, storage, toastCalls } = loadPage()
+
+    pageConfig.onTitleInput({
+      detail: {
+        value: `空页数 ${value || 'empty'}`,
+      },
+    })
+    pageConfig.onPageCountInput({
+      detail: {
+        value,
+      },
+    })
+    pageConfig.goNext()
+
+    assert.equal(storage.draftComicChapter, undefined)
+    assert.equal(navigateCalls.length, 0)
+    assert.equal(toastCalls[0].title, '请填写漫画页数')
   })
 })
 
