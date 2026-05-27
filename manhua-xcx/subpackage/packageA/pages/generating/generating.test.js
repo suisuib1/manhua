@@ -196,6 +196,52 @@ test('loading processing task status keeps later button state', async () => {
   assert.equal(pageConfig.data.canViewChapter, false)
 })
 
+test('loading completed task overrides stale failed state and writes real image', async () => {
+  const { pageConfig, requestCalls, storage } = loadPage({
+    authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-completed-load',
+      generationTaskId: 'task-completed-load',
+      generationTaskStatus: 'failed',
+      chapterTitle: 'completed after failed',
+      pageCount: 2,
+    },
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-completed-load',
+          status: 'completed',
+          diaryEntryId: 'entry-completed-load',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/completed-after-failed.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-completed-load',
+    taskStatus: 'failed',
+  })
+  await flushAsyncWork()
+
+  const imageUrl = 'http://127.0.0.1:3000/uploads/generated/completed-after-failed.png'
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks/task-completed-load')
+  assert.equal(pageConfig.data.generationStatus, 'completed')
+  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(pageConfig.data.canViewChapter, true)
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'completed')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, imageUrl)
+  assert.equal(storage.generatedComicChapters[0].coverImageUrl, imageUrl)
+  assert.equal(storage.generatedComicChapters[0].pages[0].images[0], imageUrl)
+})
+
 test('有草稿时能构造生成章节', () => {
   const { moduleExports } = loadPage()
 
@@ -292,7 +338,7 @@ test('generation task success adds backend metadata without changing reader page
           status: 'completed',
           diaryEntryId: 'entry-1',
           result: {
-            pages: [{ pageIndex: 0, mock: true }],
+            pages: [{ pageIndex: 0, imageUrl: '/uploads/generated/task-1.png' }],
           },
         },
       },
@@ -314,7 +360,7 @@ test('generation task success adds backend metadata without changing reader page
   assert.equal(chapter.generationTaskStatus, 'completed')
   assert.equal(chapter.serverDiaryEntryId, 'entry-1')
   assert.deepEqual(chapter.generationResult, {
-    pages: [{ pageIndex: 0, mock: true }],
+    pages: [{ pageIndex: 0, imageUrl: '/uploads/generated/task-1.png' }],
   })
   assert.equal(Array.isArray(chapter.pages), true)
   assert.equal(storage.generatedComicChapters[0].id, chapter.id)
@@ -657,7 +703,7 @@ test('failed polled generation task enters failed state without writing local su
   assert.equal(navigateCalls.length, 0)
 })
 
-test('polling get failure enters failed state without writing local success chapter', async () => {
+test('polling get failure keeps processing state without writing local success chapter', async () => {
   const { pageConfig, moduleExports, storage, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -691,8 +737,10 @@ test('polling get failure enters failed state without writing local success chap
   const chapter = await pending
 
   assert.equal(chapter, null)
-  assert.equal(pageConfig.data.generationStatus, 'failed')
-  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationTitle, '正在生成中')
+  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(pageConfig.data.generationTaskStatus, 'pending')
   assert.equal(storage.generatedComicChapters, undefined)
 })
 
@@ -740,7 +788,50 @@ test('retry generation creates a new backend task after failed state', async () 
   assert.equal(storage.generatedComicChapters, undefined)
 })
 
-test('polling max count resolves failed task state instead of local success fallback', async () => {
+test('polling max count uses final completed task result before showing fallback state', async () => {
+  let getCount = 0
+  const { pageConfig, moduleExports, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    getCount += 1
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-timeout-completed',
+          status: getCount > moduleExports.generationTaskMaxPollCount ? 'completed' : 'processing',
+          diaryEntryId: 'entry-timeout-completed',
+          result: getCount > moduleExports.generationTaskMaxPollCount
+            ? { pages: [{ imageUrl: '/uploads/generated/final-check.png' }] }
+            : {},
+        },
+      },
+    })
+  })
+
+  const pending = moduleExports.waitForGenerationTaskResult({
+    id: 'task-timeout-completed',
+    status: 'processing',
+    diaryEntryId: 'entry-timeout-completed',
+    result: {},
+  }, pageConfig)
+  const pollTimer = await waitForInterval(intervals)
+
+  for (let index = 0; index < moduleExports.generationTaskMaxPollCount + 1; index += 1) {
+    await runTimer(pollTimer)
+  }
+
+  const task = await pending
+
+  assert.equal(task.status, 'completed')
+  assert.equal(moduleExports.getFirstGenerationImageUrl(task), 'http://127.0.0.1:3000/uploads/generated/final-check.png')
+  assert.equal(pageConfig.data.generationTaskStatus, 'completed')
+  assert.equal(pollTimer.cleared, true)
+})
+
+test('polling max count keeps processing when final task is still processing', async () => {
   const { pageConfig, moduleExports, intervals } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -773,11 +864,38 @@ test('polling max count resolves failed task state instead of local success fall
 
   const task = await pending
 
-  assert.equal(task.status, 'failed')
-  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
-  moduleExports.enterGenerationFailedState(pageConfig, task)
-  assert.equal(pageConfig.data.generationStatus, 'failed')
-  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
+  assert.equal(task.status, 'processing')
+  assert.equal(pageConfig.data.generationTaskStatus, 'processing')
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationTitle, '正在生成中')
+  assert.equal(pageConfig.data.generationFailureTitle, '')
+  assert.equal(pollTimer.cleared, true)
+})
+
+test('polling max count keeps processing when final task lookup fails', async () => {
+  const { pageConfig, moduleExports, intervals } = loadPage({
+    authToken: 'token-task',
+  }, (options) => {
+    options.fail(new Error('temporary network error'))
+  })
+
+  const pending = moduleExports.waitForGenerationTaskResult({
+    id: 'task-timeout-get-fail',
+    status: 'processing',
+    diaryEntryId: 'entry-timeout-get-fail',
+    result: {},
+  }, pageConfig)
+  const pollTimer = await waitForInterval(intervals)
+
+  for (let index = 0; index < moduleExports.generationTaskMaxPollCount + 1; index += 1) {
+    await runTimer(pollTimer)
+  }
+
+  const task = await pending
+
+  assert.equal(task.status, 'processing')
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationFailureTitle, '')
   assert.equal(pollTimer.cleared, true)
 })
 
@@ -815,8 +933,8 @@ test('onUnload clears polling timer', async () => {
   assert.equal(intervals.some((timer) => timer.cleared), true)
 })
 
-test('generation task without imageUrl keeps local reader fallback image', async () => {
-  const { moduleExports } = loadPage({
+test('completed generation task without imageUrl keeps processing state without local success chapter', async () => {
+  const { pageConfig, moduleExports, storage } = loadPage({
     authToken: 'token-task',
   }, (options) => {
     options.success({
@@ -842,10 +960,11 @@ test('generation task without imageUrl keeps local reader fallback image', async
     diaryDate: '2026-05-21',
     diaryText: 'keep fallback image',
     pageCount: 2,
-  })
+  }, pageConfig)
 
-  assert.notEqual(chapter.pages[0].images[0], '/uploads/generated/ai-first-page.png')
-  assert.equal(chapter.pages[0].images[0].startsWith('/subpackage/'), true)
+  assert.equal(chapter, null)
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(storage.generatedComicChapters, undefined)
 })
 
 test('missing serverDiaryEntryId syncs diary before creating generation task', async () => {
@@ -875,7 +994,9 @@ test('missing serverDiaryEntryId syncs diary before creating generation task', a
           id: 'task-created',
           status: 'completed',
           diaryEntryId: 'entry-created',
-          result: {},
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/created.png' }],
+          },
         },
       },
     })
@@ -895,7 +1016,7 @@ test('missing serverDiaryEntryId syncs diary before creating generation task', a
   assert.equal(chapter.generationTaskId, 'task-created')
 })
 
-test('generation task create failure enters failed state without writing local success chapter', async () => {
+test('generation task create failure keeps processing state without writing local success chapter', async () => {
   const { pageConfig, moduleExports, requestCalls, storage } = loadPage({
     authToken: 'token-task',
   }, (options) => {
@@ -919,8 +1040,8 @@ test('generation task create failure enters failed state without writing local s
 
   assert.equal(requestCalls.length, 1)
   assert.equal(chapter, null)
-  assert.equal(pageConfig.data.generationStatus, 'failed')
-  assert.equal(pageConfig.data.generationTaskStatus, 'failed')
+  assert.equal(pageConfig.data.generationStatus, 'processing')
+  assert.equal(pageConfig.data.generationTaskStatus, 'processing')
   assert.equal(storage.generatedComicChapters, undefined)
 })
 
@@ -937,7 +1058,9 @@ test('generation task metadata does not change reader navigation', async () => {
           id: 'task-nav',
           status: 'completed',
           diaryEntryId: 'entry-nav',
-          result: {},
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/nav.png' }],
+          },
         },
       },
     })

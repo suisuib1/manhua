@@ -643,6 +643,66 @@ test('clicking completed recent chapter with task image enters reader', async ()
   })
 })
 
+test('clicking stale failed recent chapter enters reader when backend task is completed', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-recent',
+  }, (options) => {
+    if (options.url.includes('/api/comic-chapters/recent')) {
+      options.success({
+        statusCode: 200,
+        data: {
+          code: 0,
+          message: 'ok',
+          data: {
+            items: [{
+              id: 'entry-stale-failed',
+              diaryEntryId: 'entry-stale-failed',
+              generationTaskId: 'task-stale-failed',
+              title: 'stale failed chapter',
+              status: 'failed',
+              pageCount: 1,
+            }],
+          },
+        },
+      })
+      return
+    }
+
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-stale-failed',
+          status: 'completed',
+          diaryEntryId: 'entry-stale-failed',
+          result: {
+            pages: [{ imageUrl: '/uploads/generated/stale-failed-completed.png' }],
+          },
+        },
+      },
+    })
+  })
+
+  await pageConfig.onShow()
+  await pageConfig.goChapterDetail({
+    currentTarget: {
+      dataset: {
+        id: 'entry-stale-failed',
+      },
+    },
+  })
+
+  const imageUrl = 'http://127.0.0.1:3000/uploads/generated/stale-failed-completed.png'
+
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'completed')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, imageUrl)
+  assert.deepEqual(navigateCalls[0], {
+    url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=entry-stale-failed',
+  })
+})
+
 test('home falls back to mock recent chapters when backend fails', async () => {
   const { pageConfig } = loadPage({
     authToken: 'token-recent',

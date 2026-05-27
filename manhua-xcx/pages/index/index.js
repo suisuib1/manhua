@@ -132,6 +132,8 @@ function mergeTaskImageIntoChapter(chapter, task) {
 
   return buildReaderChapterFromRecent(Object.assign({}, chapter, {
     status: task.status,
+    generationTaskStatus: task.status,
+    generationResult: task.result || {},
     coverImageUrl: imageUrl,
   }))
 }

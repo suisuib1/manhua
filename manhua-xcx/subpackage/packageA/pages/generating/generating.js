@@ -19,6 +19,10 @@ function isGenerationTaskProcessing(status) {
   return status === 'pending' || status === 'processing'
 }
 
+function isGenerationTaskCompletedWithImage(task) {
+  return task && task.status === 'completed' && Boolean(getFirstGenerationImageUrl(task))
+}
+
 function getDefaultPanelImages() {
   return [
     '/subpackage/icon-home-mascot-star.png',
@@ -192,6 +196,26 @@ function buildFailedGenerationTask(task) {
   })
 }
 
+function enterGenerationProcessingState(pageContext, task) {
+  clearGenerationTaskPollTimer()
+
+  if (pageContext && typeof pageContext.clearMockTimer === 'function') {
+    pageContext.clearMockTimer()
+  }
+
+  if (pageContext && typeof pageContext.setData === 'function') {
+    pageContext.setData({
+      generationStatus: 'processing',
+      generationTitle: generationProcessingTitle,
+      generationFailureTitle: '',
+      generationFailureMessage: '',
+      generationTaskStatus: task && task.status ? task.status : 'processing',
+      generationResult: task && task.result ? task.result : {},
+      canViewChapter: false,
+    })
+  }
+}
+
 function enterGenerationFailedState(pageContext, task) {
   clearGenerationTaskPollTimer()
 
@@ -239,9 +263,15 @@ function waitForGenerationTaskResult(task, pageContext) {
 
       if (pollCount > generationTaskMaxPollCount) {
         clearGenerationTaskPollTimer()
-        const failedTask = buildFailedGenerationTask(latestKnownTask)
-        updateGenerationTaskState(pageContext, failedTask)
-        resolve(failedTask)
+        try {
+          const finalTask = await getGenerationTask(task.id)
+          latestKnownTask = finalTask || latestKnownTask
+          updateGenerationTaskState(pageContext, latestKnownTask)
+          resolve(latestKnownTask)
+        } catch (error) {
+          enterGenerationProcessingState(pageContext, latestKnownTask)
+          resolve(latestKnownTask)
+        }
         return
       }
 
@@ -265,9 +295,8 @@ function waitForGenerationTaskResult(task, pageContext) {
         }
       } catch (error) {
         clearGenerationTaskPollTimer()
-        const failedTask = buildFailedGenerationTask(latestKnownTask)
-        updateGenerationTaskState(pageContext, failedTask)
-        resolve(failedTask)
+        enterGenerationProcessingState(pageContext, latestKnownTask)
+        resolve(latestKnownTask)
       }
     }, generationTaskPollIntervalMs)
   })
@@ -308,14 +337,19 @@ async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
     savePendingDraftWithTask(draft, task)
     updateGenerationTaskState(pageContext, task)
     const readyTask = await waitForGenerationTaskResult(task, pageContext)
+    if (isGenerationTaskCompletedWithImage(readyTask)) {
+      return finalizeGeneratedChapter(draft, readyTask)
+    }
+
     if (readyTask && readyTask.status === 'failed') {
       enterGenerationFailedState(pageContext, readyTask)
       return null
     }
 
-    return finalizeGeneratedChapter(draft, readyTask)
+    enterGenerationProcessingState(pageContext, readyTask)
+    return null
   } catch (error) {
-    enterGenerationFailedState(pageContext)
+    enterGenerationProcessingState(pageContext)
     return null
   }
 }
@@ -428,11 +462,13 @@ Page({
         return
       }
 
-      if (task && task.status === 'completed' && getFirstGenerationImageUrl(task)) {
+      if (isGenerationTaskCompletedWithImage(task)) {
         const generatedChapter = finalizeGeneratedChapter(this.data.pendingDraft, task)
         this.setData({
           generatedChapterId: generatedChapter.id,
           generationStatus: 'completed',
+          generationFailureTitle: '',
+          generationFailureMessage: '',
           canViewChapter: true,
         })
         return
@@ -488,6 +524,7 @@ module.exports = {
   waitForGenerationTaskResult,
   clearGenerationTaskPollTimer,
   enterGenerationFailedState,
+  enterGenerationProcessingState,
   generationTaskPollIntervalMs,
   generationTaskMaxPollCount,
   generationFailureTitle,
@@ -495,4 +532,5 @@ module.exports = {
   generationProcessingTitle,
   isGenerationTaskFailed,
   isGenerationTaskProcessing,
+  isGenerationTaskCompletedWithImage,
 }
