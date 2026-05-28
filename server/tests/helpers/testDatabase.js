@@ -40,6 +40,9 @@ async function applyMigrationOnce() {
 
 async function clearCoreTables() {
   await applyMigrationOnce()
+  if (prisma.adminUser) {
+    await prisma.adminUser.deleteMany()
+  }
   if (prisma.generationTask) {
     await prisma.generationTask.deleteMany()
   }

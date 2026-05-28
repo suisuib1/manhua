@@ -1,45 +1,43 @@
 const { fail } = require('../utils/response')
-const { verifyUserToken } = require('../utils/jwt')
+const { verifyAdminToken } = require('../utils/jwt')
 const { prisma } = require('../utils/prisma')
 
-async function authMiddleware(req, res, next) {
+async function adminAuthMiddleware(req, res, next) {
   const token = readBearerToken(req)
 
   if (!token) {
-    return fail(res, 401, '请先登录', 401)
+    return fail(res, 401, '请先登录后台', 401)
   }
 
   let payload
   try {
-    payload = verifyUserToken(token)
+    payload = verifyAdminToken(token)
   } catch (err) {
-    return fail(res, 401, '登录已失效，请重新登录', 401)
+    return fail(res, 401, '后台登录已失效，请重新登录', 401)
   }
 
-  if (!payload || !payload.sub || payload.type === 'admin') {
-    return fail(res, 401, '登录已失效，请重新登录', 401)
+  if (!payload || !payload.sub || payload.type !== 'admin') {
+    return fail(res, 401, '后台登录已失效，请重新登录', 401)
   }
 
   try {
-    const user = await prisma.user.findUnique({
+    const admin = await prisma.adminUser.findUnique({
       where: {
         id: payload.sub,
       },
       select: {
         id: true,
+        username: true,
+        displayName: true,
         status: true,
       },
     })
 
-    if (!user || user.status !== 'active') {
-      return fail(res, 401, '登录已失效，请重新登录', 401)
+    if (!admin || admin.status !== 'active') {
+      return fail(res, 401, '后台登录已失效，请重新登录', 401)
     }
 
-    req.user = {
-      id: user.id,
-      status: user.status,
-    }
-
+    req.admin = admin
     return next()
   } catch (err) {
     return next(err)
@@ -62,4 +60,4 @@ function readBearerToken(req) {
   return token
 }
 
-module.exports = authMiddleware
+module.exports = adminAuthMiddleware

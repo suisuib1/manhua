@@ -25,11 +25,30 @@ function signUserToken(user) {
   )
 }
 
+function signAdminToken(admin) {
+  return jwt.sign(
+    {
+      sub: admin.id,
+      type: 'admin',
+    },
+    getJwtSecret(),
+    {
+      expiresIn: process.env.ADMIN_JWT_EXPIRES_IN || process.env.JWT_EXPIRES_IN || '7d',
+    }
+  )
+}
+
 function verifyUserToken(token) {
   return jwt.verify(token, getJwtSecret())
 }
 
+function verifyAdminToken(token) {
+  return jwt.verify(token, getJwtSecret())
+}
+
 module.exports = {
+  signAdminToken,
   signUserToken,
+  verifyAdminToken,
   verifyUserToken,
 }

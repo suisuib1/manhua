@@ -31,3 +31,13 @@ Notes:
 - The `appid` in WeChat DevTools `project.config.json` should match `WECHAT_APP_ID`.
 - Device debugging and production need a valid request domain and an HTTPS backend domain.
 - WeChat DevTools can temporarily disable domain verification for local debugging, but production cannot rely on that option.
+
+## Admin user
+
+Create or reset a local admin user from `server`:
+
+```bash
+node scripts/createAdmin.js --username admin --password your-password --displayName 超级管理员
+```
+
+The script never uses a hard-coded password. If the username already exists, it updates `passwordHash`, `displayName`, and sets `status` back to `active`.
