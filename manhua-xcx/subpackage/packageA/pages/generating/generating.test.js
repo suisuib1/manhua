@@ -227,8 +227,56 @@ test('loading failed task status shows retry state instead of later button state
   assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks/task-failed-load')
   assert.equal(pageConfig.data.generationStatus, 'failed')
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
-  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
+  assert.equal(pageConfig.data.generationFailureMessage, '图片服务暂时不可用，请稍后重试')
   assert.equal(pageConfig.data.canViewChapter, false)
+})
+
+test('failed task with OpenAI 401 shows friendly failure copy without writing success chapter', async () => {
+  const { pageConfig, requestCalls, storage, navigateCalls } = loadPage({
+    authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-openai-401',
+      chapterTitle: 'openai 401 chapter',
+      pageCount: 2,
+    },
+    generatedComicChapters: [],
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          id: 'task-openai-401',
+          status: 'failed',
+          diaryEntryId: 'entry-openai-401',
+          result: {},
+          errorMessage: 'OpenAI image generation failed with status 401 unauthorized authentication',
+        },
+      },
+    })
+  })
+
+  pageConfig.onLoad({
+    taskId: 'task-openai-401',
+    taskStatus: 'processing',
+  })
+  await flushAsyncWork()
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/generation-tasks/task-openai-401')
+  assert.equal(pageConfig.data.generationStatus, 'failed')
+  assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
+  assert.equal(pageConfig.data.generationFailureMessage, '图片服务暂时不可用，请稍后重试')
+  assert.equal(pageConfig.data.generationFailureMessage.includes('OpenAI'), false)
+  assert.equal(pageConfig.data.generationFailureMessage.includes('401'), false)
+  assert.equal(pageConfig.data.generationFailureMessage.toLowerCase().includes('unauthorized'), false)
+  assert.equal(pageConfig.data.canViewChapter, false)
+  assert.equal(pageConfig.data.generatedChapterId, '')
+  assert.equal(storage.generatedComicChapters.length, 1)
+  assert.equal(storage.generatedComicChapters[0].generationTaskStatus, 'failed')
+  assert.equal(storage.generatedComicChapters[0].imageUrl, undefined)
+  assert.equal(storage.generatedComicChapters[0].coverImageUrl, undefined)
+  assert.equal(navigateCalls.length, 0)
 })
 
 test('loading processing task status keeps later button state', async () => {
@@ -854,7 +902,7 @@ test('failed polled generation task enters failed state without writing local su
   assert.equal(chapter, null)
   assert.equal(pageConfig.data.generationStatus, 'failed')
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
-  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
+  assert.equal(pageConfig.data.generationFailureMessage, '图片服务暂时不可用，请稍后重试')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters.length, 1)
   assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-failed')
@@ -899,7 +947,7 @@ test('polling get failure enters failed state without writing local success chap
   assert.equal(chapter, null)
   assert.equal(pageConfig.data.generationStatus, 'failed')
   assert.equal(pageConfig.data.generationFailureTitle, '生成失败')
-  assert.equal(pageConfig.data.generationFailureMessage, '漫画生成超时，请重新生成')
+  assert.equal(pageConfig.data.generationFailureMessage, '图片服务暂时不可用，请稍后重试')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters.length, 1)
   assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-get-fail')

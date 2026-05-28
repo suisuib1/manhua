@@ -739,6 +739,7 @@ test('clicking failed recent chapter navigates to generation failed status page'
   assert.deepEqual(navigateCalls[0], {
     url: '/subpackage/packageA/pages/generating/generating?taskId=task-failed&taskStatus=failed',
   })
+  assert.equal(navigateCalls.some((call) => call.url.includes('/continuous-chapter/continuous-chapter')), false)
 })
 
 test('clicking completed recent chapter with task image enters reader', async () => {
