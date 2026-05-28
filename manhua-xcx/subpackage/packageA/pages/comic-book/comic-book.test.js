@@ -24,13 +24,17 @@ function createMockStorage() {
   }
 }
 
-function loadPage() {
+function loadPage(initialStorage = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
-  const storage = {}
+  const requestCalls = []
+  const storage = Object.assign({}, initialStorage)
 
   global.Page = (config) => {
     pageConfig = config
+    pageConfig.setData = (patch) => {
+      pageConfig.data = Object.assign({}, pageConfig.data, patch)
+    }
   }
 
   global.wx = {
@@ -46,13 +50,26 @@ function loadPage() {
     removeStorageSync(key) {
       delete storage[key]
     },
+    request(options) {
+      requestCalls.push(options)
+      requestImpl(options)
+    },
     showToast() {},
   }
 
+  delete require.cache[require.resolve('../../../../utils/api')]
+  delete require.cache[require.resolve('../../../../utils/auth')]
+  delete require.cache[require.resolve('../../../../utils/comicChapterApi')]
+  delete require.cache[require.resolve('../../../../utils/chapterCatalog')]
   delete require.cache[require.resolve('./comic-book')]
-  require('./comic-book')
+  const moduleExports = require('./comic-book')
 
-  return { pageConfig, navigateCalls }
+  return { pageConfig, moduleExports, navigateCalls, requestCalls, storage }
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve()
+  await Promise.resolve()
 }
 
 test('我的漫画书页面展示实体书封面而不是普通列表', () => {
@@ -121,4 +138,66 @@ test('漫画书统计兼容本地章节的图片字段', () => {
 
   assert.equal(stats.chapterCount, 2)
   assert.equal(stats.pageCount, 3)
+})
+
+test('logged in comic book loads real recent chapters with limit 50', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-comic-book',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'entry-real-1',
+              title: '真实生日章节',
+              date: '2026-05-28',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/real-1.png',
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/comic-chapters/recent')
+  assert.equal(requestCalls[0].method, 'GET')
+  assert.deepEqual(requestCalls[0].data, { limit: 50 })
+  assert.equal(requestCalls[0].header.Authorization, 'Bearer token-comic-book')
+  assert.deepEqual(pageConfig.data.mock.chapters.map((chapter) => chapter.title), ['真实生日章节'])
+  assert.equal(pageConfig.data.mock.chapters.some((chapter) => chapter.subtitle === '春日野餐记'), false)
+})
+
+test('logged out comic book does not request backend or show mock chapters', async () => {
+  const { pageConfig, requestCalls } = loadPage()
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 0)
+  assert.deepEqual(pageConfig.data.mock.chapters, [])
+  assert.equal(pageConfig.data.mock.bookSummary.chapterCount, 0)
+})
+
+test('comic book request failure does not fallback to mock chapters', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-comic-book',
+  }, (options) => {
+    options.fail(new Error('network error'))
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 1)
+  assert.deepEqual(pageConfig.data.mock.chapters, [])
+  assert.equal(pageConfig.data.mock.bookSummary.chapterCount, 0)
 })

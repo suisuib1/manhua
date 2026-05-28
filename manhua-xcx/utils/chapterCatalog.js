@@ -51,6 +51,11 @@ function getChapterImages(chapter) {
 }
 
 function getChapterPageCount(chapter) {
+  const pageCount = Number(chapter && chapter.pageCount)
+  if (Number.isFinite(pageCount) && pageCount > 0) {
+    return pageCount
+  }
+
   if (chapter && Array.isArray(chapter.pages) && chapter.pages.length > 0) {
     return chapter.pages.length
   }
@@ -58,15 +63,80 @@ function getChapterPageCount(chapter) {
   return getChapterImages(chapter).length
 }
 
+function getChapterStatus(chapter) {
+  return chapter && (chapter.status || chapter.generationTaskStatus || '')
+}
+
+function isTaskInProgress(status) {
+  return status === 'pending' || status === 'processing' || status === 'generating'
+}
+
+function shouldMergeLocalChapter(chapter) {
+  const status = getChapterStatus(chapter)
+
+  return isTaskInProgress(status) || status === 'failed' || (status === 'completed' && !chapter.generationTaskId)
+}
+
+function getChapterMergeKey(chapter) {
+  if (!chapter) {
+    return ''
+  }
+
+  if (chapter.generationTaskId) {
+    return `task:${chapter.generationTaskId}`
+  }
+
+  const diaryEntryId = chapter.diaryEntryId || chapter.serverDiaryEntryId
+  if (diaryEntryId) {
+    return `diary:${diaryEntryId}`
+  }
+
+  return chapter.id ? `id:${chapter.id}` : ''
+}
+
+function mergeRealAndLocalChapters(realChapters, localChapters) {
+  const merged = []
+
+  function mergeChapter(chapter, replaceExisting) {
+    const key = getChapterMergeKey(chapter)
+    if (!key) {
+      return
+    }
+
+    const existingIndex = merged.findIndex((item) => getChapterMergeKey(item) === key)
+    if (existingIndex >= 0) {
+      if (replaceExisting) {
+        merged[existingIndex] = chapter
+      }
+      return
+    }
+
+    merged.push(chapter)
+  }
+
+  ;(localChapters || []).filter(shouldMergeLocalChapter).forEach((chapter) => {
+    mergeChapter(chapter, false)
+  })
+
+  ;(realChapters || []).forEach((chapter) => {
+    mergeChapter(chapter, true)
+  })
+
+  return buildChapterList([], merged)
+}
+
 function normalizeChapter(chapter, sourceIndex) {
   const id = getChapterId(chapter, sourceIndex)
   const pageCount = getChapterPageCount(chapter)
+  const status = getChapterStatus(chapter)
 
   return Object.assign({}, chapter, {
     id,
     title: chapter.title || chapter.chapterTitle || chapter.subtitle || `第 ${sourceIndex + 1} 章`,
     subtitle: chapter.subtitle || chapter.chapterTitle || chapter.title || '',
     date: chapter.date || chapter.diaryDate || '',
+    status,
+    statusText: chapter.statusText || (status === 'failed' ? '生成失败' : (isTaskInProgress(status) ? '生成中' : '已完成')),
     pageCount,
     pageCountText: `${pageCount} 页`,
     coverImage: getChapterImages(chapter)[0] || '/subpackage/icon-home-mascot-star.png',
@@ -102,11 +172,16 @@ function buildReadableChapters() {
 
 module.exports = {
   buildChapterList,
+  getChapterMergeKey,
   buildReadableChapters,
   collectImageUrls,
   getChapterImages,
   getChapterPageCount,
+  getChapterStatus,
+  isTaskInProgress,
   loadStoredChapters,
+  mergeRealAndLocalChapters,
   normalizeChapter,
   pickImageUrl,
+  shouldMergeLocalChapter,
 }

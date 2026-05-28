@@ -24,7 +24,7 @@
           <view class="tag-row">
             <text wx:for="{{item.tags}}" wx:key="*this" class="chapter-tag">#{{item}}</text>
           </view>
-          <view class="chapter-action">{{item.pageCountText}} · 查看章节</view>
+          <view class="chapter-action">{{item.pageCountText}} · {{item.statusText}}</view>
         </view>
       </view>
     </view>

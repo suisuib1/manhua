@@ -3,11 +3,12 @@ const fs = require('node:fs')
 const path = require('node:path')
 const test = require('node:test')
 
-function loadPage(initialStorage) {
+function loadPage(initialStorage = {}, requestImpl = () => {}) {
   let pageConfig
   const navigateCalls = []
   const switchTabCalls = []
   const setDataCalls = []
+  const requestCalls = []
   const storage = Object.assign({}, initialStorage)
 
   global.Page = (config) => {
@@ -34,12 +35,25 @@ function loadPage(initialStorage) {
     removeStorageSync(key) {
       delete storage[key]
     },
+    request(options) {
+      requestCalls.push(options)
+      requestImpl(options)
+    },
   }
 
+  delete require.cache[require.resolve('../../../../utils/api')]
+  delete require.cache[require.resolve('../../../../utils/auth')]
+  delete require.cache[require.resolve('../../../../utils/comicChapterApi')]
+  delete require.cache[require.resolve('../../../../utils/chapterCatalog')]
   delete require.cache[require.resolve('./chapter-list')]
   const moduleExports = require('./chapter-list')
 
-  return { pageConfig, moduleExports, navigateCalls, switchTabCalls, setDataCalls, storage }
+  return { pageConfig, moduleExports, navigateCalls, switchTabCalls, setDataCalls, requestCalls, storage }
+}
+
+async function flushAsyncWork() {
+  await Promise.resolve()
+  await Promise.resolve()
 }
 
 test('章节选择页在 app.json 注册', () => {
@@ -69,8 +83,7 @@ test('章节选择页合并 mock 和本地生成章节且不修改原 storage', 
 
   pageConfig.onLoad()
 
-  assert.equal(pageConfig.data.chapters[0].id, 'local-001')
-  assert.equal(pageConfig.data.chapters.some((chapter) => chapter.id === 'chapter-003'), true)
+  assert.equal(pageConfig.data.chapters.length, 0)
   assert.deepEqual(storage.generatedComicChapters, [storedChapter])
 })
 
@@ -95,4 +108,121 @@ test('点击章节进入阅读器并携带 chapterId', () => {
   assert.deepEqual(navigateCalls[0], {
     url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=chapter-002',
   })
+})
+
+test('logged in chapter list loads real chapters and hides mock titles', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-chapter-list',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'entry-real-list',
+              title: '真实散步章节',
+              date: '2026-05-28',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/list.png',
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/comic-chapters/recent')
+  assert.deepEqual(requestCalls[0].data, { limit: 50 })
+  assert.deepEqual(pageConfig.data.chapters.map((chapter) => chapter.title), ['真实散步章节'])
+  assert.equal(pageConfig.data.chapters.some((chapter) => chapter.subtitle === '春日野餐记'), false)
+  assert.equal(pageConfig.data.hasChapters, true)
+})
+
+test('logged out chapter list does not request backend or show mock chapters', async () => {
+  const { pageConfig, requestCalls } = loadPage()
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 0)
+  assert.deepEqual(pageConfig.data.chapters, [])
+  assert.equal(pageConfig.data.hasChapters, false)
+})
+
+test('chapter list request failure does not fallback to mock chapters', async () => {
+  const { pageConfig, requestCalls } = loadPage({
+    authToken: 'token-chapter-list',
+  }, (options) => {
+    options.fail(new Error('network error'))
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  assert.equal(requestCalls.length, 1)
+  assert.deepEqual(pageConfig.data.chapters, [])
+  assert.equal(pageConfig.data.hasChapters, false)
+})
+
+test('clicking real chapters routes by generation status', async () => {
+  const { pageConfig, navigateCalls, storage } = loadPage({
+    authToken: 'token-chapter-list',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'entry-completed',
+              title: 'completed',
+              status: 'completed',
+              pageCount: 1,
+              coverImageUrl: '/uploads/generated/completed.png',
+              generationTaskId: 'task-completed',
+            },
+            {
+              id: 'entry-processing',
+              title: 'processing',
+              status: 'processing',
+              generationTaskId: 'task-processing',
+            },
+            {
+              id: 'entry-failed',
+              title: 'failed',
+              status: 'failed',
+              generationTaskId: 'task-failed',
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  pageConfig.openChapter({ currentTarget: { dataset: { chapterId: 'entry-completed' } } })
+  pageConfig.openChapter({ currentTarget: { dataset: { chapterId: 'entry-processing' } } })
+  pageConfig.openChapter({ currentTarget: { dataset: { chapterId: 'entry-failed' } } })
+
+  assert.deepEqual(navigateCalls, [
+    { url: '/subpackage/packageA/pages/continuous-chapter/continuous-chapter?chapterId=entry-completed' },
+    { url: '/subpackage/packageA/pages/generating/generating?taskId=task-processing&taskStatus=processing' },
+    { url: '/subpackage/packageA/pages/generating/generating?taskId=task-failed&taskStatus=failed' },
+  ])
+  assert.equal(storage.generatedComicChapters[0].id, 'entry-completed')
+  assert.equal(storage.generatedComicChapters[0].title, 'completed')
+  assert.equal(storage.generatedComicChapters[0].coverImageUrl, '/uploads/generated/completed.png')
+  assert.equal(storage.draftComicChapter.generationTaskId, 'task-failed')
+  assert.equal(storage.draftComicChapter.generationTaskStatus, 'failed')
 })

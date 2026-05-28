@@ -1,7 +1,10 @@
-const { comicBookMock, pageRoutes, homeMock } = require('../../../../utils/mock')
-const { buildChapterList, getChapterPageCount, loadStoredChapters } = require('../../../../utils/chapterCatalog')
+const { comicBookMock } = require('../../../../utils/mock')
+const { getAuthToken } = require('../../../../utils/auth')
+const { getRecentComicChapters } = require('../../../../utils/comicChapterApi')
+const { buildChapterList, getChapterPageCount, loadStoredChapters, mergeRealAndLocalChapters } = require('../../../../utils/chapterCatalog')
 
 const chapterListRoute = '/subpackage/packageA/pages/chapter-list/chapter-list'
+const comicBookRecentLimit = 50
 
 function mergeStoredChapters(defaultChapters, storedChapters) {
   return buildChapterList(defaultChapters, storedChapters)
@@ -20,20 +23,47 @@ function getComicBookStats(chapters) {
   }
 }
 
+function buildComicBookMock(chapters) {
+  return Object.assign({}, comicBookMock, {
+    chapters,
+    bookSummary: getComicBookStats(chapters),
+  })
+}
+
 Page({
   data: {
-    mock: Object.assign({}, comicBookMock, {
-      chapters: mergeStoredChapters(homeMock.recentChapters, loadStoredChapters()),
-    }),
+    mock: buildComicBookMock([]),
   },
 
-  onLoad() {
-    const chapters = mergeStoredChapters(homeMock.recentChapters, loadStoredChapters())
+  async onLoad() {
+    if (!getAuthToken()) {
+      this.setData({
+        mock: buildComicBookMock([]),
+      })
+      return null
+    }
+
+    try {
+      const data = await getRecentComicChapters({ limit: comicBookRecentLimit })
+      const realChapters = data && Array.isArray(data.items) ? data.items : []
+      const chapters = mergeRealAndLocalChapters(realChapters, loadStoredChapters())
+
+      this.setData({
+        mock: buildComicBookMock(chapters),
+      })
+
+      return data
+    } catch (error) {
+      this.setData({
+        mock: buildComicBookMock([]),
+      })
+      return null
+    }
+  },
+
+  refreshBookFromChapters(chapters) {
     this.setData({
-      mock: Object.assign({}, comicBookMock, {
-        chapters,
-        bookSummary: getComicBookStats(chapters),
-      }),
+      mock: buildComicBookMock(chapters || []),
     })
   },
 
@@ -48,4 +78,6 @@ module.exports = {
   getComicBookStats,
   mergeStoredChapters,
   loadStoredChapters,
+  buildComicBookMock,
+  comicBookRecentLimit,
 }
