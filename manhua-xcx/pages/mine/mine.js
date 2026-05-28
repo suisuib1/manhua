@@ -34,10 +34,17 @@ function buildBookStats(stats) {
   })
 }
 
+function buildMenuItems() {
+  return [
+    { id: 'comicBook', title: '我的漫画本', desc: '查看私人漫画章节', action: 'comicBook' },
+  ].concat(mineMock.menuItems)
+}
+
 Page({
   data: {
     mock: Object.assign({}, mineMock, buildMockWithUser(null), {
       bookStats: buildBookStats(null),
+      menuItems: buildMenuItems(),
     }),
   },
 
@@ -133,6 +140,13 @@ Page({
 
   handleMenuTap(event) {
     const { action, title } = event.currentTarget.dataset
+
+    if (action === 'comicBook') {
+      wx.navigateTo({
+        url: pageRoutes.comicBook,
+      })
+      return
+    }
 
     if (action === 'character') {
       wx.navigateTo({

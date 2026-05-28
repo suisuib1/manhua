@@ -246,6 +246,21 @@ test('用户信息卡片绑定登录入口且不依赖外部菜单图标资源',
   assert.equal(wxml.includes('menu-icon icon-{{index}}'), true)
 })
 
+test('我的页菜单第一项渲染我的漫画本入口', () => {
+  const { pageConfig } = loadPage()
+  const menuItems = pageConfig.data.mock.menuItems
+
+  assert.equal(menuItems[0].title, '我的漫画本')
+  assert.equal(menuItems[0].action, 'comicBook')
+  assert.deepEqual(menuItems.map((item) => item.title), [
+    '我的漫画本',
+    '角色档案',
+    '隐私说明',
+    '关于产品',
+    '设置',
+  ])
+})
+
 test('未登录时用户信息区显示未登录', () => {
   let pageConfig
 
@@ -468,7 +483,7 @@ test('个人中心不展示顶部和菜单副说明文案', () => {
   assert.equal(wxml.includes('{{item.desc}}'), false)
 })
 
-test('点击说明和设置菜单进入对应页面', () => {
+test('点击我的页菜单进入对应页面', () => {
   let pageConfig
   const navigateCalls = []
 
@@ -486,11 +501,15 @@ test('点击说明和设置菜单进入对应页面', () => {
   delete require.cache[require.resolve('./mine')]
   require('./mine')
 
+  pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'comicBook', title: '我的漫画本' } } })
+  pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'character', title: '角色档案' } } })
   pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'privacy', title: '隐私说明' } } })
   pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'about', title: '关于产品' } } })
   pageConfig.handleMenuTap({ currentTarget: { dataset: { action: 'settings', title: '设置' } } })
 
   assert.deepEqual(navigateCalls, [
+    { url: '/subpackage/packageA/pages/comic-book/comic-book' },
+    { url: '/subpackage/packageA/pages/character/character' },
     { url: '/subpackage/packageA/pages/privacy/privacy' },
     { url: '/subpackage/packageA/pages/about/about' },
     { url: '/subpackage/packageA/pages/settings/settings' },
