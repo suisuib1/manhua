@@ -7,6 +7,10 @@ function readWxml() {
   return fs.readFileSync(path.join(__dirname, 'character.wxml'), 'utf8')
 }
 
+function readWxss() {
+  return fs.readFileSync(path.join(__dirname, 'character.wxss'), 'utf8')
+}
+
 function loadPage() {
   let pageConfig
   const chooseCalls = []
@@ -88,6 +92,26 @@ test('角色档案页不再渲染顶部大标题区域', () => {
   assert.equal(wxml.includes('polish-header'), false)
   assert.equal(wxml.includes('我的漫画主角'), false)
   assert.equal(wxml.includes('让每一章里的你都保持熟悉又可爱'), false)
+})
+
+test('character page starts with profile cover and has no invalid top spacer', () => {
+  const wxml = readWxml()
+
+  assert.equal(wxml.trim().startsWith('<view class="character-page polish-page">'), true)
+  assert.equal(wxml.includes('<scroll-view'), false)
+  assert.equal(wxml.includes('character-header'), false)
+  assert.equal(wxml.includes('top-spacer'), false)
+  assert.equal(wxml.includes('profile-cover polish-card'), true)
+})
+
+test('character page keeps first profile card below native navbar without extra top margin', () => {
+  const wxss = readWxss()
+
+  assert.equal(wxss.includes('.character-page > .profile-cover'), true)
+  assert.equal(/\.character-page\s*\{[^}]*padding-top:\s*40rpx/.test(wxss), true)
+  assert.equal(/\.character-page\s*\{[^}]*margin-top:\s*-/.test(wxss), false)
+  assert.equal(/\.character-page\s*\{[^}]*transform:\s*translateY\(-/.test(wxss), false)
+  assert.equal(/\.character-page\s*\{[^}]*position:\s*(fixed|absolute)/.test(wxss), false)
 })
 
 test('from diary saves successfully then navigates back', async () => {

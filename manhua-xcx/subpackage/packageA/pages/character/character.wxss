@@ -16,7 +16,11 @@ button::after {
 }
 
 .character-page {
-  padding-top: 96rpx;
+  padding-top: 40rpx;
+}
+
+.character-page > .profile-cover {
+  margin-top: 0;
 }
 
 .profile-cover {
