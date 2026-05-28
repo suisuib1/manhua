@@ -13,6 +13,10 @@ const {
   getChapter,
   listChapters,
 } = require('../controllers/adminComicChapter.controller')
+const {
+  getUser,
+  listUsers,
+} = require('../controllers/adminUser.controller')
 
 const router = express.Router()
 
@@ -23,5 +27,7 @@ router.get('/generation-tasks', adminAuthMiddleware, listTasks)
 router.get('/generation-tasks/:id', adminAuthMiddleware, getTask)
 router.get('/comic-chapters', adminAuthMiddleware, listChapters)
 router.get('/comic-chapters/:diaryEntryId', adminAuthMiddleware, getChapter)
+router.get('/users', adminAuthMiddleware, listUsers)
+router.get('/users/:id', adminAuthMiddleware, getUser)
 
 module.exports = router
