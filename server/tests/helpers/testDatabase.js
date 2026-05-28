@@ -1,12 +1,20 @@
 const fs = require('node:fs')
-const os = require('node:os')
 const path = require('node:path')
 const test = require('node:test')
+require('dotenv').config({
+  path: path.join(__dirname, '..', '..', '.env'),
+})
 
 process.env.NODE_ENV = 'test'
-const testDatabaseDir = fs.mkdtempSync(path.join(os.tmpdir(), `manhua-test-${process.pid}-`))
-const testDatabasePath = path.join(testDatabaseDir, 'test.db')
-process.env.DATABASE_URL = process.env.DATABASE_URL || `file:${testDatabasePath.replace(/\\/g, '/')}`
+
+const testSchemaName = `test_${process.pid}`
+const baseDatabaseUrl = process.env.DATABASE_URL
+
+if (!baseDatabaseUrl || !baseDatabaseUrl.startsWith('postgresql://')) {
+  throw new Error('PostgreSQL DATABASE_URL is required for tests')
+}
+
+process.env.DATABASE_URL = withSchema(baseDatabaseUrl, testSchemaName)
 
 const { prisma } = require('../../src/utils/prisma')
 
@@ -15,6 +23,8 @@ let migrationApplied = false
 
 async function applyMigrationOnce() {
   if (migrationApplied) return
+
+  await prisma.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${testSchemaName}"`)
 
   const migrationsDir = path.join(prismaDir, 'migrations')
   const migrationDirs = fs.readdirSync(migrationsDir, { withFileTypes: true })
@@ -69,11 +79,17 @@ module.exports = {
 }
 
 test.after(async () => {
-  await prisma.$disconnect()
-
   try {
-    fs.rmSync(testDatabaseDir, { recursive: true, force: true })
+    await prisma.$executeRawUnsafe(`DROP SCHEMA IF EXISTS "${testSchemaName}" CASCADE`)
   } catch (err) {
     // Keep test outcomes focused on application failures, not OS cleanup races.
+  } finally {
+    await prisma.$disconnect()
   }
 })
+
+function withSchema(databaseUrl, schemaName) {
+  const url = new URL(databaseUrl)
+  url.searchParams.set('schema', schemaName)
+  return url.toString()
+}
