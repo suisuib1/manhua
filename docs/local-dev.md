@@ -55,3 +55,33 @@ node scripts/createAdmin.js --username admin --password 你的密码 --displayNa
 ```
 
 The script never uses a hard-coded password. If the username already exists, it updates `passwordHash`, `displayName`, and sets `status` back to `active`.
+
+## SQLite data migration
+
+PostgreSQL is the recommended local database. The old SQLite database is not migrated automatically. A backup is kept under `server/prisma/backups/`.
+
+If you do not need old local data, skip this section and continue using the empty PostgreSQL database.
+
+Before migration, make sure the target PostgreSQL business tables are empty. The migration script refuses to write into non-empty target tables and will not delete or overwrite data.
+
+From `server`, run:
+
+```bash
+npm run db:migrate:sqlite-to-postgres
+npm run db:check:postgres-data
+```
+
+To use another SQLite backup:
+
+```bash
+SQLITE_DATABASE_PATH=./prisma/backups/your-backup.db npm run db:migrate:sqlite-to-postgres
+SQLITE_DATABASE_PATH=./prisma/backups/your-backup.db npm run db:check:postgres-data
+```
+
+The script only migrates database records and keeps existing image URLs. It does not move or copy files from `uploads/generated`.
+
+If the old SQLite backup does not contain `admin_users`, that table is skipped. Create or update the admin user separately:
+
+```bash
+node scripts/createAdmin.js --username admin --password 你的密码 --displayName 超级管理员
+```

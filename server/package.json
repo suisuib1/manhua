@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test --test-isolation=none --test-concurrency=1",
+    "db:migrate:sqlite-to-postgres": "node scripts/migrateSqliteToPostgres.js",
+    "db:check:postgres-data": "node scripts/checkPostgresData.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
