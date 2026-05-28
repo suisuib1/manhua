@@ -15,6 +15,10 @@
           <el-icon><List /></el-icon>
           <span>生成任务</span>
         </el-menu-item>
+        <el-menu-item index="/comic-chapters">
+          <el-icon><Notebook /></el-icon>
+          <span>漫画章节</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
 
@@ -35,7 +39,7 @@
 </template>
 
 <script setup>
-import { DataBoard, List } from '@element-plus/icons-vue'
+import { DataBoard, List, Notebook } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 

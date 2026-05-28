@@ -28,6 +28,7 @@ export function formatDuration(value) {
 
 export function statusText(status) {
   const map = {
+    no_task: '未生成',
     pending: '等待中',
     processing: '生成中',
     completed: '已完成',
@@ -39,6 +40,7 @@ export function statusText(status) {
 
 export function statusType(status) {
   const map = {
+    no_task: 'info',
     pending: 'info',
     processing: 'warning',
     completed: 'success',

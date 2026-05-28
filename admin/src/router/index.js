@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { setUnauthorizedHandler } from '../utils/request'
 import { useAuthStore } from '../stores/auth'
 import AdminLayout from '../layouts/AdminLayout.vue'
+import ComicChapterDetail from '../pages/ComicChapterDetail.vue'
+import ComicChapters from '../pages/ComicChapters.vue'
 import Dashboard from '../pages/Dashboard.vue'
 import GenerationTaskDetail from '../pages/GenerationTaskDetail.vue'
 import GenerationTasks from '../pages/GenerationTasks.vue'
@@ -43,6 +45,16 @@ const router = createRouter({
           path: 'generation-tasks/:id',
           name: 'generationTaskDetail',
           component: GenerationTaskDetail,
+        },
+        {
+          path: 'comic-chapters',
+          name: 'comicChapters',
+          component: ComicChapters,
+        },
+        {
+          path: 'comic-chapters/:diaryEntryId',
+          name: 'comicChapterDetail',
+          component: ComicChapterDetail,
         },
       ],
     },
