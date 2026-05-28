@@ -11,6 +11,10 @@
           <el-icon><DataBoard /></el-icon>
           <span>首页概览</span>
         </el-menu-item>
+        <el-menu-item index="/users">
+          <el-icon><User /></el-icon>
+          <span>用户管理</span>
+        </el-menu-item>
         <el-menu-item index="/generation-tasks">
           <el-icon><List /></el-icon>
           <span>生成任务</span>
@@ -39,7 +43,7 @@
 </template>
 
 <script setup>
-import { DataBoard, List, Notebook } from '@element-plus/icons-vue'
+import { DataBoard, List, Notebook, User } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
