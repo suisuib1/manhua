@@ -13,11 +13,12 @@
       bindtap="openChapter"
       hover-class="chapter-card-hover"
     >
-      <image class="chapter-cover" src="{{item.coverImage}}" mode="aspectFill" />
+      <image wx:if="{{item.displayCoverUrl}}" class="chapter-cover" src="{{item.displayCoverUrl}}" mode="aspectFill" />
+      <image wx:else class="chapter-cover" src="{{item.coverImage}}" mode="aspectFill" />
       <view class="chapter-info">
         <view class="chapter-main">
           <view class="chapter-title">{{item.subtitle || item.title}}</view>
-          <view class="chapter-date">{{item.date || item.createdAt}}</view>
+          <view class="chapter-date">{{item.displayDate}}</view>
         </view>
         <view class="chapter-summary">{{item.summary || item.caption || '点击查看这一章的漫画分镜'}}</view>
         <view class="chapter-footer">

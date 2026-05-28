@@ -145,6 +145,86 @@ test('logged in chapter list loads real chapters and hides mock titles', async (
   assert.equal(pageConfig.data.hasChapters, true)
 })
 
+test('chapter list adapts cover image fallbacks and formats ISO date', async () => {
+  const { pageConfig } = loadPage({
+    authToken: 'token-chapter-list',
+  }, (options) => {
+    options.success({
+      statusCode: 200,
+      data: {
+        code: 0,
+        message: 'ok',
+        data: {
+          items: [
+            {
+              id: 'entry-cover',
+              title: 'cover',
+              status: 'completed',
+              date: '2026-05-28T00:00:00.000Z',
+              coverImageUrl: '/uploads/generated/cover.png',
+            },
+            {
+              id: 'entry-image',
+              title: 'image',
+              status: 'completed',
+              createdAt: '2026-05-27T10:20:30.000Z',
+              imageUrl: '/uploads/generated/image.png',
+            },
+            {
+              id: 'entry-result',
+              title: 'result',
+              status: 'completed',
+              updatedAt: '2026-05-26T10:20:30.000Z',
+              result: {
+                pages: [{ imageUrl: '/uploads/generated/result.png' }],
+              },
+            },
+            {
+              id: 'entry-pages',
+              title: 'pages',
+              status: 'completed',
+              date: '2026-05-25',
+              pages: [{ images: ['/uploads/generated/page-image.png'] }],
+            },
+            {
+              id: 'entry-images',
+              title: 'images',
+              status: 'completed',
+              date: '2026-05-24',
+              images: ['/uploads/generated/images-first.png'],
+            },
+            {
+              id: 'entry-empty',
+              title: 'empty',
+              status: 'completed',
+              date: '2026-05-23',
+            },
+          ],
+        },
+      },
+    })
+  })
+
+  await pageConfig.onLoad()
+  await flushAsyncWork()
+
+  const chaptersByTitle = pageConfig.data.chapters.reduce((result, chapter) => {
+    result[chapter.title] = chapter
+    return result
+  }, {})
+
+  assert.equal(chaptersByTitle.cover.displayCoverUrl, 'http://127.0.0.1:3000/uploads/generated/cover.png')
+  assert.equal(chaptersByTitle.image.displayCoverUrl, 'http://127.0.0.1:3000/uploads/generated/image.png')
+  assert.equal(chaptersByTitle.result.displayCoverUrl, 'http://127.0.0.1:3000/uploads/generated/result.png')
+  assert.equal(chaptersByTitle.pages.displayCoverUrl, 'http://127.0.0.1:3000/uploads/generated/page-image.png')
+  assert.equal(chaptersByTitle.images.displayCoverUrl, 'http://127.0.0.1:3000/uploads/generated/images-first.png')
+  assert.equal(chaptersByTitle.empty.displayCoverUrl, '')
+  assert.equal(chaptersByTitle.empty.coverImage, '/subpackage/icon-home-mascot-star.png')
+  assert.equal(chaptersByTitle.cover.displayDate, '2026-05-28')
+  assert.equal(chaptersByTitle.image.displayDate, '2026-05-27')
+  assert.equal(chaptersByTitle.result.displayDate, '2026-05-26')
+})
+
 test('logged out chapter list does not request backend or show mock chapters', async () => {
   const { pageConfig, requestCalls } = loadPage()
 
@@ -225,4 +305,12 @@ test('clicking real chapters routes by generation status', async () => {
   assert.equal(storage.generatedComicChapters[0].coverImageUrl, '/uploads/generated/completed.png')
   assert.equal(storage.draftComicChapter.generationTaskId, 'task-failed')
   assert.equal(storage.draftComicChapter.generationTaskStatus, 'failed')
+})
+
+test('chapter list binds display cover and display date fields', () => {
+  const wxml = fs.readFileSync(path.join(__dirname, 'chapter-list.wxml'), 'utf8')
+
+  assert.equal(wxml.includes('wx:if="{{item.displayCoverUrl}}"'), true)
+  assert.equal(wxml.includes('src="{{item.displayCoverUrl}}"'), true)
+  assert.equal(wxml.includes('{{item.displayDate}}'), true)
 })

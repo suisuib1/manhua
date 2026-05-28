@@ -1,4 +1,5 @@
 const { homeMock, storageKeys } = require('./mock')
+const apiConfig = require('../config/api.config')
 
 function loadStoredChapters() {
   return wx.getStorageSync(storageKeys.generatedComicChapters) || []
@@ -20,6 +21,61 @@ function pickImageUrl(item) {
   if (typeof item === 'string') return item
 
   return item.imageUrl || item.url || item.src || item.path || item.tempFilePath || ''
+}
+
+function normalizeResourceUrl(imageUrl) {
+  if (!imageUrl || /^https?:\/\//.test(imageUrl) || /^wxfile:\/\//.test(imageUrl)) {
+    return imageUrl || ''
+  }
+
+  return `${apiConfig.baseUrl}${imageUrl.indexOf('/') === 0 ? imageUrl : `/${imageUrl}`}`
+}
+
+function getFirstResultPageImage(chapter) {
+  const pages = chapter && chapter.result && Array.isArray(chapter.result.pages) ? chapter.result.pages : []
+
+  return pickImageUrl(pages[0])
+}
+
+function getFirstPageImage(chapter) {
+  const pages = chapter && Array.isArray(chapter.pages) ? chapter.pages : []
+  const firstPage = pages[0]
+
+  if (!firstPage) {
+    return ''
+  }
+
+  const images = Array.isArray(firstPage.images) ? firstPage.images : []
+  return pickImageUrl(images[0]) || pickImageUrl(firstPage)
+}
+
+function getFirstImage(chapter) {
+  const images = chapter && Array.isArray(chapter.images) ? chapter.images : []
+
+  return pickImageUrl(images[0])
+}
+
+function getDisplayCoverUrl(chapter) {
+  const imageUrl = [
+    chapter && chapter.coverImageUrl,
+    chapter && chapter.imageUrl,
+    getFirstResultPageImage(chapter),
+    getFirstPageImage(chapter),
+    getFirstImage(chapter),
+  ].map(pickImageUrl).find(Boolean)
+
+  return normalizeResourceUrl(imageUrl)
+}
+
+function formatChapterDate(value) {
+  if (!value) {
+    return ''
+  }
+
+  const text = String(value)
+  const isoDate = text.match(/^(\d{4}-\d{2}-\d{2})/)
+
+  return isoDate ? isoDate[1] : text
 }
 
 function collectImageUrls(items) {
@@ -129,6 +185,8 @@ function normalizeChapter(chapter, sourceIndex) {
   const id = getChapterId(chapter, sourceIndex)
   const pageCount = getChapterPageCount(chapter)
   const status = getChapterStatus(chapter)
+  const displayCoverUrl = getDisplayCoverUrl(chapter)
+  const displayDate = formatChapterDate(chapter.date || chapter.createdAt || chapter.updatedAt || chapter.diaryDate)
 
   return Object.assign({}, chapter, {
     id,
@@ -139,7 +197,9 @@ function normalizeChapter(chapter, sourceIndex) {
     statusText: chapter.statusText || (status === 'failed' ? '生成失败' : (isTaskInProgress(status) ? '生成中' : '已完成')),
     pageCount,
     pageCountText: `${pageCount} 页`,
-    coverImage: getChapterImages(chapter)[0] || '/subpackage/icon-home-mascot-star.png',
+    displayCoverUrl,
+    displayDate,
+    coverImage: displayCoverUrl || '/subpackage/icon-home-mascot-star.png',
     tags: chapter.tags || chapter.selectedTags || [],
     sourceIndex,
     sortTime: getChapterTimestamp(chapter, sourceIndex),
@@ -178,10 +238,13 @@ module.exports = {
   getChapterImages,
   getChapterPageCount,
   getChapterStatus,
+  getDisplayCoverUrl,
   isTaskInProgress,
   loadStoredChapters,
   mergeRealAndLocalChapters,
   normalizeChapter,
+  normalizeResourceUrl,
   pickImageUrl,
   shouldMergeLocalChapter,
+  formatChapterDate,
 }
