@@ -3,6 +3,8 @@ import { setUnauthorizedHandler } from '../utils/request'
 import { useAuthStore } from '../stores/auth'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import GenerationTaskDetail from '../pages/GenerationTaskDetail.vue'
+import GenerationTasks from '../pages/GenerationTasks.vue'
 import Login from '../pages/Login.vue'
 
 const router = createRouter({
@@ -31,6 +33,16 @@ const router = createRouter({
           path: 'dashboard',
           name: 'dashboard',
           component: Dashboard,
+        },
+        {
+          path: 'generation-tasks',
+          name: 'generationTasks',
+          component: GenerationTasks,
+        },
+        {
+          path: 'generation-tasks/:id',
+          name: 'generationTaskDetail',
+          component: GenerationTaskDetail,
         },
       ],
     },
