@@ -73,21 +73,6 @@
         </div>
         <el-empty v-else description="暂无图片" />
       </el-card>
-
-      <el-card shadow="never">
-        <template #header>Input JSON</template>
-        <pre class="json-block">{{ formatJson(task.input) }}</pre>
-      </el-card>
-
-      <el-card shadow="never">
-        <template #header>Result JSON</template>
-        <pre class="json-block">{{ formatJson(task.result) }}</pre>
-      </el-card>
-
-      <el-card shadow="never">
-        <template #header>Prompt Snapshot</template>
-        <pre class="prompt-block">{{ task.promptSnapshot || '-' }}</pre>
-      </el-card>
     </template>
   </section>
 </template>
@@ -99,7 +84,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { getGenerationTaskDetail } from '../api/generationTasks'
 import {
   formatDuration,
-  formatJson,
   formatTime,
   normalizeAssetUrl,
   statusText,
@@ -112,7 +96,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 const task = ref(null)
 
-const rawImageUrl = computed(() => findFirstImageUrl(task.value?.result))
+const rawImageUrl = computed(() => task.value?.imageUrl || '')
 const imageUrl = computed(() => normalizeAssetUrl(rawImageUrl.value))
 
 async function loadDetail() {
@@ -127,12 +111,6 @@ async function loadDetail() {
   } finally {
     loading.value = false
   }
-}
-
-function findFirstImageUrl(result) {
-  const pages = Array.isArray(result?.pages) ? result.pages : []
-  const page = pages.find((item) => item && item.imageUrl)
-  return page ? page.imageUrl : ''
 }
 
 function goBack() {
@@ -190,22 +168,4 @@ onMounted(loadDetail)
   word-break: break-all;
 }
 
-.json-block,
-.prompt-block {
-  margin: 0;
-  padding: 16px;
-  max-height: 420px;
-  overflow: auto;
-  background: #111827;
-  color: #e5e7eb;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.6;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.prompt-block {
-  max-height: 520px;
-}
 </style>

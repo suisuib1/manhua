@@ -79,6 +79,11 @@
           <el-table-column label="创建时间" min-width="170">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
+          <el-table-column label="操作" width="110" fixed="right">
+            <template #default="{ row }">
+              <el-button text type="primary" @click="goTaskDetail(row.id)">查看详情</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
 
@@ -127,6 +132,11 @@
           <el-table-column label="创建时间" min-width="170">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
+          <el-table-column label="操作" width="110" fixed="right">
+            <template #default="{ row }">
+              <el-button text type="primary" @click="goChapterDetail(row.diaryEntryId)">查看详情</el-button>
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
     </template>
@@ -135,6 +145,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { getDashboardStats } from '../api/adminDashboard'
 import { getComicChapters } from '../api/comicChapters'
 import { getGenerationTasks } from '../api/generationTasks'
@@ -146,6 +157,7 @@ import {
 } from '../utils/taskFormat'
 
 const loading = ref(false)
+const router = useRouter()
 const errorMessage = ref('')
 const stats = ref(null)
 const recentTasks = ref([])
@@ -229,6 +241,14 @@ function formatDateParam(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function goTaskDetail(id) {
+  router.push(`/generation-tasks/${id}`)
+}
+
+function goChapterDetail(id) {
+  router.push(`/comic-chapters/${id}`)
 }
 
 onMounted(loadDashboard)

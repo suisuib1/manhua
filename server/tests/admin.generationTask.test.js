@@ -287,14 +287,11 @@ test('GET /api/admin/generation-tasks/:id returns safe detail for admin', async 
     assert.equal(detail.body.data.ownerUserId, user.id)
     assert.equal(detail.body.data.status, 'failed')
     assert.equal(detail.body.data.durationMs, 2000)
-    assert.deepEqual(detail.body.data.input, {
-      diaryEntryId: diary.id,
-      chapterTitle: 'task_detail_chapter',
-      sensitive: '[redacted-header] Bearer [redacted] [redacted-env] [redacted-path]',
-    })
-    assert.equal(detail.body.data.result.pages[0].imageUrl, null)
-    assert.equal(detail.body.data.result.pages[0].note, 'Bearer [redacted] [redacted-path]')
-    assert.equal(detail.body.data.promptSnapshot.length <= 4000, true)
+    assert.equal(detail.body.data.hasImage, false)
+    assert.equal(detail.body.data.imageUrl, null)
+    assert.equal(detail.body.data.input, undefined)
+    assert.equal(detail.body.data.result, undefined)
+    assert.equal(detail.body.data.promptSnapshot, undefined)
     assert.equal(detail.body.data.diary.id, diary.id)
     assert.equal(detail.body.data.diary.title, 'task_detail_chapter')
     assert.equal(detail.body.data.diary.content.length <= 160, true)
@@ -304,7 +301,12 @@ test('GET /api/admin/generation-tasks/:id returns safe detail for admin', async 
 
     const serialized = JSON.stringify(detail.body.data)
     assert.equal(serialized.includes('passwordHash'), false)
+    assert.equal(serialized.includes('promptSnapshot'), false)
+    assert.equal(serialized.includes('inputJson'), false)
+    assert.equal(serialized.includes('resultJson'), false)
     assert.equal(serialized.includes('secret-token'), false)
+    assert.equal(serialized.includes('input-token'), false)
+    assert.equal(serialized.includes('result-token'), false)
     assert.equal(serialized.includes('OPENAI_API_KEY'), false)
     assert.equal(serialized.includes('Authorization'), false)
     assert.equal(serialized.includes(process.cwd()), false)

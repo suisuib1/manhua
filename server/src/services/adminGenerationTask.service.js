@@ -1,4 +1,3 @@
-const path = require('node:path')
 const { prisma } = require('../utils/prisma')
 
 const allowedStatuses = new Set(['pending', 'processing', 'completed', 'failed'])
@@ -152,8 +151,8 @@ function formatTaskSummary(task) {
 }
 
 function formatTaskDetail(task) {
-  const input = sanitizeJsonValue(parseJsonObject(task.inputJson))
-  const result = sanitizeJsonValue(parseJsonObject(task.resultJson))
+  const result = parseJsonObject(task.resultJson)
+  const imageUrl = findFirstImageUrl(result)
 
   return {
     id: task.id,
@@ -165,9 +164,8 @@ function formatTaskDetail(task) {
     finishedAt: task.finishedAt ? task.finishedAt.toISOString() : null,
     durationMs: calculateDurationMs(task),
     errorMessage: sanitizeSummary(task.errorMessage, 300),
-    input,
-    result,
-    promptSnapshot: sanitizePrompt(task.promptSnapshot),
+    hasImage: Boolean(imageUrl),
+    imageUrl: imageUrl || null,
     diary: formatDiary(task.diaryEntry),
     user: formatUser(task.owner),
   }
@@ -227,28 +225,6 @@ function calculateDurationMs(task) {
   return duration >= 0 ? duration : null
 }
 
-function sanitizePrompt(value) {
-  return sanitizeSummary(value, 4000)
-}
-
-function sanitizeJsonValue(value) {
-  if (typeof value === 'string') {
-    return sanitizeSensitiveText(value)
-  }
-
-  if (Array.isArray(value)) {
-    return value.map(sanitizeJsonValue)
-  }
-
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, item]) => [key, sanitizeJsonValue(item)])
-    )
-  }
-
-  return value
-}
-
 function sanitizeSummary(value, maxLength) {
   return sanitizeSensitiveText(summarize(value, maxLength))
 }
@@ -259,11 +235,6 @@ function sanitizeSensitiveText(value) {
     .replace(/Bearer\s+[^\s,;]+/gi, 'Bearer [redacted]')
     .replace(/OPENAI_API_KEY/gi, '[redacted-env]')
     .replace(/Authorization/gi, '[redacted-header]')
-
-  const cwd = process.cwd()
-  text = replaceAllText(text, cwd, '[redacted-path]')
-  text = replaceAllText(text, cwd.replace(/\\/g, '/'), '[redacted-path]')
-  text = replaceAllText(text, path.resolve(__dirname, '..', '..'), '[redacted-path]')
 
   return text
 }
@@ -288,11 +259,6 @@ function parseJsonArray(value) {
   } catch (err) {
     return []
   }
-}
-
-function replaceAllText(value, search, replacement) {
-  if (!search) return value
-  return value.split(search).join(replacement)
 }
 
 function normalizePositiveInt(value, fallback) {
