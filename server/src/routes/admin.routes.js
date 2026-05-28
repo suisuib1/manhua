@@ -14,6 +14,10 @@ const {
   listChapters,
 } = require('../controllers/adminComicChapter.controller')
 const {
+  getCharacterProfile,
+  listCharacterProfiles,
+} = require('../controllers/adminCharacterProfile.controller')
+const {
   getUser,
   listUsers,
 } = require('../controllers/adminUser.controller')
@@ -27,6 +31,8 @@ router.get('/generation-tasks', adminAuthMiddleware, listTasks)
 router.get('/generation-tasks/:id', adminAuthMiddleware, getTask)
 router.get('/comic-chapters', adminAuthMiddleware, listChapters)
 router.get('/comic-chapters/:diaryEntryId', adminAuthMiddleware, getChapter)
+router.get('/character-profiles', adminAuthMiddleware, listCharacterProfiles)
+router.get('/character-profiles/:id', adminAuthMiddleware, getCharacterProfile)
 router.get('/users', adminAuthMiddleware, listUsers)
 router.get('/users/:id', adminAuthMiddleware, getUser)
 
