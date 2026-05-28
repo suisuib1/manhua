@@ -198,6 +198,30 @@ test('later button saves pending chapter without overwriting existing completed 
   assert.equal(storage.generatedComicChapters[2].coverImageUrl, 'http://127.0.0.1:3000/uploads/generated/old-2.png')
 })
 
+test('later button does not restore old create draft after task was created', () => {
+  const { pageConfig, storage } = loadPage({
+    createDraftResetAfterGeneration: true,
+    generatedComicChapters: [],
+  })
+
+  pageConfig.setData({
+    pendingDraft: {
+      serverDiaryEntryId: 'entry-created-later',
+      chapterTitle: '已进入生成流程',
+      pageCount: 2,
+    },
+    generationTaskId: 'task-created-later',
+    generationTaskStatus: 'processing',
+    generationResult: {},
+  })
+  pageConfig.goHome()
+
+  assert.equal(storage.draftComicChapter, undefined)
+  assert.equal(storage.createDraftResetAfterGeneration, true)
+  assert.equal(storage.generatedComicChapters[0].generationTaskId, 'task-created-later')
+  assert.equal(storage.generatedComicChapters[0].title, '已进入生成流程')
+})
+
 test('loading failed task status shows retry state instead of later button state', async () => {
   const { pageConfig, requestCalls } = loadPage({
     authToken: 'token-task',
@@ -679,6 +703,8 @@ test('pending generation task polls until completed and injects first image', as
   assert.equal(chapter.pages[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(storage.generatedComicChapters[0].pages[0].images[0], 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
   assert.equal(storage.generatedComicChapters[0].pages[0].imageUrl, 'http://127.0.0.1:3000/uploads/generated/polled-first-page.png')
+  assert.equal(storage.draftComicChapter, undefined)
+  assert.equal(storage.createDraftResetAfterGeneration, true)
   assert.equal(pollTimer.cleared, true)
 })
 
@@ -1225,13 +1251,18 @@ test('missing serverDiaryEntryId syncs diary before creating generation task', a
   assert.equal(requestCalls[0].url, 'http://127.0.0.1:3000/api/diary-entries')
   assert.equal(requestCalls[1].url, 'http://127.0.0.1:3000/api/generation-tasks')
   assert.equal(requestCalls[1].data.diaryEntryId, 'entry-created')
-  assert.equal(storage.draftComicChapter.serverDiaryEntryId, 'entry-created')
+  assert.equal(storage.draftComicChapter, undefined)
+  assert.equal(storage.createDraftResetAfterGeneration, true)
   assert.equal(chapter.generationTaskId, 'task-created')
 })
 
 test('generation task create failure enters failed state without writing local success chapter', async () => {
   const { pageConfig, moduleExports, requestCalls, storage } = loadPage({
     authToken: 'token-task',
+    draftComicChapter: {
+      serverDiaryEntryId: 'entry-fail',
+      chapterTitle: 'fallback chapter',
+    },
   }, (options) => {
     options.success({
       statusCode: 500,
@@ -1256,6 +1287,8 @@ test('generation task create failure enters failed state without writing local s
   assert.equal(pageConfig.data.generationStatus, 'failed')
   assert.equal(pageConfig.data.generationTaskStatus, 'failed')
   assert.equal(storage.generatedComicChapters, undefined)
+  assert.equal(storage.draftComicChapter.chapterTitle, 'fallback chapter')
+  assert.equal(storage.createDraftResetAfterGeneration, undefined)
 })
 
 test('generation task metadata does not change reader navigation', async () => {

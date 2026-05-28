@@ -1,5 +1,5 @@
 const { createChapterMock, pageRoutes } = require('../../utils/mock')
-const { saveDraftWithBackendFallback } = require('../../utils/diarySync')
+const { saveDraftWithBackendFallback, consumeCreateDraftResetAfterGeneration } = require('../../utils/diarySync')
 const { getEmotionTags } = require('../../utils/emotionTagApi')
 
 function formatLocalDate(date = new Date()) {
@@ -65,6 +65,23 @@ function encodeDraft(draft) {
   return encodeURIComponent(JSON.stringify(draft))
 }
 
+function buildDefaultCreateFormData(tagOptions) {
+  const today = formatLocalDate()
+
+  return {
+    draftChapterTitle: '',
+    diaryDateValue: today,
+    diaryDateLabel: today,
+    pageMode: createChapterMock.pageMode,
+    pageCount: '',
+    pageCountInput: '',
+    selectedTags: [],
+    tagOptions: (Array.isArray(tagOptions) && tagOptions.length > 0 ? tagOptions : buildFallbackTagOptions()).map((item) => Object.assign({}, item, {
+      selected: false,
+    })),
+  }
+}
+
 function decodeDraft(query) {
   if (!query) return null
 
@@ -95,6 +112,14 @@ Page({
 
   onLoad() {
     return this.loadEmotionTags()
+  },
+
+  onShow() {
+    if (!consumeCreateDraftResetAfterGeneration()) {
+      return
+    }
+
+    this.setData(buildDefaultCreateFormData(this.data.tagOptions))
   },
 
   async loadEmotionTags() {
@@ -234,4 +259,5 @@ module.exports = {
   buildFallbackTagOptions,
   normalizePageCount,
   getRandomPageCount,
+  buildDefaultCreateFormData,
 }

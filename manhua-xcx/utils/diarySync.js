@@ -61,6 +61,21 @@ function saveLocalDraft(draft) {
   wx.setStorageSync(storageKeys.draftComicChapter, draft)
 }
 
+function clearCreateDraftAfterGeneration() {
+  wx.removeStorageSync(storageKeys.draftComicChapter)
+  wx.setStorageSync(storageKeys.createDraftResetAfterGeneration, true)
+}
+
+function consumeCreateDraftResetAfterGeneration() {
+  const shouldReset = Boolean(wx.getStorageSync(storageKeys.createDraftResetAfterGeneration))
+
+  if (shouldReset) {
+    wx.removeStorageSync(storageKeys.createDraftResetAfterGeneration)
+  }
+
+  return shouldReset
+}
+
 function saveServerDiaryEntryId(draft, serverDiaryEntryId) {
   const latestLocalDraft = wx.getStorageSync(storageKeys.draftComicChapter) || draft
   const nextDraft = Object.assign({}, latestLocalDraft, {
@@ -150,4 +165,6 @@ module.exports = {
   mapDraftToDiaryEntryPayload,
   prepareDraftForBackendSync,
   saveDraftWithBackendFallback,
+  clearCreateDraftAfterGeneration,
+  consumeCreateDraftResetAfterGeneration,
 }

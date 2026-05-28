@@ -21,6 +21,9 @@ function loadPage(storage = {}, requestImpl = () => {}) {
     setStorageSync(key, value) {
       storage[key] = value
     },
+    removeStorageSync(key) {
+      delete storage[key]
+    },
     request(options) {
       requestCalls.push(options)
       requestImpl(options)
@@ -175,6 +178,71 @@ test('create page starts with empty title and no selected mood tags', () => {
   assert.equal(pageConfig.data.draftChapterTitle.includes('和小猫一起的傍晚'), false)
   assert.deepEqual(pageConfig.data.selectedTags, [])
   assert.equal(pageConfig.data.tagOptions.some((item) => item.selected), false)
+})
+
+test('create page clears cached input after generation flow succeeds', () => {
+  const { pageConfig, storage } = loadPage({
+    createDraftResetAfterGeneration: true,
+    generatedComicChapters: [{ id: 'pending-task-1' }],
+  })
+
+  pageConfig.setData({
+    draftChapterTitle: '上一轮标题',
+    diaryDateValue: '2026-05-01',
+    diaryDateLabel: '2026-05-01',
+    pageMode: 'custom',
+    pageCount: 4,
+    pageCountInput: '4',
+    selectedTags: ['warm'],
+    tagOptions: [
+      { value: 'warm', label: '温暖', selected: true },
+      { value: 'daily', label: '日常', selected: false },
+    ],
+  })
+  pageConfig.onShow()
+
+  const today = new Date()
+  const expectedToday = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  assert.equal(pageConfig.data.draftChapterTitle, '')
+  assert.equal(pageConfig.data.diaryDateValue, expectedToday)
+  assert.equal(pageConfig.data.diaryDateLabel, expectedToday)
+  assert.equal(pageConfig.data.pageMode, 'custom')
+  assert.equal(pageConfig.data.pageCount, '')
+  assert.equal(pageConfig.data.pageCountInput, '')
+  assert.deepEqual(pageConfig.data.selectedTags, [])
+  assert.equal(pageConfig.data.tagOptions.some((item) => item.selected), false)
+  assert.equal(storage.createDraftResetAfterGeneration, undefined)
+  assert.deepEqual(storage.generatedComicChapters, [{ id: 'pending-task-1' }])
+})
+
+test('create page keeps cached input when user has not successfully submitted', () => {
+  const { pageConfig } = loadPage()
+
+  pageConfig.setData({
+    draftChapterTitle: '未提交草稿',
+    diaryDateValue: '2026-05-02',
+    diaryDateLabel: '2026-05-02',
+    pageMode: 'custom',
+    pageCount: 3,
+    pageCountInput: '3',
+    selectedTags: ['daily'],
+    tagOptions: [
+      { value: 'daily', label: '日常', selected: true },
+    ],
+  })
+  pageConfig.onShow()
+
+  assert.equal(pageConfig.data.draftChapterTitle, '未提交草稿')
+  assert.equal(pageConfig.data.diaryDateValue, '2026-05-02')
+  assert.equal(pageConfig.data.pageCount, 3)
+  assert.equal(pageConfig.data.pageCountInput, '3')
+  assert.deepEqual(pageConfig.data.selectedTags, ['daily'])
+  assert.equal(pageConfig.data.tagOptions[0].selected, true)
 })
 
 test('create page initial date uses runtime today instead of mock date', () => {

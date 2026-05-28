@@ -1,6 +1,6 @@
 const { generatingMock, pageRoutes, storageKeys } = require('../../../../utils/mock')
 const { getAuthToken } = require('../../../../utils/auth')
-const { saveDraftWithBackendFallback } = require('../../../../utils/diarySync')
+const { saveDraftWithBackendFallback, clearCreateDraftAfterGeneration } = require('../../../../utils/diarySync')
 const { createGenerationTask, getGenerationTask } = require('../../../../utils/generationTaskApi')
 const apiConfig = require('../../../../config/api.config')
 
@@ -154,6 +154,10 @@ function loadPendingDraft() {
 
 function savePendingDraftWithTask(draft, task) {
   if (!draft || !task || !task.id) {
+    return
+  }
+
+  if (wx.getStorageSync(storageKeys.createDraftResetAfterGeneration)) {
     return
   }
 
@@ -476,6 +480,7 @@ async function finalizeGeneratedChapterWithBackendFallback(draft, pageContext) {
 
     savePendingDraftWithTask(draft, task)
     updateGenerationTaskState(pageContext, task)
+    clearCreateDraftAfterGeneration()
     const readyTask = await waitForGenerationTaskResult(task, pageContext)
     if (isGenerationTaskCompletedWithImage(readyTask)) {
       return finalizeGeneratedChapter(draft, readyTask)
