@@ -7,6 +7,9 @@ process.env.WECHAT_LOGIN_MOCK = 'true'
 
 const { clearCoreTables, prisma } = require('./helpers/testDatabase')
 const { app } = require('../src/app')
+const {
+  markStaleGenerationTasksFailed,
+} = require('../src/services/generationTask.service')
 
 function listen(appInstance) {
   return new Promise((resolve, reject) => {
@@ -104,7 +107,7 @@ async function createGenerationTask(ownerUserId, diaryEntryId, suffix, overrides
       resultJson: overrides.rawResultJson === undefined ? JSON.stringify(result) : overrides.rawResultJson,
       errorMessage: overrides.errorMessage || null,
       startedAt: now,
-      finishedAt: now,
+      finishedAt: Object.prototype.hasOwnProperty.call(overrides, 'finishedAt') ? overrides.finishedAt : now,
       createdAt: now,
     },
   })
@@ -335,6 +338,44 @@ test('GET /api/comic-chapters/recent does not expose internal or private fields'
     assert.equal(item.inputJson, undefined)
     assert.equal(item.resultJson, undefined)
     assert.equal(JSON.stringify(item).includes(fullText), false)
+  } finally {
+    await new Promise((resolve) => server.close(resolve))
+  }
+})
+
+test('GET /api/comic-chapters/recent returns failed after stale latest task is marked failed', async () => {
+  const server = await listen(app)
+
+  try {
+    const loginData = await login(server, 'recent_stale_generation')
+    const entry = await createDiaryEntry(loginData.user.id, 'stale_generation')
+    const oldTime = new Date('2026-05-21T00:00:00.000Z')
+    const staleTask = await createGenerationTask(loginData.user.id, entry.id, 'stale_generation', {
+      second: 1,
+      status: 'processing',
+      imageUrl: null,
+      finishedAt: null,
+    })
+    await prisma.generationTask.update({
+      where: {
+        id: staleTask.id,
+      },
+      data: {
+        startedAt: oldTime,
+        updatedAt: oldTime,
+      },
+    })
+
+    await markStaleGenerationTasksFailed({
+      now: new Date('2026-05-21T00:20:00.000Z'),
+      timeoutMs: 5 * 60 * 1000,
+    })
+
+    const { body } = await requestJson(server, 'GET', '/api/comic-chapters/recent', undefined, loginData.token)
+
+    assert.equal(body.data.items.length, 1)
+    assert.equal(body.data.items[0].generationTaskId, staleTask.id)
+    assert.equal(body.data.items[0].status, 'failed')
   } finally {
     await new Promise((resolve) => server.close(resolve))
   }

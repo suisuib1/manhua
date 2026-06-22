@@ -8,6 +8,9 @@ delete process.env.OPENAI_API_KEY
 
 const { clearCoreTables, prisma } = require('./helpers/testDatabase')
 const { app } = require('../src/app')
+const {
+  markStaleGenerationTasksFailed,
+} = require('../src/services/generationTask.service')
 
 function listen(appInstance) {
   return new Promise((resolve, reject) => {
@@ -81,6 +84,33 @@ async function createDiaryEntry(ownerUserId, suffix = 'one', overrides = {}) {
       selectedTagsJson: JSON.stringify(['daily', 'cute']),
       status: 'draft',
     }, overrides),
+  })
+}
+
+async function createStoredGenerationTask(ownerUserId, diaryEntryId, suffix = 'stored', overrides = {}) {
+  const createdAt = overrides.createdAt || new Date('2026-05-21T00:00:00.000Z')
+
+  return prisma.generationTask.create({
+    data: {
+      ownerUserId,
+      diaryEntryId,
+      status: overrides.status || 'processing',
+      taskType: 'diary_to_comic',
+      promptSnapshot: `stored_prompt_${suffix}`,
+      inputJson: JSON.stringify({ suffix }),
+      resultJson: Object.prototype.hasOwnProperty.call(overrides, 'resultJson')
+        ? overrides.resultJson
+        : null,
+      errorMessage: overrides.errorMessage || null,
+      startedAt: Object.prototype.hasOwnProperty.call(overrides, 'startedAt')
+        ? overrides.startedAt
+        : createdAt,
+      finishedAt: Object.prototype.hasOwnProperty.call(overrides, 'finishedAt')
+        ? overrides.finishedAt
+        : null,
+      createdAt,
+      updatedAt: overrides.updatedAt || createdAt,
+    },
   })
 }
 
@@ -204,6 +234,80 @@ test('POST /api/generation-tasks requires login', async () => {
   } finally {
     await new Promise((resolve) => server.close(resolve))
   }
+})
+
+test('markStaleGenerationTasksFailed marks timed out processing and pending tasks failed only when safe', async () => {
+  const owner = await prisma.user.create({
+    data: {
+      wxOpenid: 'stale_generation_owner',
+    },
+  })
+  const oldEntry = await createDiaryEntry(owner.id, 'stale_old')
+  const freshEntry = await createDiaryEntry(owner.id, 'stale_fresh')
+  const oldTime = new Date('2026-05-21T00:00:00.000Z')
+  const freshTime = new Date('2026-05-21T00:15:00.000Z')
+  const now = new Date('2026-05-21T00:20:00.000Z')
+
+  const staleProcessing = await createStoredGenerationTask(owner.id, oldEntry.id, 'processing', {
+    status: 'processing',
+    startedAt: oldTime,
+    updatedAt: oldTime,
+  })
+  const stalePending = await createStoredGenerationTask(owner.id, oldEntry.id, 'pending', {
+    status: 'pending',
+    startedAt: null,
+    createdAt: oldTime,
+    updatedAt: oldTime,
+  })
+  const freshProcessing = await createStoredGenerationTask(owner.id, freshEntry.id, 'fresh_processing', {
+    status: 'processing',
+    startedAt: freshTime,
+    updatedAt: freshTime,
+  })
+  const completed = await createStoredGenerationTask(owner.id, oldEntry.id, 'completed', {
+    status: 'completed',
+    resultJson: JSON.stringify({ pages: [{ imageUrl: '/uploads/generated/completed.png' }] }),
+    finishedAt: oldTime,
+    updatedAt: oldTime,
+  })
+  const failed = await createStoredGenerationTask(owner.id, oldEntry.id, 'failed', {
+    status: 'failed',
+    errorMessage: 'already failed',
+    finishedAt: oldTime,
+    updatedAt: oldTime,
+  })
+
+  const result = await markStaleGenerationTasksFailed({
+    now,
+    timeoutMs: 5 * 60 * 1000,
+  })
+
+  assert.equal(result.failedCount, 2)
+
+  const storedTasks = await prisma.generationTask.findMany({
+    where: {
+      id: {
+        in: [staleProcessing.id, stalePending.id, freshProcessing.id, completed.id, failed.id],
+      },
+    },
+    orderBy: {
+      createdAt: 'asc',
+    },
+  })
+  const byId = new Map(storedTasks.map((task) => [task.id, task]))
+
+  assert.equal(byId.get(staleProcessing.id).status, 'failed')
+  assert.equal(byId.get(staleProcessing.id).errorMessage, '生成任务超时，请重新生成')
+  assert.deepEqual(byId.get(staleProcessing.id).finishedAt, now)
+  assert.equal(byId.get(stalePending.id).status, 'failed')
+  assert.equal(byId.get(stalePending.id).errorMessage, '生成任务超时，请重新生成')
+  assert.deepEqual(byId.get(stalePending.id).finishedAt, now)
+  assert.equal(byId.get(freshProcessing.id).status, 'processing')
+  assert.equal(byId.get(freshProcessing.id).finishedAt, null)
+  assert.equal(byId.get(completed.id).status, 'completed')
+  assert.deepEqual(byId.get(completed.id).finishedAt, oldTime)
+  assert.equal(byId.get(failed.id).status, 'failed')
+  assert.equal(byId.get(failed.id).errorMessage, 'already failed')
 })
 
 test('logged in user can create and read a completed mock generation task', async () => {

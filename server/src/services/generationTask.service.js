@@ -4,6 +4,11 @@ const {
   hasOpenAiImageConfig,
 } = require('./openaiImage.service')
 
+const staleGenerationTaskErrorMessage = '生成任务超时，请重新生成'
+const staleGenerationTaskMinTimeoutMs = 10 * 60 * 1000
+const staleGenerationTaskScanIntervalMs = 60 * 1000
+let staleGenerationTaskScanTimer = null
+
 async function createGenerationTask(ownerUserId, input) {
   const diaryEntryId = assertRequiredString(input.diaryEntryId, 'diaryEntryId is required')
   const diaryEntry = await findOwnedDiaryEntry(ownerUserId, diaryEntryId)
@@ -64,6 +69,93 @@ async function getGenerationTask(ownerUserId, id) {
   }
 
   return formatTask(task)
+}
+
+async function markStaleGenerationTasksFailed(options = {}) {
+  const now = options.now || new Date()
+  const timeoutMs = normalizeStaleGenerationTaskTimeoutMs(options.timeoutMs)
+  const staleBefore = new Date(now.getTime() - timeoutMs)
+  const tasks = await prisma.generationTask.findMany({
+    where: {
+      status: {
+        in: ['pending', 'processing'],
+      },
+      finishedAt: null,
+      deletedAt: null,
+      createdAt: {
+        lt: staleBefore,
+      },
+      updatedAt: {
+        lt: staleBefore,
+      },
+    },
+    select: {
+      id: true,
+      status: true,
+      resultJson: true,
+      startedAt: true,
+      updatedAt: true,
+      createdAt: true,
+    },
+  })
+  let failedCount = 0
+
+  for (const task of tasks) {
+    if (!isGenerationTaskStale(task, staleBefore)) {
+      continue
+    }
+
+    if (hasGenerationTaskImage(task)) {
+      continue
+    }
+
+    const updated = await updateGenerationTaskStateSafely(task.id, {
+      status: 'failed',
+      errorMessage: staleGenerationTaskErrorMessage,
+      finishedAt: now,
+    }, {
+      status: {
+        in: ['pending', 'processing'],
+      },
+      finishedAt: null,
+    })
+
+    if (updated && updated.count > 0) {
+      failedCount += updated.count
+    }
+  }
+
+  return {
+    failedCount,
+  }
+}
+
+function startStaleGenerationTaskScanner(options = {}) {
+  if (staleGenerationTaskScanTimer) {
+    return staleGenerationTaskScanTimer
+  }
+
+  markStaleGenerationTasksFailed().catch(warnGenerationTaskUpdateFailure)
+
+  const intervalMs = options.intervalMs || staleGenerationTaskScanIntervalMs
+  staleGenerationTaskScanTimer = setInterval(() => {
+    markStaleGenerationTasksFailed().catch(warnGenerationTaskUpdateFailure)
+  }, intervalMs)
+
+  if (typeof staleGenerationTaskScanTimer.unref === 'function') {
+    staleGenerationTaskScanTimer.unref()
+  }
+
+  return staleGenerationTaskScanTimer
+}
+
+function stopStaleGenerationTaskScanner() {
+  if (!staleGenerationTaskScanTimer) {
+    return
+  }
+
+  clearInterval(staleGenerationTaskScanTimer)
+  staleGenerationTaskScanTimer = null
 }
 
 async function findOwnedDiaryEntry(ownerUserId, diaryEntryId) {
@@ -217,6 +309,34 @@ async function markGenerationTaskFailed(taskId, err, sensitiveContext) {
 
 function getGenerationTaskTimeoutMs() {
   return toPositiveInteger(process.env.OPENAI_TIMEOUT_MS, 60000)
+}
+
+function normalizeStaleGenerationTaskTimeoutMs(value) {
+  if (Number.isInteger(value) && value > 0) {
+    return value
+  }
+
+  const openAiTimeoutMs = toPositiveInteger(process.env.OPENAI_TIMEOUT_MS, 0)
+  if (!openAiTimeoutMs) {
+    return staleGenerationTaskMinTimeoutMs
+  }
+
+  return Math.max(openAiTimeoutMs * 2, staleGenerationTaskMinTimeoutMs)
+}
+
+function isGenerationTaskStale(task, staleBefore) {
+  const referenceTime = task.startedAt || task.updatedAt || task.createdAt
+
+  return Boolean(referenceTime && referenceTime < staleBefore)
+}
+
+function hasGenerationTaskImage(task) {
+  const result = parseJsonObject(task && task.resultJson)
+  const pages = Array.isArray(result.pages) ? result.pages : []
+
+  return pages.some((page) => {
+    return page && typeof page.imageUrl === 'string' && page.imageUrl.trim()
+  })
 }
 
 function logGenerationTaskEvent(event, taskId, extra = {}) {
@@ -511,4 +631,7 @@ function throwNotFound() {
 module.exports = {
   createGenerationTask,
   getGenerationTask,
+  markStaleGenerationTasksFailed,
+  startStaleGenerationTaskScanner,
+  stopStaleGenerationTaskScanner,
 }

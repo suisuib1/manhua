@@ -6,9 +6,14 @@ require('dotenv').config({
 })
 
 const { app } = require('./app')
+const {
+  startStaleGenerationTaskScanner,
+} = require('./services/generationTask.service')
 
 const port = Number(process.env.PORT || 3000)
 
 app.listen(port, () => {
   console.log(`manhua-api listening on ${port}`)
 })
+
+startStaleGenerationTaskScanner()
